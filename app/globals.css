@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&family=Assistant:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+@theme {
+  /* Mango Brand Colors */
+  --color-mango: #F5A623;
+  --color-mango-dark: #D4881A;
+  --color-mango-light: #FBBF55;
+  --color-gold: #D4A853;
+  --color-luxury-black: #1C1C1E;
+  --color-charcoal: #2D2D2D;
+  --color-cream: #FFF8F0;
+  --color-surface: #F8F5F1;
+
+  /* Fonts */
+  --font-heebo: "Heebo", sans-serif;
+  --font-assistant: "Assistant", sans-serif;
+  --font-playfair: "Playfair Display", serif;
+}
+
+html {
+  direction: rtl;
+  font-family: var(--font-assistant);
+  background-color: var(--color-luxury-black);
+  color: var(--color-cream);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heebo);
+}
