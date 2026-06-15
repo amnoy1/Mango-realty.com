@@ -15,15 +15,17 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 overflow-visible transition-all duration-300 ${
         scrolled
           ? "bg-[var(--color-cream)]/95 backdrop-blur-md shadow-sm"
           : "bg-[var(--color-cream)]"
       } border-b border-black/8`}
     >
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <a href="/" className="flex items-center">
-          <Image src="/logo.png" alt="Mango Real Estate" width={44} height={44} className="rounded-lg" priority />
+        {/* Logo — half overflows below navbar onto hero image */}
+        <a href="/" className="flex items-center relative z-[60]"
+           style={{ transform: "translateY(32px)" }}>
+          <Image src="/logo.png" alt="Mango Real Estate" width={88} height={88} className="rounded-2xl shadow-lg" priority />
         </a>
 
         <div className="hidden md:flex items-center gap-8 text-sm text-[var(--color-luxury-black)]/55">
