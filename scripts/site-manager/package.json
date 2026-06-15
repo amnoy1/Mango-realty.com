@@ -1,0 +1,17 @@
+{
+  "name": "mango-site-manager",
+  "version": "1.0.0",
+  "description": "מנהל האתר — Mango Realty automated property ingestion agent",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@supabase/supabase-js": "^2.49.0",
+    "dotenv": "^16.4.7",
+    "mammoth": "^1.8.0",
+    "twilio": "^5.4.0"
+  }
+}
