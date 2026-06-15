@@ -26,6 +26,8 @@ interface PropertyDetail {
   city: string;
   neighborhood: string;
   street: string;
+  lat?: number;
+  lng?: number;
   description: string;
   features: string[];
   images: string[];
@@ -35,7 +37,7 @@ interface PropertyDetail {
 const MOCK_PROPERTIES: PropertyDetail[] = [
   {
     slug: "penthouse-tzafon-yashan",
-    title: "פנטהאוז יוקרה מדהים",
+    title: "רפפורט 3, כפר סבא",
     badge: "חדש",
     price: 8200000,
     price_type: "sale",
@@ -47,6 +49,8 @@ const MOCK_PROPERTIES: PropertyDetail[] = [
     city: "כפר סבא",
     neighborhood: "מרכז העיר",
     street: "רפפורט 3",
+    lat: 32.1755,
+    lng: 34.9069,
     description:
       "פנטהאוז ייחודי בקומה האחרונה עם נוף פנורמי לים ולעיר. הנכס כולל גג פרטי של 80 מ\"ר, מטבח מקצועי מצויד, חדר ראשי מפואר עם חדר הלבשה ואמבטיה סוויטה. גימורים ברמה הגבוהה ביותר — שיש קרארה, חלונות אלומיניום, מיזוג מרכזי ומעלית פרטית.",
     features: [
@@ -64,7 +68,7 @@ const MOCK_PROPERTIES: PropertyDetail[] = [
   },
   {
     slug: "dira-5-chadarim-neve-ofer",
-    title: "דירת 5 חדרים מרווחת",
+    title: "ביאליק 12, רמת גן",
     badge: "בלעדי",
     price: 5500000,
     price_type: "sale",
@@ -94,18 +98,18 @@ const MOCK_PROPERTIES: PropertyDetail[] = [
 
 const RELATED: Property[] = [
   {
-    id: "r1", slug: "gan-eden-givataim", title: "גן עדן בגבעתיים", price: 3800000,
+    id: "r1", slug: "gan-eden-givataim", title: "בורוכוב 14, גבעתיים", price: 3800000,
     rooms: 4, area: 110, city: "גבעתיים", neighborhood: "בורוכוב",
     image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=600&q=80",
   },
   {
-    id: "r2", slug: "villa-breicha-ramat-hasharon", title: "וילה פרטית עם בריכה", price: 14500000,
+    id: "r2", slug: "villa-breicha-ramat-hasharon", title: "לופבן 7, רמת השרון", price: 14500000,
     rooms: 8, area: 450, city: "רמת השרון", neighborhood: "שכונת השרון",
     image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80",
     badge: "פרימיום",
   },
   {
-    id: "r3", title: "דירת 4 חדרים חדשה", price: 4200000,
+    id: "r3", title: "הירקון 88, תל אביב", price: 4200000,
     rooms: 4, area: 125, city: "תל אביב", neighborhood: "הצפון הישן",
     image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80",
   },
@@ -167,9 +171,14 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
   const prev = () => setActiveImg((i) => (i - 1 + property.images.length) % property.images.length);
   const next = () => setActiveImg((i) => (i + 1) % property.images.length);
 
-  const address = `${property.street}, ${property.neighborhood}, ${property.city}, Israel`;
-  const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-  const svExternalUrl = `https://www.google.com/maps?q=${encodeURIComponent(address)}&layer=c`;
+  const address = `${property.street}, ${property.city}, Israel`;
+  const hasCoords = property.lat && property.lng;
+  const mapEmbedSrc = hasCoords
+    ? `https://maps.google.com/maps?q=${property.lat},${property.lng}&z=17&ie=UTF8&iwloc=&output=embed`
+    : `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=17&ie=UTF8&iwloc=&output=embed`;
+  const svExternalUrl = hasCoords
+    ? `https://www.google.com/maps/@${property.lat},${property.lng},3a,75y,90t/data=!3m1!1e1`
+    : `https://www.google.com/maps/place/${encodeURIComponent(address)}`;
 
   return (
     <>
