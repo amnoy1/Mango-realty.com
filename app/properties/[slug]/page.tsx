@@ -169,7 +169,7 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
 
   const address = `${property.street}, ${property.neighborhood}, ${property.city}, Israel`;
   const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-  const svEmbedSrc  = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&layer=c&output=embed`;
+  const svEmbedSrc  = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&layer=c&cbp=12,0,0,0,0&output=svembed`;
 
   return (
     <>
@@ -336,15 +336,26 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
                 <p className="text-sm text-[var(--color-luxury-black)]/50 mb-3">
                   {property.street}, {property.neighborhood}, {property.city}
                 </p>
-                {/* Mini-map */}
-                <div className="rounded-2xl overflow-hidden border border-black/8 mb-3" style={{ height: 220 }}>
+                {/* Mini-map — click opens full popup, overlay blocks "Open in maps" button */}
+                <div
+                  className="relative rounded-2xl overflow-hidden border border-black/8 mb-3 cursor-pointer group"
+                  style={{ height: 220 }}
+                  onClick={() => setModal("map")}
+                  title="לחץ לפתיחת המפה"
+                >
                   <iframe
                     src={mapEmbedSrc}
-                    className="w-full h-full border-0"
+                    className="w-full h-full border-0 pointer-events-none"
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                     title="מפת נכס"
                   />
+                  {/* Transparent overlay — intercepts clicks, blocks iframe buttons */}
+                  <div className="absolute inset-0 bg-transparent group-hover:bg-black/5 transition-colors flex items-center justify-center">
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm text-[var(--color-luxury-black)] text-xs font-bold px-3 py-1.5 rounded-full shadow">
+                      פתח מפה מורחבת
+                    </span>
+                  </div>
                 </div>
                 <div className="flex gap-3">
                   <button onClick={() => setModal("map")}
