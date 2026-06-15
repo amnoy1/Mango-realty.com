@@ -169,7 +169,7 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
 
   const address = `${property.street}, ${property.neighborhood}, ${property.city}, Israel`;
   const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-  const svEmbedSrc  = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&layer=c&cbp=12,0,0,0,0&output=svembed`;
+  const svExternalUrl = `https://www.google.com/maps?q=${encodeURIComponent(address)}&layer=c`;
 
   return (
     <>
@@ -179,9 +179,7 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
       {modal === "map" && (
         <MapModal title={`מפה — ${address}`} src={mapEmbedSrc} onClose={() => setModal(null)} />
       )}
-      {modal === "sv" && (
-        <MapModal title={`Street View — ${address}`} src={svEmbedSrc} onClose={() => setModal(null)} />
-      )}
+      {/* Street View opens externally — no modal needed */}
 
       <main className="bg-[var(--color-cream)] min-h-screen pt-16">
 
@@ -254,10 +252,10 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
                 className="flex items-center gap-1.5 bg-white/15 hover:bg-white/28 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-lg transition border border-white/20">
                 <MapPin size={12} /> מפה
               </button>
-              <button onClick={() => setModal("sv")}
+              <a href={svExternalUrl} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1.5 bg-white/15 hover:bg-white/28 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-lg transition border border-white/20">
                 <Navigation size={12} /> Street View
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -343,9 +341,11 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
                   onClick={() => setModal("map")}
                   title="לחץ לפתיחת המפה"
                 >
+                  {/* iframe taller than container — clips Google's "Open in Maps" link at bottom */}
                   <iframe
                     src={mapEmbedSrc}
-                    className="w-full h-full border-0 pointer-events-none"
+                    className="w-full border-0 pointer-events-none absolute inset-0"
+                    style={{ height: "calc(100% + 44px)" }}
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                     title="מפת נכס"
@@ -362,10 +362,10 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
                     className="flex items-center gap-2 border border-black/12 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--color-luxury-black)]/65 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-all">
                     <MapPin size={14} /> Google Maps
                   </button>
-                  <button onClick={() => setModal("sv")}
+                  <a href={svExternalUrl} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-2 border border-black/12 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--color-luxury-black)]/65 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-all">
                     <Navigation size={14} /> Street View
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>
