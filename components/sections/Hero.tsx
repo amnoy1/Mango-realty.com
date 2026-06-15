@@ -48,9 +48,9 @@ export default function Hero() {
           מנגו ריאלטי — נדל&quot;ן יוקרה עם ליווי AI אישי 24/7
         </p>
 
-        {/* Search bar */}
+        {/* Search bar — ~half width */}
         <div
-          className="w-full rounded-2xl p-2.5 flex flex-col sm:flex-row gap-2.5"
+          className="w-full max-w-sm rounded-2xl p-2.5 flex flex-col sm:flex-row gap-2.5"
           style={{
             background: "rgba(255,250,244,0.13)",
             backdropFilter: "blur(28px)",
