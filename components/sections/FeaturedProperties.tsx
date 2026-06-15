@@ -51,18 +51,18 @@ const PROPERTIES: Property[] = [
 
 export default function FeaturedProperties() {
   return (
-    <section id="properties" className="py-24 bg-[var(--color-luxury-black)]">
+    <section id="properties" className="py-24 bg-[var(--color-cream)]">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-end justify-between mb-12">
           <div>
-            <span className="text-[var(--color-mango)] text-xs font-semibold uppercase tracking-widest mb-2 block">
+            <span className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-[3px] mb-2 block">
               נכסי בחירה
             </span>
-            <h2 className="text-4xl font-black text-[var(--color-cream)]">נכסים מובחרים</h2>
+            <h2 className="text-4xl font-black text-[var(--color-luxury-black)]">נכסים מובחרים</h2>
           </div>
           <a
             href="/properties"
-            className="flex items-center gap-2 text-[var(--color-cream)]/40 hover:text-[var(--color-mango)] transition-colors text-sm"
+            className="flex items-center gap-2 text-[var(--color-luxury-black)]/35 hover:text-[var(--color-gold)] transition-colors text-sm"
           >
             כל הנכסים
             <ArrowLeft size={15} />

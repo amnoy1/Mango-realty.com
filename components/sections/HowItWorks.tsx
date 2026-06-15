@@ -22,16 +22,15 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="py-24 bg-[var(--color-charcoal)]">
+    <section className="py-24 bg-[var(--color-cream)]">
       <div className="max-w-5xl mx-auto px-4 text-center">
-        <span className="text-[var(--color-mango)] text-xs font-semibold uppercase tracking-widest mb-3 block">
+        <span className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-[3px] mb-3 block">
           תהליך פשוט
         </span>
-        <h2 className="text-4xl font-black text-[var(--color-cream)] mb-16">איך זה עובד?</h2>
+        <h2 className="text-4xl font-black text-[var(--color-luxury-black)] mb-16">איך זה עובד?</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 relative">
-          {/* connector */}
-          <div className="hidden md:block absolute top-9 right-[calc(33%+24px)] left-[calc(33%+24px)] h-px bg-[var(--color-mango)]/15" />
+          <div className="hidden md:block absolute top-9 right-[calc(33%+28px)] left-[calc(33%+28px)] h-px bg-[var(--color-gold)]/20" />
 
           {STEPS.map(({ icon: Icon, title, desc }, i) => (
             <motion.div
@@ -43,15 +42,17 @@ export default function HowItWorks() {
               className="flex flex-col items-center"
             >
               <div className="relative mb-6">
-                <div className="w-18 h-18 w-[72px] h-[72px] rounded-full bg-[var(--color-mango)]/10 border border-[var(--color-mango)]/25 flex items-center justify-center">
-                  <Icon size={28} className="text-[var(--color-mango)]" />
+                <div className="w-[72px] h-[72px] rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(212,168,83,0.1)", border: "1px solid rgba(212,168,83,0.25)" }}>
+                  <Icon size={28} style={{ color: "#D4A853" }} />
                 </div>
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[var(--color-mango)] rounded-full text-black text-[10px] font-black flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center"
+                  style={{ background: "#D4A853", color: "#1C1C1E" }}>
                   {i + 1}
                 </span>
               </div>
-              <h3 className="text-lg font-black text-[var(--color-cream)] mb-2">{title}</h3>
-              <p className="text-[var(--color-cream)]/45 text-sm leading-relaxed max-w-[220px]">{desc}</p>
+              <h3 className="text-lg font-black text-[var(--color-luxury-black)] mb-2">{title}</h3>
+              <p className="text-[var(--color-luxury-black)]/45 text-sm leading-relaxed max-w-[220px]">{desc}</p>
             </motion.div>
           ))}
         </div>
@@ -63,7 +64,10 @@ export default function HowItWorks() {
           transition={{ delay: 0.5 }}
           className="mt-14"
         >
-          <button className="bg-[var(--color-mango)] hover:bg-[var(--color-mango-light)] text-black font-black px-10 py-4 rounded-full transition-all hover:shadow-lg hover:shadow-[var(--color-mango)]/20 text-base">
+          <button
+            className="font-black px-10 py-4 rounded-full transition-all hover:brightness-110 text-base"
+            style={{ background: "#D4A853", color: "#1C1C1E", fontFamily: "var(--font-heebo)" }}
+          >
             התחל עכשיו — בחינם →
           </button>
         </motion.div>

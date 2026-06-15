@@ -16,57 +16,40 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-[var(--color-luxury-black)]/95 backdrop-blur-md border-b border-white/5 shadow-lg"
-          : "bg-transparent"
-      }`}
+          ? "bg-[var(--color-cream)]/95 backdrop-blur-md shadow-sm"
+          : "bg-[var(--color-cream)]"
+      } border-b border-black/8`}
     >
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <a href="/" className="font-heebo font-black text-2xl text-[var(--color-mango)]">
-          Mango Realty
+        <a href="/" className="font-heebo font-black text-xl text-[var(--color-luxury-black)]">
+          Mango <span className="text-[var(--color-gold)]">Realty</span>
         </a>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8 text-sm text-[var(--color-cream)]/70">
-          <a href="#properties" className="hover:text-[var(--color-mango)] transition-colors">
-            נכסים
-          </a>
-          <a href="#neighborhoods" className="hover:text-[var(--color-mango)] transition-colors">
-            שכונות
-          </a>
-          <a href="#agent" className="hover:text-[var(--color-mango)] transition-colors">
-            סוכן AI
-          </a>
+        <div className="hidden md:flex items-center gap-8 text-sm text-[var(--color-luxury-black)]/55">
+          <a href="#properties" className="hover:text-[var(--color-gold)] transition-colors">נכסים</a>
+          <a href="#neighborhoods" className="hover:text-[var(--color-gold)] transition-colors">שכונות</a>
+          <a href="#agent" className="hover:text-[var(--color-gold)] transition-colors">סוכן AI</a>
           <a
             href="tel:+97235000000"
-            className="flex items-center gap-2 bg-[var(--color-mango)] text-black px-5 py-2 rounded-full font-bold hover:bg-[var(--color-mango-light)] transition-colors"
+            className="flex items-center gap-2 bg-[var(--color-luxury-black)] text-[var(--color-cream)] px-5 py-2 rounded-full font-bold hover:bg-[var(--color-charcoal)] transition-colors text-xs"
           >
-            <Phone size={14} />
+            <Phone size={13} />
             צור קשר
           </a>
         </div>
 
-        {/* Mobile toggle */}
-        <button
-          className="md:hidden text-[var(--color-cream)] p-1"
-          onClick={() => setOpen(!open)}
-          aria-label="תפריט"
-        >
+        <button className="md:hidden p-1 text-[var(--color-luxury-black)]" onClick={() => setOpen(!open)}>
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-[var(--color-charcoal)] border-t border-white/5 px-6 py-5 flex flex-col gap-5 text-[var(--color-cream)]/80">
+        <div className="md:hidden bg-[var(--color-cream)] border-t border-black/8 px-6 py-5 flex flex-col gap-5 text-sm text-[var(--color-luxury-black)]/70">
           <a href="#properties" onClick={() => setOpen(false)}>נכסים</a>
           <a href="#neighborhoods" onClick={() => setOpen(false)}>שכונות</a>
           <a href="#agent" onClick={() => setOpen(false)}>סוכן AI</a>
-          <a
-            href="tel:+97235000000"
-            className="flex items-center gap-2 text-[var(--color-mango)] font-bold"
-          >
-            <Phone size={16} /> 03-500-0000
+          <a href="tel:+97235000000" className="flex items-center gap-2 font-bold text-[var(--color-luxury-black)]">
+            <Phone size={15} /> 03-500-0000
           </a>
         </div>
       )}

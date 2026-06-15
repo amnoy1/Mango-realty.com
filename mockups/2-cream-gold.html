@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cream & Gold — Mango Realty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;800;900&family=Assistant:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Assistant',sans-serif;background:#FFF8F0;color:#1C1C1E;direction:rtl}
+  h1,h2,h3,nav{font-family:'Heebo',sans-serif}
+
+  nav{position:fixed;top:0;width:100%;z-index:99;display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:#FFF8F0;border-bottom:1px solid rgba(28,28,30,0.08);box-shadow:0 2px 20px rgba(0,0,0,0.05)}
+  .logo{font-size:22px;font-weight:900;color:#1C1C1E}
+  .logo span{color:#D4A853}
+  .nav-links{display:flex;gap:32px;list-style:none;font-size:14px;color:rgba(28,28,30,0.55)}
+  .nav-links a{color:inherit;text-decoration:none;transition:color .2s}
+  .nav-links a:hover{color:#D4A853}
+  .nav-cta{background:#1C1C1E;color:#FFF8F0;font-weight:700;font-size:14px;padding:9px 22px;border-radius:50px;border:none;cursor:pointer}
+
+  /* HERO */
+  .hero{height:100vh;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:visible}
+  .hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&q=85') center/cover no-repeat}
+  /* overlay קל — התמונה חיה ונושמת */
+  .hero-overlay{position:absolute;inset:0;background:linear-gradient(to top, rgba(10,8,5,0.52) 0%, rgba(10,8,5,0.18) 55%, rgba(0,0,0,0.04) 100%)}
+  .hero-content{position:relative;z-index:2;padding:0 60px;width:100%;text-align:center}
+  .hero-tag{display:inline-block;background:rgba(212,168,83,0.18);border:1px solid rgba(212,168,83,0.45);color:#e8c86a;font-size:13px;padding:5px 16px;border-radius:50px;margin-bottom:22px;font-family:'Playfair Display',serif;font-style:italic;backdrop-filter:blur(4px)}
+  h1{font-size:clamp(2.8rem,5vw,4.8rem);font-weight:900;color:#fff;line-height:1.12;margin-bottom:14px;text-shadow:0 2px 20px rgba(0,0,0,0.3)}
+  h1 em{color:#e8c86a;font-style:normal}
+  .hero-sub{font-size:17px;color:rgba(255,255,255,0.65);margin-bottom:0;max-width:520px;margin:0 auto}
+
+  /* FLOATING SEARCH BAR */
+  .search-float{position:absolute;bottom:-34px;left:50%;transform:translateX(-50%);width:min(780px,90%);z-index:20;background:rgba(255,250,244,0.13);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,0.22);border-radius:20px;padding:10px;display:flex;gap:8px;box-shadow:0 20px 60px rgba(0,0,0,0.22),0 0 0 1px rgba(255,255,255,0.06)}
+  .search-input{flex:1;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border-radius:12px;padding:11px 16px;border:1px solid rgba(255,255,255,0.15)}
+  .search-input input{background:transparent;border:none;outline:none;color:#fff;font-family:'Assistant',sans-serif;font-size:14px;width:100%}
+  .search-input input::placeholder{color:rgba(255,255,255,0.4)}
+  .sep{width:1px;background:rgba(255,255,255,0.15);align-self:stretch;margin:6px 0}
+  .search-select{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);border-radius:12px;outline:none;color:#fff;font-family:'Assistant',sans-serif;font-size:14px;cursor:pointer;padding:11px 14px}
+  .search-select option{background:#2D2D2D;color:#fff}
+  .search-btn{background:#D4A853;color:#1C1C1E;font-weight:800;font-family:'Heebo',sans-serif;font-size:15px;padding:11px 28px;border-radius:12px;border:none;cursor:pointer;transition:background .2s;white-space:nowrap;flex-shrink:0}
+  .search-btn:hover{background:#e8c86a}
+
+  /* STATS */
+  .stats{background:#1C1C1E;padding:68px 60px 32px}
+  .stats-grid{max-width:900px;margin:0 auto;display:flex;gap:0;text-align:center;color:#FFF8F0}
+  .stat{flex:1;padding:8px 0;border-left:1px solid rgba(255,255,255,0.08)}
+  .stat:last-child{border-left:none}
+  .stat-val{font-size:2rem;font-weight:900;font-family:'Heebo',sans-serif;color:#D4A853}
+  .stat-lbl{font-size:12px;color:rgba(255,248,240,0.4);margin-top:3px}
+
+  /* PROPERTIES */
+  .section{padding:80px 60px;max-width:1200px;margin:0 auto}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:36px}
+  .section-label{font-size:12px;color:#D4A853;font-weight:700;text-transform:uppercase;letter-spacing:2px;display:block;margin-bottom:8px}
+  h2{font-size:2.2rem;font-weight:900;color:#1C1C1E}
+  .see-all{font-size:14px;color:rgba(28,28,30,0.4);text-decoration:none}
+  .see-all:hover{color:#D4A853}
+  .props-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.07);border:1px solid rgba(0,0,0,0.05);transition:box-shadow .3s,transform .3s}
+  .card:hover{box-shadow:0 12px 40px rgba(0,0,0,0.12);transform:translateY(-4px)}
+  .card-img{height:200px;overflow:hidden;position:relative}
+  .card-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+  .card:hover .card-img img{transform:scale(1.05)}
+  .card-badge{position:absolute;top:12px;right:12px;background:#D4A853;color:#1C1C1E;font-size:11px;font-weight:800;padding:4px 10px;border-radius:50px;font-family:'Heebo',sans-serif}
+  .card-body{padding:20px}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+  .card-title{font-size:16px;font-weight:800;line-height:1.3;color:#1C1C1E}
+  .card-price{font-size:17px;font-weight:900;color:#D4A853;white-space:nowrap;font-family:'Heebo',sans-serif}
+  .card-loc{font-size:13px;color:rgba(28,28,30,0.4);margin-bottom:14px}
+  .card-specs{display:flex;gap:16px;font-size:13px;color:rgba(28,28,30,0.5);border-top:1px solid rgba(0,0,0,0.07);padding-top:14px}
+
+  /* AI */
+  .ai-section{background:#1C1C1E;padding:80px 60px;display:flex;gap:60px;align-items:center}
+  .ai-content{flex:1;color:#FFF8F0}
+  .ai-label{font-size:12px;color:#D4A853;font-weight:700;text-transform:uppercase;letter-spacing:2px;display:block;margin-bottom:12px}
+  .ai-title{font-size:2.4rem;font-weight:900;line-height:1.2;margin-bottom:14px}
+  .ai-title span{color:#D4A853}
+  .ai-sub{font-size:15px;color:rgba(255,248,240,0.5);line-height:1.7;margin-bottom:28px}
+  .ai-features{list-style:none;margin-bottom:32px;display:flex;flex-direction:column;gap:10px}
+  .ai-features li{display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,248,240,0.65)}
+  .ai-btn{background:#D4A853;color:#1C1C1E;font-weight:900;font-family:'Heebo',sans-serif;font-size:15px;padding:14px 32px;border-radius:50px;border:none;cursor:pointer}
+  .chat-mock{width:280px;background:#2D2D2D;border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.6);flex-shrink:0}
+  .chat-header{background:#333;padding:12px 16px;display:flex;align-items:center;gap:10px}
+  .chat-avatar{width:32px;height:32px;border-radius:50%;background:#D4A853;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .chat-name{font-size:13px;font-weight:700;color:#FFF8F0}
+  .chat-status{font-size:11px;color:#4ade80}
+  .chat-body{padding:14px;display:flex;flex-direction:column;gap:10px}
+  .msg-user{background:#3D3D3D;border-radius:14px 14px 4px 14px;padding:9px 13px;font-size:13px;color:#FFF8F0;align-self:flex-end;max-width:85%}
+  .msg-ai{background:rgba(212,168,83,0.15);border:1px solid rgba(212,168,83,0.2);border-radius:14px 14px 14px 4px;padding:9px 13px;font-size:13px;color:#FFF8F0;max-width:85%}
+
+  footer{background:#f5f0e8;border-top:1px solid rgba(0,0,0,0.06);padding:36px 60px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:rgba(28,28,30,0.35)}
+  .footer-logo{font-size:18px;font-weight:900;color:#1C1C1E}
+  .footer-logo span{color:#D4A853}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Mango <span>Realty</span></div>
+  <ul class="nav-links">
+    <li><a href="#">נכסים</a></li>
+    <li><a href="#">שכונות</a></li>
+    <li><a href="#">סוכן AI</a></li>
+  </ul>
+  <button class="nav-cta">📞 צור קשר</button>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <span class="hero-tag">נדל"ן יוקרה באזורי הביקוש</span>
+    <h1>מצא את הנכס<br><em>שחלמת עליו</em></h1>
+    <p class="hero-sub">מנגו ריאלטי — נדל"ן יוקרה עם ליווי AI אישי 24/7</p>
+  </div>
+  <!-- floating search bar -->
+  <div class="search-float">
+    <div class="search-input">
+      <span style="color:#D4A853">📍</span>
+      <input type="text" placeholder="עיר, שכונה או רחוב...">
+    </div>
+    <div class="sep"></div>
+    <select class="search-select"><option>דירה</option><option>בית</option><option>מסחרי</option></select>
+    <div class="sep"></div>
+    <select class="search-select"><option>כל המחירים</option><option>עד 3M</option><option>עד 6M</option><option>6M+</option></select>
+    <button class="search-btn">🔍 חפש</button>
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-val">500+</div><div class="stat-lbl">נכסים פעילים</div></div>
+    <div class="stat"><div class="stat-val">1,200+</div><div class="stat-lbl">לקוחות מרוצים</div></div>
+    <div class="stat"><div class="stat-val">98%</div><div class="stat-lbl">הצלחה בעסקאות</div></div>
+    <div class="stat"><div class="stat-val">12</div><div class="stat-lbl">שנות ניסיון</div></div>
+  </div>
+</div>
+
+<div style="background:#FFF8F0">
+  <div class="section">
+    <div class="section-head">
+      <div><span class="section-label">נכסי בחירה</span><h2>נכסים מובחרים</h2></div>
+      <a href="#" class="see-all">כל הנכסים ←</a>
+    </div>
+    <div class="props-grid">
+      <div class="card">
+        <div class="card-img"><img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=500&q=80" alt=""><span class="card-badge">חדש</span></div>
+        <div class="card-body">
+          <div class="card-top"><span class="card-title">פנטהאוז יוקרה</span><span class="card-price">₪8.2M</span></div>
+          <div class="card-loc">📍 הצפון הישן, תל אביב</div>
+          <div class="card-specs">🛏 6 חדרים &nbsp; 📐 220 מ"ר</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-img"><img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500&q=80" alt=""><span class="card-badge">בלעדי</span></div>
+        <div class="card-body">
+          <div class="card-top"><span class="card-title">דירת 5 חדרים מרווחת</span><span class="card-price">₪5.5M</span></div>
+          <div class="card-loc">📍 נווה עופר, רמת גן</div>
+          <div class="card-specs">🛏 5 חדרים &nbsp; 📐 148 מ"ר</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-img"><img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=500&q=80" alt=""></div>
+        <div class="card-body">
+          <div class="card-top"><span class="card-title">וילה פרטית עם בריכה</span><span class="card-price">₪14.5M</span></div>
+          <div class="card-loc">📍 שכונת השרון, רמת השרון</div>
+          <div class="card-specs">🛏 8 חדרים &nbsp; 📐 450 מ"ר</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ai-section">
+  <div class="ai-content">
+    <span class="ai-label">סוכן AI אישי</span>
+    <h2 class="ai-title">הסוכן שלך<br><span>תמיד פה בשבילך</span></h2>
+    <p class="ai-sub">הסוכן החכם של מנגו ריאלטי מכיר כל נכס וכל שכונה, ומוכן לעזור לך למצוא את הבית המושלם.</p>
+    <ul class="ai-features">
+      <li>⏰ זמין 24/7 — ענה על שאלות בכל שעה</li>
+      <li>✨ מחפש נכסים לפי ההעדפות שלך</li>
+      <li>🛡 מנהל משא ומתן ומנתח שווי נכסים</li>
+    </ul>
+    <button class="ai-btn">שוחח עם הסוכן →</button>
+  </div>
+  <div class="chat-mock">
+    <div class="chat-header">
+      <div class="chat-avatar">🤖</div>
+      <div><div class="chat-name">מנגו AI</div><div class="chat-status">● מחובר</div></div>
+    </div>
+    <div class="chat-body">
+      <div class="msg-user">מחפש דירה בת"א, 4 חד', עד 4M</div>
+      <div class="msg-ai">מצאתי 8 נכסים! הכי טוב: 4 חד' בפלורנטין, 105 מ"ר. 3.85M ₪ 🏠</div>
+      <div class="msg-user">אפשר תמונות?</div>
+      <div class="msg-ai">בטח! הנה 6 תמונות של הנכס... 📸</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">Mango <span>Realty</span></div>
+  <span>© 2025 כל הזכויות שמורות</span>
+</footer>
+</body>
+</html>

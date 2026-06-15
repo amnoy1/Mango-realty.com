@@ -21,8 +21,8 @@
 html {
   direction: rtl;
   font-family: var(--font-assistant);
-  background-color: var(--color-luxury-black);
-  color: var(--color-cream);
+  background-color: var(--color-cream);
+  color: var(--color-luxury-black);
 }
 
 body {
