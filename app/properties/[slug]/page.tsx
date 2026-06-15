@@ -31,6 +31,14 @@ interface PropertyDetail {
   description: string;
   features: string[];
   images: string[];
+  neighborhood_info?: {
+    brief: string;
+    socioeconomic: number;
+    education: string[];
+    culture: string[];
+    shopping: string[];
+    transport: { trains: string[]; buses: string[]; future?: string[] };
+  };
 }
 
 /* ─── Mock data ─── */
@@ -58,6 +66,45 @@ const MOCK_PROPERTIES: PropertyDetail[] = [
       "מזגן מרכזי", "שיש קרארה", "נוף לים", "מטבח מקצועי",
       "חדר הלבשה", "ממ\"ד",
     ],
+    neighborhood_info: {
+      brief: "מרכז העיר כפר סבא הוא ליבה הוותיקה של העיר — שכונה בוגרת ומבוססת שמשלבת אדריכלות מהשנות ה-30 לצד בנייה חדשה. הסמיכות לרחוב ויצמן, לבניין העירייה ולמוקדי המסחר המרכזיים הופכת אותה לנגישה ונוחה לכל צורכי היומיום. השכונה ידועה בקהילה מבוססת, שקטה יחסית ועם תשתיות מפותחות.",
+      socioeconomic: 8,
+      education: [
+        "בי\"ס יסודי אחד העם (500 מ׳)",
+        "בי\"ס יסודי ביאליק (800 מ׳)",
+        "חט\"ב עירוני ב (1.2 ק׳מ)",
+        "גני ילדים עירוניים בשכונה",
+        "מכללת רופין — סמוכה לעיר",
+      ],
+      culture: [
+        "מרכז קהילה ונוער עציון — חוגים, ספורט, תיאטרון",
+        "מרכז קהילתי הראשונים — פעילות לכל הגילאים",
+        "היכל התרבות כפר סבא — הצגות, קונצרטים, אירועים",
+        "ספריית העיר כפר סבא (700 מ׳)",
+        "תנועות נוער: צופים, בני עקיבא, מכבי צעיר",
+      ],
+      shopping: [
+        "קניון G כפר סבא — ZARA, H&M, Nike, Cinema City (פתוח שבת)",
+        "קניון כפר סבא הירוקה — סופר, בנקים, מסעדות",
+        "שוק עירוני מרכזי — ירקות, פירות, מוצרי טרי",
+        "רחוב ויצמן — מסחר ומסעדנות",
+      ],
+      transport: {
+        trains: [
+          "תחנת רכבת כפר סבא-נורדאו (550 מ׳) — לת\"א מרכז 28 דקות",
+          "תחנת כפר סבא-הוד השרון (1.8 ק׳מ)",
+        ],
+        buses: [
+          "קו 149 — כפר סבא ↔ תל אביב רציף",
+          "קו 29, 39 — כפר סבא ↔ רעננה / הרצליה",
+          "קו 561, 567 — כפר סבא ↔ ראש העין / פ\"ת",
+          "קו 222 — שירות מהיר בין-עירוני",
+        ],
+        future: [
+          "מטרו קו M1 — תחנה מתוכננת במרכז כפר סבא (2035)",
+        ],
+      },
+    },
     images: [
       "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&q=85",
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1600&q=85",
@@ -377,6 +424,96 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
                   </button>
                 </div>
               </div>
+
+              {/* ── Neighborhood Info ── */}
+              {property.neighborhood_info && (() => {
+                const ni = property.neighborhood_info;
+                return (
+                  <div className="pt-2">
+                    <h2 className="font-black text-[var(--color-luxury-black)] mb-1">השכונה והאזור</h2>
+                    <p className="text-xs text-[var(--color-luxury-black)]/35 mb-4">{property.neighborhood}, {property.city}</p>
+
+                    {/* Brief */}
+                    <p className="text-sm text-[var(--color-luxury-black)]/60 leading-relaxed mb-6">{ni.brief}</p>
+
+                    {/* Socioeconomic */}
+                    <div className="bg-white rounded-2xl p-4 border border-black/8 mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold text-[var(--color-luxury-black)]/50 uppercase tracking-wider">חתך סוציו-אקונומי (CBS)</span>
+                        <span className="font-black text-lg text-[var(--color-gold)]">{ni.socioeconomic}/10</span>
+                      </div>
+                      <div className="flex gap-1">
+                        {Array.from({ length: 10 }).map((_, i) => (
+                          <div key={i} className="h-2 flex-1 rounded-full"
+                            style={{ background: i < ni.socioeconomic ? "#D4A853" : "rgba(0,0,0,0.08)" }} />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Info grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {[
+                        { label: "חינוך", emoji: "🎓", items: ni.education },
+                        { label: "תרבות וקהילה", emoji: "🎭", items: ni.culture },
+                        { label: "קניות ובילוי", emoji: "🛍️", items: ni.shopping },
+                      ].map(({ label, emoji, items }) => (
+                        <div key={label} className="bg-white rounded-2xl p-4 border border-black/8">
+                          <div className="text-xs font-bold text-[var(--color-luxury-black)]/50 uppercase tracking-wider mb-3">
+                            {emoji} {label}
+                          </div>
+                          <ul className="space-y-1.5">
+                            {items.map((item) => (
+                              <li key={item} className="flex items-start gap-2 text-xs text-[var(--color-luxury-black)]/65">
+                                <span className="text-[var(--color-gold)] mt-0.5 shrink-0">·</span>
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+
+                      {/* Transport */}
+                      <div className="bg-white rounded-2xl p-4 border border-black/8">
+                        <div className="text-xs font-bold text-[var(--color-luxury-black)]/50 uppercase tracking-wider mb-3">
+                          🚆 תחבורה ציבורית
+                        </div>
+                        <div className="space-y-3">
+                          {ni.transport.trains.length > 0 && (
+                            <div>
+                              <div className="text-[10px] font-bold text-[var(--color-luxury-black)]/35 mb-1">רכבת</div>
+                              {ni.transport.trains.map((t) => (
+                                <div key={t} className="flex items-start gap-2 text-xs text-[var(--color-luxury-black)]/65 mb-1">
+                                  <span className="text-[var(--color-gold)] shrink-0">·</span>{t}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {ni.transport.buses.length > 0 && (
+                            <div>
+                              <div className="text-[10px] font-bold text-[var(--color-luxury-black)]/35 mb-1">אוטובוסים</div>
+                              {ni.transport.buses.map((b) => (
+                                <div key={b} className="flex items-start gap-2 text-xs text-[var(--color-luxury-black)]/65 mb-1">
+                                  <span className="text-[var(--color-gold)] shrink-0">·</span>{b}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {ni.transport.future && ni.transport.future.length > 0 && (
+                            <div>
+                              <div className="text-[10px] font-bold text-[var(--color-gold)]/70 mb-1">עתידי</div>
+                              {ni.transport.future.map((f) => (
+                                <div key={f} className="flex items-start gap-2 text-xs text-[var(--color-gold)]/80 mb-1">
+                                  <span className="shrink-0">→</span>{f}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* ── Sidebar ── */}
