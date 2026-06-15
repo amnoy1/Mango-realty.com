@@ -1,8 +1,10 @@
 import { Bed, Square, MapPin, Heart } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export interface Property {
   id: string;
+  slug?: string;
   title: string;
   price: number;
   rooms: number;
@@ -20,8 +22,10 @@ export default function PropertyCard({ property }: { property: Property }) {
     maximumFractionDigits: 0,
   }).format(property.price);
 
+  const href = property.slug ? `/properties/${property.slug}` : "#";
+
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden border border-black/6 shadow-[0_2px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.13)] transition-all duration-300 hover:-translate-y-1">
+    <Link href={href} className="group bg-white rounded-2xl overflow-hidden border border-black/6 shadow-[0_2px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.13)] transition-all duration-300 hover:-translate-y-1 block">
       {/* Image */}
       <div className="relative h-52 overflow-hidden">
         <Image
@@ -69,6 +73,6 @@ export default function PropertyCard({ property }: { property: Property }) {
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

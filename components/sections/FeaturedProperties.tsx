@@ -6,6 +6,7 @@ import PropertyCard, { type Property } from "@/components/ui/PropertyCard";
 const PROPERTIES: Property[] = [
   {
     id: "1",
+    slug: "penthouse-tzafon-yashan",
     title: "פנטהאוז יוקרה מדהים",
     price: 8200000,
     rooms: 6,
@@ -17,6 +18,7 @@ const PROPERTIES: Property[] = [
   },
   {
     id: "2",
+    slug: "dira-5-chadarim-neve-ofer",
     title: "דירת 5 חדרים מרווחת",
     price: 5500000,
     rooms: 5,
@@ -28,6 +30,7 @@ const PROPERTIES: Property[] = [
   },
   {
     id: "3",
+    slug: "gan-eden-givataim",
     title: "גן עדן בגבעתיים",
     price: 3800000,
     rooms: 4,
@@ -38,6 +41,7 @@ const PROPERTIES: Property[] = [
   },
   {
     id: "4",
+    slug: "villa-breicha-ramat-hasharon",
     title: "וילה פרטית עם בריכה",
     price: 14500000,
     rooms: 8,
