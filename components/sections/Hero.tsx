@@ -1,12 +1,11 @@
 "use client";
 import { useState } from "react";
-import { MapPin, Home } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 
-const CITIES = ["תל אביב", "רמת גן", "גבעתיים", "רמת השרון", "הרצליה"];
+const CITIES = ["תל אביב", "רמת גן", "גבעתיים", "רמת השרון"];
 
 export default function Hero() {
   const [city, setCity] = useState("");
-  const [type, setType] = useState("apartment");
 
   return (
     <section className="relative h-screen flex flex-col justify-center overflow-hidden pt-16">
@@ -18,25 +17,28 @@ export default function Hero() {
             "url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&q=85')",
         }}
       />
-      {/* Light overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/52 via-black/16 to-black/04" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
 
-      {/* Content block — right-aligned, pushed lower */}
-      <div className="relative z-10 w-full mt-16 pr-8 md:pr-20 pl-[30%] md:pl-[42%]">
+      {/* Content — right side, pushed slightly below center */}
+      <div
+        className="relative z-10 mt-12"
+        style={{ paddingRight: "clamp(2rem, 8vw, 6rem)", paddingLeft: "clamp(2rem, 38vw, 52rem)" }}
+      >
         {/* Badge */}
         <span
-          className="inline-block mb-5 px-4 py-1.5 rounded-full border border-[var(--color-gold)]/45 bg-[var(--color-gold)]/14 text-[#e8c86a] text-sm backdrop-blur-sm"
+          className="inline-block mb-4 px-3.5 py-1 rounded-full border border-[#D4A853]/45 bg-[#D4A853]/12 text-[#e8c86a] text-[13px] backdrop-blur-sm"
           style={{ fontFamily: "var(--font-playfair)", fontStyle: "italic" }}
         >
           נדל&quot;ן יוקרה באזורי הביקוש
         </span>
 
-        {/* Headline — 10% smaller than before */}
+        {/* Headline */}
         <h1
-          className="font-black text-white leading-[1.1] mb-4"
+          className="font-black text-white mb-3"
           style={{
-            fontSize: "clamp(2.4rem, 5.4vw, 4.05rem)",
-            textShadow: "0 2px 24px rgba(0,0,0,0.35)",
+            fontSize: "clamp(2rem, 4.5vw, 3.6rem)",
+            lineHeight: 1.12,
+            textShadow: "0 2px 20px rgba(0,0,0,0.4)",
           }}
         >
           מצא את הנכס<br />
@@ -44,62 +46,46 @@ export default function Hero() {
         </h1>
 
         {/* Subtitle */}
-        <p className="text-base text-white/62 mb-8 max-w-sm">
+        <p className="mb-7 text-white/60" style={{ fontSize: "clamp(0.85rem, 1.2vw, 1rem)" }}>
           מנגו ריאלטי — נדל&quot;ן יוקרה עם ליווי AI אישי 24/7
         </p>
 
-        {/* Search bar — ~half width */}
+        {/* Search bar — input + button only */}
         <div
-          className="w-full max-w-sm rounded-2xl p-2.5 flex flex-col sm:flex-row gap-2.5"
+          className="flex items-center gap-2 rounded-[18px] p-2"
           style={{
+            width: "clamp(260px, 30vw, 420px)",
             background: "rgba(255,250,244,0.13)",
             backdropFilter: "blur(28px)",
             WebkitBackdropFilter: "blur(28px)",
             border: "1px solid rgba(255,255,255,0.22)",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.06)",
+            boxShadow: "0 16px 48px rgba(0,0,0,0.2)",
           }}
         >
           <div
-            className="flex-1 flex items-center gap-2.5 rounded-xl px-4 py-2.5"
-            style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.15)" }}
+            className="flex-1 flex items-center gap-2 rounded-[12px] px-3 py-2"
+            style={{ background: "rgba(255,255,255,0.11)", border: "1px solid rgba(255,255,255,0.14)" }}
           >
-            <MapPin size={15} style={{ color: "#D4A853", flexShrink: 0 }} />
+            <MapPin size={14} style={{ color: "#D4A853", flexShrink: 0 }} />
             <input
               type="text"
-              placeholder="עיר, שכונה או רחוב..."
+              placeholder="עיר, שכונה..."
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="bg-transparent text-white placeholder-white/38 outline-none w-full text-sm"
+              className="bg-transparent text-white placeholder-white/35 outline-none w-full text-sm"
             />
           </div>
-
-          <div
-            className="flex items-center gap-2 rounded-xl px-3 py-2.5"
-            style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.15)" }}
-          >
-            <Home size={14} style={{ color: "#D4A853", flexShrink: 0 }} />
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="bg-transparent text-white outline-none text-sm cursor-pointer appearance-none"
-            >
-              <option value="apartment" className="bg-[#2D2D2D]">דירה</option>
-              <option value="house" className="bg-[#2D2D2D]">בית פרטי</option>
-              <option value="commercial" className="bg-[#2D2D2D]">מסחרי</option>
-              <option value="land" className="bg-[#2D2D2D]">קרקע</option>
-            </select>
-          </div>
-
           <button
-            className="rounded-xl px-6 py-2.5 font-black text-sm transition-all whitespace-nowrap hover:brightness-110"
+            className="flex items-center gap-1.5 rounded-[12px] px-4 py-2 font-black text-sm whitespace-nowrap hover:brightness-110 transition-all shrink-0"
             style={{ background: "#D4A853", color: "#1C1C1E", fontFamily: "var(--font-heebo)" }}
           >
-            🔍 חפש
+            <Search size={13} />
+            חפש
           </button>
         </div>
 
         {/* Quick city links */}
-        <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/35">
+        <div className="mt-3.5 flex flex-wrap gap-x-3 gap-y-1 items-center text-[11px] text-white/35">
           <span>פופולרי:</span>
           {CITIES.map((c) => (
             <button key={c} onClick={() => setCity(c)}
