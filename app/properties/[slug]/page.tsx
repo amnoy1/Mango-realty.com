@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, use } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -129,8 +129,9 @@ function formatPrice(n: number) {
   }).format(n);
 }
 
-export default function PropertyPage({ params }: { params: { slug: string } }) {
-  const property = MOCK_PROPERTIES.find((p) => p.slug === params.slug)
+export default function PropertyPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
+  const property = MOCK_PROPERTIES.find((p) => p.slug === slug)
     ?? MOCK_PROPERTIES[0]; // fallback for demo
 
   const [activeImg, setActiveImg] = useState(0);
