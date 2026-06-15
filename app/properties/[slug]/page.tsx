@@ -26,8 +26,6 @@ interface PropertyDetail {
   city: string;
   neighborhood: string;
   street: string;
-  lat?: number;
-  lng?: number;
   description: string;
   features: string[];
   images: string[];
@@ -49,8 +47,6 @@ const MOCK_PROPERTIES: PropertyDetail[] = [
     city: "כפר סבא",
     neighborhood: "מרכז העיר",
     street: "רפפורט 3",
-    lat: 32.1924,
-    lng: 34.8922,
     description:
       "פנטהאוז ייחודי בקומה האחרונה עם נוף פנורמי לים ולעיר. הנכס כולל גג פרטי של 80 מ\"ר, מטבח מקצועי מצויד, חדר ראשי מפואר עם חדר הלבשה ואמבטיה סוויטה. גימורים ברמה הגבוהה ביותר — שיש קרארה, חלונות אלומיניום, מיזוג מרכזי ומעלית פרטית.",
     features: [
@@ -172,13 +168,8 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
   const next = () => setActiveImg((i) => (i + 1) % property.images.length);
 
   const address = `${property.street}, ${property.city}, Israel`;
-  const hasCoords = property.lat && property.lng;
-  const mapEmbedSrc = hasCoords
-    ? `https://maps.google.com/maps?q=${property.lat},${property.lng}&z=17&ie=UTF8&iwloc=&output=embed`
-    : `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=17&ie=UTF8&iwloc=&output=embed`;
-  const svExternalUrl = hasCoords
-    ? `https://www.google.com/maps/@${property.lat},${property.lng},3a,75y,90t/data=!3m1!1e1`
-    : `https://www.google.com/maps/place/${encodeURIComponent(address)}`;
+  const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=17&ie=UTF8&iwloc=&output=embed`;
+  const svExternalUrl = `https://www.google.com/maps/place/${encodeURIComponent(address)}`;
 
   return (
     <>
