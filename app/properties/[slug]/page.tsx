@@ -166,16 +166,20 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
 
   const [activeImg, setActiveImg] = useState(0);
   const [saved, setSaved] = useState(false);
-  const [modal, setModal] = useState<"map" | "sv" | null>(null);
+  const [modal, setModal] = useState<"map" | null>(null);
 
   const prev = () => setActiveImg((i) => (i - 1 + property.images.length) % property.images.length);
   const next = () => setActiveImg((i) => (i + 1) % property.images.length);
 
   const address = `${property.street}, ${property.city}, Israel`;
   const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=17&ie=UTF8&iwloc=&output=embed`;
-  const svEmbedSrc = property.lat && property.lng
-    ? `https://maps.google.com/maps?q=${encodeURIComponent(address)}&layer=c&cbll=${property.lat},${property.lng}&cbp=12,0,0,0,0&output=embed`
-    : null;
+
+  const openStreetView = () => {
+    const url = property.lat && property.lng
+      ? `https://www.google.com/maps/@${property.lat},${property.lng},3a,75y,90t/data=!3m1!1e1`
+      : `https://www.google.com/maps?q=${encodeURIComponent(address)}&layer=c`;
+    window.open(url, "streetview", "width=1100,height=720,left=100,top=80");
+  };
 
   return (
     <>
@@ -184,9 +188,6 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
       {/* ── Modals ── */}
       {modal === "map" && (
         <MapModal title={`מפה — ${address}`} src={mapEmbedSrc} onClose={() => setModal(null)} />
-      )}
-      {modal === "sv" && svEmbedSrc && (
-        <MapModal title={`Street View — ${address}`} src={svEmbedSrc} onClose={() => setModal(null)} />
       )}
 
       <main className="bg-[var(--color-cream)] min-h-screen pt-16">
@@ -260,12 +261,10 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
                 className="flex items-center gap-1.5 bg-white/15 hover:bg-white/28 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-lg transition border border-white/20">
                 <MapPin size={12} /> מפה
               </button>
-              {svEmbedSrc && (
-                <button onClick={() => setModal("sv")}
-                  className="flex items-center gap-1.5 bg-white/15 hover:bg-white/28 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-lg transition border border-white/20">
-                  <Navigation size={12} /> Street View
-                </button>
-              )}
+              <button onClick={openStreetView}
+                className="flex items-center gap-1.5 bg-white/15 hover:bg-white/28 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-lg transition border border-white/20">
+                <Navigation size={12} /> Street View
+              </button>
             </div>
           </div>
         </div>
@@ -372,12 +371,10 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
                     className="flex items-center gap-2 border border-black/12 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--color-luxury-black)]/65 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-all">
                     <MapPin size={14} /> Google Maps
                   </button>
-                  {svEmbedSrc && (
-                    <button onClick={() => setModal("sv")}
-                      className="flex items-center gap-2 border border-black/12 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--color-luxury-black)]/65 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-all">
-                      <Navigation size={14} /> Street View
-                    </button>
-                  )}
+                  <button onClick={openStreetView}
+                    className="flex items-center gap-2 border border-black/12 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--color-luxury-black)]/65 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-all">
+                    <Navigation size={14} /> Street View
+                  </button>
                 </div>
               </div>
             </div>
