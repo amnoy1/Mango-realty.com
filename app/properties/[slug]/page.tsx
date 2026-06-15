@@ -185,8 +185,9 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
 
       <main className="bg-[var(--color-cream)] min-h-screen pt-16">
 
-        {/* ── Gallery — full viewport width ── */}
-        <div className="relative w-full bg-black" style={{ height: "clamp(300px, 55vw, 640px)" }}>
+        {/* ── Gallery — constrained to page container ── */}
+        <div className="max-w-7xl mx-auto px-4 pt-8">
+        <div className="relative w-full bg-black rounded-2xl overflow-hidden" style={{ height: "clamp(300px, 48vw, 580px)" }}>
           <Image
             src={property.images[activeImg]}
             alt={property.title}
@@ -260,16 +261,6 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
             </div>
           </div>
         </div>
-
-        {/* ── Embedded mini-map below gallery ── */}
-        <div className="w-full border-b border-black/8" style={{ height: 220 }}>
-          <iframe
-            src={mapEmbedSrc}
-            className="w-full h-full border-0"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            title="מפת נכס"
-          />
         </div>
 
         {/* ── Content ── */}
@@ -339,12 +330,22 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
                 </div>
               </div>
 
-              {/* Location section */}
+              {/* Location section + embedded map */}
               <div>
                 <h2 className="font-black text-[var(--color-luxury-black)] mb-3">מיקום</h2>
                 <p className="text-sm text-[var(--color-luxury-black)]/50 mb-3">
                   {property.street}, {property.neighborhood}, {property.city}
                 </p>
+                {/* Mini-map */}
+                <div className="rounded-2xl overflow-hidden border border-black/8 mb-3" style={{ height: 220 }}>
+                  <iframe
+                    src={mapEmbedSrc}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="מפת נכס"
+                  />
+                </div>
                 <div className="flex gap-3">
                   <button onClick={() => setModal("map")}
                     className="flex items-center gap-2 border border-black/12 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--color-luxury-black)]/65 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-all">
