@@ -1,4 +1,5 @@
 import { Phone, Mail, MapPin } from "lucide-react";
+import Image from "next/image";
 
 const NAV = ["נכסים למכירה", "נכסים להשכרה", "שכונות", "סוכן AI", "אודות"];
 const CITIES = ["תל אביב", "רמת גן", "גבעתיים", "רמת השרון", "הרצליה"];
@@ -10,9 +11,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="text-2xl font-black text-[var(--color-luxury-black)] mb-1">
-              Mango <span className="text-[var(--color-gold)]">Realty</span>
-            </div>
+            <Image src="/logo.png" alt="Mango Real Estate" width={56} height={56} className="rounded-xl mb-3" />
             <p className="text-[var(--color-luxury-black)]/40 text-sm leading-relaxed max-w-xs mb-6 mt-3">
               משרד תיווך נדל&quot;ן מוביל המתמחה באזורי הביקוש. עם סוכן AI חכם, מצא את הנכס המושלם שלך.
             </p>

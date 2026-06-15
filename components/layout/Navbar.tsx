@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Menu, X, Phone } from "lucide-react";
+import Image from "next/image";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -21,8 +22,8 @@ export default function Navbar() {
       } border-b border-black/8`}
     >
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <a href="/" className="font-heebo font-black text-xl text-[var(--color-luxury-black)]">
-          Mango <span className="text-[var(--color-gold)]">Realty</span>
+        <a href="/" className="flex items-center">
+          <Image src="/logo.png" alt="Mango Real Estate" width={44} height={44} className="rounded-lg" priority />
         </a>
 
         <div className="hidden md:flex items-center gap-8 text-sm text-[var(--color-luxury-black)]/55">
