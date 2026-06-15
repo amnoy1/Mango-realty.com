@@ -24,14 +24,6 @@ export default function Hero() {
         className="relative z-10 mt-12"
         style={{ paddingRight: "clamp(2rem, 8vw, 6rem)", paddingLeft: "clamp(2rem, 38vw, 52rem)" }}
       >
-        {/* Badge */}
-        <span
-          className="inline-block mb-4 px-3.5 py-1 rounded-full border border-[#D4A853]/45 bg-[#D4A853]/12 text-[#e8c86a] text-[13px] backdrop-blur-sm"
-          style={{ fontFamily: "var(--font-playfair)", fontStyle: "italic" }}
-        >
-          נדל&quot;ן יוקרה באזורי הביקוש
-        </span>
-
         {/* Headline */}
         <h1
           className="font-black text-white mb-3"
