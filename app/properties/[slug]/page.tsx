@@ -55,7 +55,7 @@ const MOCK_PROPERTIES: PropertyDetail[] = [
     floor: 12,
     total_floors: 12,
     city: "כפר סבא",
-    neighborhood: "מרכז העיר",
+    neighborhood: "השכונה הירוקה",
     street: "רפפורט 3",
     lat: 32.1924,
     lng: 34.8922,
@@ -67,38 +67,36 @@ const MOCK_PROPERTIES: PropertyDetail[] = [
       "חדר הלבשה", "ממ\"ד",
     ],
     neighborhood_info: {
-      brief: "מרכז העיר כפר סבא הוא ליבה הוותיקה של העיר — שכונה בוגרת ומבוססת שמשלבת אדריכלות מהשנות ה-30 לצד בנייה חדשה. הסמיכות לרחוב ויצמן, לבניין העירייה ולמוקדי המסחר המרכזיים הופכת אותה לנגישה ונוחה לכל צורכי היומיום. השכונה ידועה בקהילה מבוססת, שקטה יחסית ועם תשתיות מפותחות.",
+      brief: "השכונה הירוקה היא שכונה חדשה ומתוכננת בדרום-מערב כפר סבא — שכונת יוקרה שתוכננה מראש על פי עקרונות בנייה ירוקה עם פארקים, שבילי הולכי רגל וגשרים ייעודיים לילדים. כ-12,000 תושבים מתגוררים בה, ברובם משפחות צעירות ומשפרי דיור. הסמיכות לקניון כפר סבא הירוקה, לBI סנטר ולמחלף כפר סבא (כביש 4) הופכת אותה לנגישה וקלה לחיים.",
       socioeconomic: 8,
       education: [
-        "בי\"ס יסודי אחד העם (500 מ׳)",
-        "בי\"ס יסודי ביאליק (800 מ׳)",
-        "חט\"ב עירוני ב (1.2 ק׳מ)",
-        "גני ילדים עירוניים בשכונה",
-        "מכללת רופין — סמוכה לעיר",
+        "בי\"ס יסודי הירוק ע\"ש שמעון פרס — בשכונה",
+        "בי\"ס יסודי רחל המשוררת — בשכונה",
+        "בי\"ס יסודי שי עגנון, לאה גולדברג, אורנה פורת — סמוך",
+        "גני ילדים עירוניים מרובים בשכונה",
+        "שבט צופים — פעיל בשכונה",
       ],
       culture: [
-        "מרכז קהילה ונוער עציון — חוגים, ספורט, תיאטרון",
-        "מרכז קהילתי הראשונים — פעילות לכל הגילאים",
-        "היכל התרבות כפר סבא — הצגות, קונצרטים, אירועים",
-        "ספריית העיר כפר סבא (700 מ׳)",
-        "תנועות נוער: צופים, בני עקיבא, מכבי צעיר",
+        "פארק גדול ומטופח עם גינות משחקים",
+        "מגרשי ספורט ומתקני כושר חיצוניים",
+        "קאנטרי קלאב בפיתוח — בקרבת השכונה",
+        "היכל התרבות כפר סבא — 10 דקות נסיעה",
+        "חוגים ופנאי במרכזי הקהילה העירוניים",
       ],
       shopping: [
-        "קניון G כפר סבא — ZARA, H&M, Nike, Cinema City (פתוח שבת)",
-        "קניון כפר סבא הירוקה — סופר, בנקים, מסעדות",
-        "שוק עירוני מרכזי — ירקות, פירות, מוצרי טרי",
-        "רחוב ויצמן — מסחר ומסעדנות",
+        "קניון כפר סבא הירוקה — מכולת, בנקים, מסעדות, בשכונה",
+        "BI סנטר — מרכז מסחרי שכונתי",
+        "קניון G כפר סבא — ZARA, H&M, Cinema City (5 דקות)",
+        "רחוב ויצמן — מסחר, בתי קפה ומסעדות",
       ],
       transport: {
         trains: [
-          "תחנת רכבת כפר סבא-נורדאו (550 מ׳) — לת\"א מרכז 28 דקות",
-          "תחנת כפר סבא-הוד השרון (1.8 ק׳מ)",
+          "תחנת רכבת כפר סבא-נורדאו — 10 דקות נסיעה",
+          "לתל אביב מרכז: 28 דקות ברכבת",
         ],
         buses: [
-          "קו 149 — כפר סבא ↔ תל אביב רציף",
-          "קו 29, 39 — כפר סבא ↔ רעננה / הרצליה",
-          "קו 561, 567 — כפר סבא ↔ ראש העין / פ\"ת",
-          "קו 222 — שירות מהיר בין-עירוני",
+          "קווי אוטובוס ממחלף כפר סבא לת\"א, ירושלים, צפון",
+          "גישה ישירה לכביש 4 ← כביש 5 ← כביש 6",
         ],
         future: [
           "מטרו קו M1 — תחנה מתוכננת במרכז כפר סבא (2035)",
@@ -428,88 +426,50 @@ export default function PropertyPage({ params }: { params: Promise<{ slug: strin
               {/* ── Neighborhood Info ── */}
               {property.neighborhood_info && (() => {
                 const ni = property.neighborhood_info;
+                const sections = [
+                  { label: "חינוך", items: ni.education },
+                  { label: "תרבות וקהילה", items: ni.culture },
+                  { label: "קניות ובילוי", items: ni.shopping },
+                  { label: "תחבורה", items: [
+                    ...ni.transport.trains,
+                    ...ni.transport.buses,
+                    ...(ni.transport.future ?? []),
+                  ]},
+                ];
                 return (
-                  <div className="pt-2">
-                    <h2 className="font-black text-[var(--color-luxury-black)] mb-1">השכונה והאזור</h2>
-                    <p className="text-xs text-[var(--color-luxury-black)]/35 mb-4">{property.neighborhood}, {property.city}</p>
+                  <div>
+                    <h2 className="font-black text-[var(--color-luxury-black)] mb-3">השכונה והאזור</h2>
 
-                    {/* Brief */}
-                    <p className="text-sm text-[var(--color-luxury-black)]/60 leading-relaxed mb-6">{ni.brief}</p>
-
-                    {/* Socioeconomic */}
-                    <div className="bg-white rounded-2xl p-4 border border-black/8 mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-[var(--color-luxury-black)]/50 uppercase tracking-wider">חתך סוציו-אקונומי (CBS)</span>
-                        <span className="font-black text-lg text-[var(--color-gold)]">{ni.socioeconomic}/10</span>
-                      </div>
-                      <div className="flex gap-1">
+                    {/* Socioeconomic bar */}
+                    <div className="flex items-center gap-4 mb-4">
+                      <span className="text-xs text-[var(--color-luxury-black)]/45 shrink-0">חתך סוציו-אקונומי</span>
+                      <div className="flex gap-0.5 flex-1">
                         {Array.from({ length: 10 }).map((_, i) => (
-                          <div key={i} className="h-2 flex-1 rounded-full"
+                          <div key={i} className="h-1.5 flex-1 rounded-full"
                             style={{ background: i < ni.socioeconomic ? "#D4A853" : "rgba(0,0,0,0.08)" }} />
                         ))}
                       </div>
+                      <span className="font-black text-sm text-[var(--color-gold)] shrink-0">{ni.socioeconomic}/10</span>
                     </div>
 
-                    {/* Info grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {[
-                        { label: "חינוך", emoji: "🎓", items: ni.education },
-                        { label: "תרבות וקהילה", emoji: "🎭", items: ni.culture },
-                        { label: "קניות ובילוי", emoji: "🛍️", items: ni.shopping },
-                      ].map(({ label, emoji, items }) => (
-                        <div key={label} className="bg-white rounded-2xl p-4 border border-black/8">
-                          <div className="text-xs font-bold text-[var(--color-luxury-black)]/50 uppercase tracking-wider mb-3">
-                            {emoji} {label}
-                          </div>
-                          <ul className="space-y-1.5">
+                    {/* Brief */}
+                    <p className="text-sm text-[var(--color-luxury-black)]/60 leading-relaxed mb-5">{ni.brief}</p>
+
+                    {/* 4 sections — same grid style as features */}
+                    <div className="space-y-4">
+                      {sections.map(({ label, items }) => (
+                        <div key={label}>
+                          <h3 className="text-xs font-bold text-[var(--color-luxury-black)]/40 uppercase tracking-widest mb-2">{label}</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-4">
                             {items.map((item) => (
-                              <li key={item} className="flex items-start gap-2 text-xs text-[var(--color-luxury-black)]/65">
-                                <span className="text-[var(--color-gold)] mt-0.5 shrink-0">·</span>
+                              <div key={item} className="flex items-start gap-2 text-sm text-[var(--color-luxury-black)]/65">
+                                <Check size={13} className="text-[var(--color-gold)] shrink-0 mt-0.5" />
                                 {item}
-                              </li>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                       ))}
-
-                      {/* Transport */}
-                      <div className="bg-white rounded-2xl p-4 border border-black/8">
-                        <div className="text-xs font-bold text-[var(--color-luxury-black)]/50 uppercase tracking-wider mb-3">
-                          🚆 תחבורה ציבורית
-                        </div>
-                        <div className="space-y-3">
-                          {ni.transport.trains.length > 0 && (
-                            <div>
-                              <div className="text-[10px] font-bold text-[var(--color-luxury-black)]/35 mb-1">רכבת</div>
-                              {ni.transport.trains.map((t) => (
-                                <div key={t} className="flex items-start gap-2 text-xs text-[var(--color-luxury-black)]/65 mb-1">
-                                  <span className="text-[var(--color-gold)] shrink-0">·</span>{t}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {ni.transport.buses.length > 0 && (
-                            <div>
-                              <div className="text-[10px] font-bold text-[var(--color-luxury-black)]/35 mb-1">אוטובוסים</div>
-                              {ni.transport.buses.map((b) => (
-                                <div key={b} className="flex items-start gap-2 text-xs text-[var(--color-luxury-black)]/65 mb-1">
-                                  <span className="text-[var(--color-gold)] shrink-0">·</span>{b}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {ni.transport.future && ni.transport.future.length > 0 && (
-                            <div>
-                              <div className="text-[10px] font-bold text-[var(--color-gold)]/70 mb-1">עתידי</div>
-                              {ni.transport.future.map((f) => (
-                                <div key={f} className="flex items-start gap-2 text-xs text-[var(--color-gold)]/80 mb-1">
-                                  <span className="shrink-0">→</span>{f}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
                     </div>
                   </div>
                 );
