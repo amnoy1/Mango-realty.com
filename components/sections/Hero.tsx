@@ -9,7 +9,7 @@ export default function Hero() {
   const [type, setType] = useState("apartment");
 
   return (
-    <section className="relative h-screen flex flex-col items-center justify-center overflow-visible pt-16">
+    <section className="relative h-screen flex flex-col justify-center overflow-hidden pt-16">
       {/* Background photo */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -21,30 +21,33 @@ export default function Hero() {
       {/* Light overlay — image stays alive */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/52 via-black/16 to-black/04" />
 
-      {/* Text */}
-      <div className="relative z-10 text-center px-4 mb-24">
+      {/* Content — RTL right-aligned, vertically centered */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-8 md:px-16">
+        {/* Badge */}
         <span
           className="inline-block mb-5 px-4 py-1.5 rounded-full border border-[var(--color-gold)]/45 bg-[var(--color-gold)]/14 text-[#e8c86a] text-sm backdrop-blur-sm"
           style={{ fontFamily: "var(--font-playfair)", fontStyle: "italic" }}
         >
           נדל&quot;ן יוקרה באזורי הביקוש
         </span>
+
+        {/* Headline */}
         <h1
-          className="text-5xl md:text-7xl font-black text-white leading-[1.1] mb-4"
+          className="text-5xl md:text-7xl font-black text-white leading-[1.1] mb-4 max-w-2xl"
           style={{ textShadow: "0 2px 24px rgba(0,0,0,0.35)" }}
         >
           מצא את הנכס<br />
           <span style={{ color: "#e8c86a" }}>שחלמת עליו</span>
         </h1>
-        <p className="text-lg text-white/62 max-w-lg mx-auto">
+
+        {/* Subtitle */}
+        <p className="text-lg text-white/62 mb-10 max-w-md">
           מנגו ריאלטי — נדל&quot;ן יוקרה עם ליווי AI אישי 24/7
         </p>
-      </div>
 
-      {/* Floating search bar — half in hero, half in stats */}
-      <div className="absolute bottom-0 translate-y-1/2 z-20 w-full px-4 flex justify-center">
+        {/* Search bar — directly below subtitle */}
         <div
-          className="w-full max-w-3xl rounded-2xl p-2.5 flex flex-col sm:flex-row gap-2.5"
+          className="w-full max-w-2xl rounded-2xl p-2.5 flex flex-col sm:flex-row gap-2.5"
           style={{
             background: "rgba(255,250,244,0.13)",
             backdropFilter: "blur(28px)",
@@ -85,15 +88,22 @@ export default function Hero() {
           </div>
 
           <button
-            className="rounded-xl px-8 py-3 font-black text-sm transition-all whitespace-nowrap hover:brightness-110"
-            style={{
-              background: "#D4A853",
-              color: "#1C1C1E",
-              fontFamily: "var(--font-heebo)",
-            }}
+            className="rounded-xl px-7 py-3 font-black text-sm transition-all whitespace-nowrap hover:brightness-110"
+            style={{ background: "#D4A853", color: "#1C1C1E", fontFamily: "var(--font-heebo)" }}
           >
             🔍 חפש נכסים
           </button>
+        </div>
+
+        {/* Quick city links */}
+        <div className="mt-5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/35">
+          <span>פופולרי:</span>
+          {CITIES.map((c) => (
+            <button key={c} onClick={() => setCity(c)}
+              className="text-white/55 hover:text-[#e8c86a] transition-colors">
+              {c}
+            </button>
+          ))}
         </div>
       </div>
     </section>
