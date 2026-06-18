@@ -36,10 +36,13 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 ### Public Site
 - Homepage: Navbar, Hero, Stats, FeaturedProperties, AIAgentSection, Neighborhoods, HowItWorks, Footer
 - `/properties/[slug]` — דף נכס: gallery slider, Google Maps embed, Street View popup, agent card
-- `FeaturedProperties` — server component, מושך נכסים אמיתיים מ-Supabase
+- `/properties` — דף רשימת נכסים (קיים, ריק עד שיעלו נכסים)
+- `FeaturedProperties` — server component, מושך נכסים אמיתיים מ-Supabase (ללא mock data)
 
-### Admin Panel (`/admin`)
+### Admin Panel (`/admin`) — ✅ מוכן לשימוש
 - Google OAuth — רק `amir@mango-realty.com` נכנס
+- Middleware (`middleware.ts`) — מגן על `/admin/*`, מפנה ל-login אם לא מחובר
+- `AdminLayout` — מציג chrome רק למשתמש מאומת, אחרת מעביר children (middleware עושה redirect)
 - `/admin/login` — Google Sign-In page
 - `/admin/properties` — רשימת נכסים + עריכה + מחיקה
 - `/admin/properties/new` — יצירת נכס חדש
@@ -54,8 +57,11 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 
 ### SiteManager (`scripts/site-manager/`)
 - סוכן Node.js: סורק תיקיות → Claude מחלץ → WhatsApp לאישור → Supabase
-- `.env` נדרש: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, Twilio vars
-- הרצה: `node index.js` | בדיקה ללא WhatsApp: `SKIP_WHATSAPP=true node index.js`
+- Watch folder: `C:\תיקייה ציבורית\תיקייה ציבורית חדשה`
+- Selected photos folder: מחפש `נבחרו` / `תמונות נבחרות` / `נבחרות` / `selected`
+- `.env` נדרש: `WATCH_FOLDER`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`
+- הרצה: `node index.js` | בדיקה ללא WhatsApp: `SKIP_WHATSAPP=true` ב-.env
+- **npm install בוצע** — חבילות מותקנות
 
 ## DB Schema (עיקרי)
 ```sql
@@ -68,16 +74,35 @@ properties: id, slug, title, price, price_type, property_type, status,
 ```
 RLS: public read על `status = 'active'`, service_role לכל השאר.
 
-## ⚠️ פעולה ידנית שטרם בוצעה
-**Google OAuth ב-Supabase Dashboard** (נדרש לפני שהAdmin עובד):
-1. Supabase → Authentication → Providers → Google → Enable + Client ID/Secret
-2. Google Cloud Console → Authorized redirect URI: `https://sgrphwunigmsdtbmilgd.supabase.co/auth/v1/callback`
-3. Supabase → URL Configuration → Site URL: `https://mango-realty-com.vercel.app`
-4. Redirect URLs: `https://mango-realty-com.vercel.app/auth/callback`
+## ✅ פעולות ידניות שבוצעו (2026-06-18)
+1. ✅ Google OAuth ב-Supabase → Providers → Google → Client ID + Secret (Google Cloud Console)
+2. ✅ Authorized redirect URI: `https://sgrphwunigmsdtbmilgd.supabase.co/auth/v1/callback`
+3. ✅ Supabase URL Config → Site URL: `https://mango-realty-com.vercel.app`
+4. ✅ Redirect URLs: `https://mango-realty-com.vercel.app/auth/callback`
+5. ✅ Supabase SQL — `handle_new_user` trigger הורץ בהצלחה (auto-creates user_profile on Google signup)
+6. ✅ Fix: ERR_TOO_MANY_REDIRECTS נפתר (AdminLayout לא עושה redirect, רק middleware)
+
+## ⏭️ הצעד הבא — להמשיך מכאן
+**1. בדוק כניסת Admin (ראשונה!):**
+   - כנס ל: `https://mango-realty-com.vercel.app/admin/login`
+   - לחץ "כניסה עם Google" → בחר `amir@mango-realty.com`
+   - אמור להגיע ל-`/admin/properties` (ריק בינתיים)
+
+**2. צור Supabase Storage bucket:**
+   - Supabase → Storage → New bucket → שם: `property-images` → Public: ✅
+
+**3. מלא .env של הסוכן** (`scripts/site-manager/.env`):
+   - העתק `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` מ-Vercel
+
+**4. הרץ את הסוכן לראשונה:**
+   ```
+   cd scripts/site-manager
+   node index.js
+   ```
 
 ## Phase הבא (Phase 2)
-1. `/properties` — דף חיפוש עם פילטרים
-2. AI Search — חיפוש בשפה טבעית + pgvector
+1. AI Search — חיפוש בשפה טבעית + pgvector
+2. `/properties` — פילטרים (עיר, מחיר, חדרים)
 3. Google Auth לקונים
 4. WhatsApp Agent — Claude + Twilio
 5. SEO — JSON-LD schema, sitemap
