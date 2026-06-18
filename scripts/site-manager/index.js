@@ -174,6 +174,10 @@ ${textContent}
     "saferoom": false,
     "garden": false
   },
+  "lat": null,
+  "lng": null,
+  "meta_title": "כותרת SEO קצרה עד 60 תווים",
+  "meta_description": "תיאור SEO עד 160 תווים",
   "whatsapp_summary": "סיכום קצר 2-3 שורות לאישור ב-WhatsApp"
 }
 
@@ -186,7 +190,7 @@ ${textContent}
 - אם פרט לא ידוע → null`;
 
   const response = await claude.messages.create({
-    model: 'claude-opus-4-6',
+    model: 'claude-sonnet-4-6',
     max_tokens: 1024,
     messages: [{ role: 'user', content: prompt }],
   });
@@ -319,9 +323,13 @@ async function insertProperty(data, imageUrls) {
     city:            data.city         || null,
     neighborhood:    data.neighborhood || null,
     street:          data.street       || null,
-    features:        data.features     || {},
-    images:          imageUrls,
-    published_at:    new Date().toISOString(),
+    features:         data.features          || {},
+    images:           imageUrls,
+    lat:              data.lat               || null,
+    lng:              data.lng               || null,
+    meta_title:       data.meta_title        || null,
+    meta_description: data.meta_description  || null,
+    published_at:     new Date().toISOString(),
   };
 
   const { data: inserted, error } = await supabase

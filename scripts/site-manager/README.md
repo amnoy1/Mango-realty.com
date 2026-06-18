@@ -52,8 +52,8 @@ copy .env.example .env
 | `TWILIO_AUTH_TOKEN` | מ-console.twilio.com |
 | `TWILIO_WHATSAPP_FROM` | מספר WhatsApp של Twilio (עם קידומת `whatsapp:`) |
 | `ADMIN_WHATSAPP` | מספר הטלפון שלך (עם קידומת `whatsapp:`) |
-| `SUPABASE_URL` | מ-Supabase Project Settings |
-| `SUPABASE_SERVICE_KEY` | `service_role` key מ-Supabase (לא `anon`) |
+| `NEXT_PUBLIC_SUPABASE_URL` | מ-Supabase Project Settings |
+| `SUPABASE_SERVICE_ROLE_KEY` | `service_role` key מ-Supabase (לא `anon`) |
 
 ### 4. בדיקה ידנית
 
