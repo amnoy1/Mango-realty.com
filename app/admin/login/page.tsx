@@ -31,8 +31,8 @@ function LoginContent() {
         <p className="text-gray-500 text-sm mb-8">פאנל ניהול פנימי</p>
 
         {error && (
-          <p className="mb-6 text-sm text-red-600 bg-red-50 rounded-lg px-4 py-2">
-            שגיאת אימות — נסה שוב
+          <p className="mb-6 text-sm text-red-600 bg-red-50 rounded-lg px-4 py-2 text-left break-all">
+            שגיאה: {error}
           </p>
         )}
 

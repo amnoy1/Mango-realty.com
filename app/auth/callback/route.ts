@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
     if (!error) {
       return response;
     }
+    return NextResponse.redirect(
+      `${origin}/admin/login?error=${encodeURIComponent(error.message)}`
+    );
   }
 
-  return NextResponse.redirect(`${origin}/admin/login?error=auth_failed`);
+  return NextResponse.redirect(`${origin}/admin/login?error=no_code`);
 }
