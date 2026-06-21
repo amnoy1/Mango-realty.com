@@ -13,16 +13,16 @@ function LoginContent() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name) => {
+        get: (name: string) => {
           const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
           return match ? decodeURIComponent(match[1]) : undefined;
         },
-        set: (name, value, options) => {
+        set: (name: string, value: string, options: { maxAge?: number }) => {
           let c = `${name}=${encodeURIComponent(value)}; path=/; SameSite=Lax`;
           if (options?.maxAge) c += `; max-age=${options.maxAge}`;
           document.cookie = c;
         },
-        remove: (name) => {
+        remove: (name: string) => {
           document.cookie = `${name}=; path=/; max-age=0`;
         },
       },
