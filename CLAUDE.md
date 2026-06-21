@@ -74,31 +74,35 @@ properties: id, slug, title, price, price_type, property_type, status,
 ```
 RLS: public read על `status = 'active'`, service_role לכל השאר.
 
-## ✅ פעולות ידניות שבוצעו (2026-06-18)
-1. ✅ Google OAuth ב-Supabase → Providers → Google → Client ID + Secret (Google Cloud Console)
+## ✅ פעולות ידניות שבוצעו
+1. ✅ Google OAuth ב-Supabase → Providers → Google → Client ID + Secret
 2. ✅ Authorized redirect URI: `https://sgrphwunigmsdtbmilgd.supabase.co/auth/v1/callback`
 3. ✅ Supabase URL Config → Site URL: `https://mango-realty-com.vercel.app`
-4. ✅ Redirect URLs: `https://mango-realty-com.vercel.app/auth/callback`
-5. ✅ Supabase SQL — `handle_new_user` trigger הורץ בהצלחה (auto-creates user_profile on Google signup)
-6. ✅ Fix: ERR_TOO_MANY_REDIRECTS נפתר (AdminLayout לא עושה redirect, רק middleware)
+4. ✅ Redirect URLs הוספו: `/auth/callback` + `/auth/handle`
+5. ✅ `handle_new_user` trigger — הורץ עם EXCEPTION handler (לא יבלוק login)
+6. ✅ `user_profiles` טבלה נוצרה + RLS policy
+7. ✅ ERR_TOO_MANY_REDIRECTS נפתר
 
-## ⏭️ הצעד הבא — להמשיך מכאן
-**1. בדוק כניסת Admin (ראשונה!):**
-   - כנס ל: `https://mango-realty-com.vercel.app/admin/login`
-   - לחץ "כניסה עם Google" → בחר `amir@mango-realty.com`
-   - אמור להגיע ל-`/admin/properties` (ריק בינתיים)
+## 🔴 בעיה פתוחה — Google OAuth לא עובד (2026-06-21)
+**השגיאה:** "PKCE code verifier not found in storage"
+**מה נוסה:** cookie path=/, custom cookie handler, client-side handle page
+**הפתרון הכי פשוט שטרם נוסה:**
+→ Supabase Dashboard → Authentication → Settings → **Auth flow: שנה מ-PKCE ל-Implicit** → Save
+→ ואז נסה לוגין שוב מ-https://mango-realty-com.vercel.app/admin/login
 
-**2. צור Supabase Storage bucket:**
-   - Supabase → Storage → New bucket → שם: `property-images` → Public: ✅
+**קוד נוכחי של callback (client-side):**
+- Login page: `app/admin/login/page.tsx` — `redirectTo: /auth/handle`
+- Handle page: `app/auth/handle/page.tsx` — מטפל ב-PKCE ו-implicit flow
+- Route handler: `app/auth/callback/route.ts` — נשאר כגיבוי
 
-**3. מלא .env של הסוכן** (`scripts/site-manager/.env`):
-   - העתק `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` מ-Vercel
+**אם Implicit לא עובד — בדוק:**
+1. Supabase → Authentication → Logs — ראה מה השגיאה בצד שרת
+2. Chrome DevTools → Network → בדוק מה ה-URL שמגיע ל-/auth/handle (יש ?code= ?)
 
-**4. הרץ את הסוכן לראשונה:**
-   ```
-   cd scripts/site-manager
-   node index.js
-   ```
+## ⏭️ אחרי שהלוגין עובד — המשך בסדר הזה:
+1. צור Supabase Storage bucket: `property-images` (Public)
+2. מלא `scripts/site-manager/.env` עם מפתחות מ-Vercel
+3. הרץ סוכן: `cd scripts/site-manager && node index.js`
 
 ## Phase הבא (Phase 2)
 1. AI Search — חיפוש בשפה טבעית + pgvector
