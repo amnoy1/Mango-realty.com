@@ -11,7 +11,22 @@ function LoginContent() {
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookieOptions: { path: "/" } }
+    {
+      cookies: {
+        get: (name) => {
+          const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+          return match ? decodeURIComponent(match[1]) : undefined;
+        },
+        set: (name, value, options) => {
+          let c = `${name}=${encodeURIComponent(value)}; path=/; SameSite=Lax`;
+          if (options?.maxAge) c += `; max-age=${options.maxAge}`;
+          document.cookie = c;
+        },
+        remove: (name) => {
+          document.cookie = `${name}=; path=/; max-age=0`;
+        },
+      },
+    }
   );
 
   async function handleGoogleLogin() {
