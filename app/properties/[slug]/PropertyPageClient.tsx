@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -66,9 +66,11 @@ const AGENT_PHOTO = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w
 export default function PropertyPageClient({
   property,
   related,
+  neighborhoodSection,
 }: {
   property: PropertyData;
   related: Property[];
+  neighborhoodSection?: ReactNode;
 }) {
   const [activeImg, setActiveImg] = useState(0);
   const [saved, setSaved] = useState(false);
@@ -311,6 +313,9 @@ export default function PropertyPageClient({
               </div>
             </div>
           </div>
+
+          {/* Neighborhood */}
+          {neighborhoodSection}
 
           {/* Related */}
           {related.length > 0 && (
