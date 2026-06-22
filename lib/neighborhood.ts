@@ -71,18 +71,19 @@ const GOV_SCHOOLS_RESOURCE = "5548fd63-5868-4053-ad81-98caddc5e232";
 
 async function fetchSchools(city: string) {
   try {
-    const filters = encodeURIComponent(JSON.stringify({ "שם ישוב": city }));
-    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_SCHOOLS_RESOURCE}&filters=${filters}&limit=1000`;
+    // Filter at API level — only schools (not kindergartens), limit response size
+    const filters = encodeURIComponent(JSON.stringify({ "שם ישוב": city, "סוג מוסד": "בית ספר" }));
+    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_SCHOOLS_RESOURCE}&filters=${filters}&limit=200`;
     const res = await fetch(url, {
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(12000),
       next: { revalidate: 3600 },
     });
     if (!res.ok) return { count: 0, schools: [] as { name: string; type: string }[] };
     const json = await res.json();
     const records: Record<string, string>[] = json.result?.records ?? [];
 
-    // Keep only schools (not kindergartens) — "סוג מוסד" = "בית ספר"
-    const schools = records.filter((r) => r["סוג מוסד"] === "בית ספר");
+    // All records are already schools (filtered at API level)
+    const schools = records;
 
     // De-duplicate by name
     const seen = new Set<string>();
