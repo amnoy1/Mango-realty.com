@@ -2,58 +2,61 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// Client sends: { filenames: string[], slug?: string }
+// Returns:      { uploads: { signedUrl: string; path: string; publicUrl: string }[] }
+// Client then PUT each file directly to signedUrl (bypasses Vercel 4.5 MB body limit)
 export async function POST(request: NextRequest) {
   const supabaseUser = await createClient();
-  const { data: { user } } = await supabaseUser.auth.getUser();
+  const {
+    data: { user },
+  } = await supabaseUser.auth.getUser();
 
   if (!user || user.email !== "amir@mango-realty.com") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const formData = await request.formData();
-  const files = formData.getAll("files") as File[];
-  const slug = (formData.get("slug") as string) || `property-${Date.now()}`;
+  const { filenames, slug: rawSlug } = await request.json();
 
-  if (!files.length) {
-    return NextResponse.json({ error: "No files provided" }, { status: 400 });
+  if (!Array.isArray(filenames) || filenames.length === 0) {
+    return NextResponse.json({ error: "No filenames provided" }, { status: 400 });
   }
 
+  const slug = rawSlug || `property-${Date.now()}`;
   const supabase = await createAdminClient();
-  const urls: string[] = [];
-
+  const uploads: { signedUrl: string; path: string; publicUrl: string }[] = [];
   const errors: string[] = [];
 
-  for (const file of files) {
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const fileName = `${slug}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
+  for (const name of filenames as string[]) {
+    const ext = name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${slug}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    const { error } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from("property-images")
-      .upload(fileName, buffer, {
-        contentType: file.type || "image/jpeg",
-        upsert: true,
-      });
+      .createSignedUploadUrl(path);
 
-    if (error) {
-      console.error("Storage upload error:", error);
-      errors.push(`${file.name}: ${error.message}`);
+    if (error || !data) {
+      console.error("Failed to create signed URL:", error);
+      errors.push(`${name}: ${error?.message ?? "unknown error"}`);
       continue;
     }
 
     const { data: urlData } = supabase.storage
       .from("property-images")
-      .getPublicUrl(fileName);
+      .getPublicUrl(path);
 
-    urls.push(urlData.publicUrl);
+    uploads.push({
+      signedUrl: data.signedUrl,
+      path,
+      publicUrl: urlData.publicUrl,
+    });
   }
 
-  if (urls.length === 0) {
+  if (uploads.length === 0) {
     return NextResponse.json(
-      { error: errors.length ? errors.join("; ") : "Upload failed — no files were saved" },
+      { error: errors.length ? errors.join("; ") : "Failed to create upload URLs" },
       { status: 500 }
     );
   }
 
-  return NextResponse.json({ urls, errors: errors.length ? errors : undefined });
+  return NextResponse.json({ uploads, errors: errors.length ? errors : undefined });
 }

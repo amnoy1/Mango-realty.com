@@ -40,31 +40,68 @@ export default function ImageUploader({ images, onChange, propertySlug }: ImageU
     setUploading(true);
     setUploadError(null);
 
-    const formData = new FormData();
-    validFiles.forEach((f) => formData.append("files", f));
-    if (propertySlug) formData.append("slug", propertySlug);
-
     try {
-      const res = await fetch("/api/admin/upload-images", {
+      // Step 1: get signed upload URLs from our API (tiny JSON request, no file data)
+      const signRes = await fetch("/api/admin/upload-images", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filenames: validFiles.map((f) => f.name),
+          slug: propertySlug,
+        }),
       });
-      const json = await res.json();
 
-      if (!res.ok || json.error) {
-        throw new Error(json.error || `שגיאת שרת ${res.status}`);
+      let signJson: { uploads?: { signedUrl: string; path: string; publicUrl: string }[]; errors?: string[]; error?: string };
+      try {
+        signJson = await signRes.json();
+      } catch {
+        throw new Error(`שגיאת שרת ${signRes.status}`);
       }
 
-      const newImages: UploadedImage[] = json.urls.map((url: string, i: number) => ({
-        id: `${Date.now()}-${i}`,
-        url,
-        name: validFiles[i]?.name ?? `image-${i}`,
-      }));
+      if (!signRes.ok || signJson.error) {
+        throw new Error(signJson.error || `שגיאת שרת ${signRes.status}`);
+      }
 
-      onChange([...images, ...newImages]);
+      const uploads = signJson.uploads ?? [];
 
-      if (json.errors?.length) {
-        setUploadError(`חלק מהתמונות נכשלו: ${json.errors.join("; ")}`);
+      // Step 2: upload each file directly to Supabase (bypasses Vercel body size limit)
+      const uploadErrors: string[] = [];
+      const newImages: UploadedImage[] = [];
+
+      await Promise.all(
+        uploads.map(async (slot, i) => {
+          const file = validFiles[i];
+          if (!file) return;
+
+          const putRes = await fetch(slot.signedUrl, {
+            method: "PUT",
+            body: file,
+            headers: { "Content-Type": file.type || "image/jpeg" },
+          });
+
+          if (!putRes.ok) {
+            uploadErrors.push(`${file.name}: HTTP ${putRes.status}`);
+            return;
+          }
+
+          newImages[i] = {
+            id: `${Date.now()}-${i}`,
+            url: slot.publicUrl,
+            name: file.name,
+          };
+        })
+      );
+
+      const succeeded = newImages.filter(Boolean);
+      if (succeeded.length === 0) {
+        throw new Error(uploadErrors.join("; ") || "כל ההעלאות נכשלו");
+      }
+
+      onChange([...images, ...succeeded]);
+
+      const allErrors = [...(signJson.errors ?? []), ...uploadErrors];
+      if (allErrors.length) {
+        setUploadError(`חלק מהתמונות נכשלו: ${allErrors.join("; ")}`);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "שגיאה לא ידועה";
@@ -72,7 +109,6 @@ export default function ImageUploader({ images, onChange, propertySlug }: ImageU
       console.error("Upload failed:", err);
     } finally {
       setUploading(false);
-      // Reset input so the same file(s) can be re-selected or new files chosen
       if (inputRef.current) inputRef.current.value = "";
     }
   }, [images, onChange, propertySlug]);
