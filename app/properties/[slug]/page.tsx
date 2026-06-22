@@ -43,6 +43,7 @@ export async function generateStaticParams() {
 }
 
 export const dynamicParams = true;
+export const dynamic = "force-dynamic"; // always render fresh — neighborhood data changes
 
 // Async RSC — streams in when ready, doesn't block the rest of the page
 async function NeighborhoodFetcher({ city, neighborhood }: { city: string; neighborhood: string }) {
