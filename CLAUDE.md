@@ -83,26 +83,16 @@ RLS: public read על `status = 'active'`, service_role לכל השאר.
 6. ✅ `user_profiles` טבלה נוצרה + RLS policy
 7. ✅ ERR_TOO_MANY_REDIRECTS נפתר
 
-## 🔴 בעיה פתוחה — Google OAuth לא עובד (2026-06-21)
-**השגיאה:** "PKCE code verifier not found in storage"
-**מה נוסה:** cookie path=/, custom cookie handler, client-side handle page
-**הפתרון הכי פשוט שטרם נוסה:**
-→ Supabase Dashboard → Authentication → Settings → **Auth flow: שנה מ-PKCE ל-Implicit** → Save
-→ ואז נסה לוגין שוב מ-https://mango-realty-com.vercel.app/admin/login
+## ✅ Google OAuth — עובד! (נפתר 2026-06-22)
+**הפתרון:** `auth: { flowType: "implicit" }` בשני הדפים (login + handle)
+- Login: `app/admin/login/page.tsx` — `flowType: "implicit"` + `redirectTo: /auth/handle`
+- Handle: `app/auth/handle/page.tsx` — `getSession()` מזהה hash אוטומטית, שומר session ב-cookies
 
-**קוד נוכחי של callback (client-side):**
-- Login page: `app/admin/login/page.tsx` — `redirectTo: /auth/handle`
-- Handle page: `app/auth/handle/page.tsx` — מטפל ב-PKCE ו-implicit flow
-- Route handler: `app/auth/callback/route.ts` — נשאר כגיבוי
-
-**אם Implicit לא עובד — בדוק:**
-1. Supabase → Authentication → Logs — ראה מה השגיאה בצד שרת
-2. Chrome DevTools → Network → בדוק מה ה-URL שמגיע ל-/auth/handle (יש ?code= ?)
-
-## ⏭️ אחרי שהלוגין עובד — המשך בסדר הזה:
-1. צור Supabase Storage bucket: `property-images` (Public)
-2. מלא `scripts/site-manager/.env` עם מפתחות מ-Vercel
-3. הרץ סוכן: `cd scripts/site-manager && node index.js`
+## ⏭️ הצעד הבא — להמשיך מכאן
+1. **צור Supabase Storage bucket:** Storage → New bucket → שם: `property-images` → Public ✅
+2. **מלא `.env` של הסוכן** (`scripts/site-manager/.env`):
+   - `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` מ-Vercel
+3. **הרץ סוכן לראשונה:** `cd scripts/site-manager && node index.js`
 
 ## Phase הבא (Phase 2)
 1. AI Search — חיפוש בשפה טבעית + pgvector
