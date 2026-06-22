@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useRef, useState, useCallback } from "react";
 
 interface UploadedImage {
@@ -16,8 +17,11 @@ interface ImageUploaderProps {
 }
 
 export default function ImageUploader({ images, onChange, propertySlug }: ImageUploaderProps) {
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDraggingFiles, setIsDraggingFiles] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [dragReorderIndex, setDragReorderIndex] = useState<number | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const uploadFiles = useCallback(async (files: FileList | File[]) => {
@@ -34,6 +38,7 @@ export default function ImageUploader({ images, onChange, propertySlug }: ImageU
     }
 
     setUploading(true);
+    setUploadError(null);
 
     const formData = new FormData();
     validFiles.forEach((f) => formData.append("files", f));
@@ -44,58 +49,91 @@ export default function ImageUploader({ images, onChange, propertySlug }: ImageU
         method: "POST",
         body: formData,
       });
-      const { urls, error } = await res.json();
-      if (error) throw new Error(error);
+      const json = await res.json();
 
-      const newImages: UploadedImage[] = urls.map((url: string, i: number) => ({
+      if (!res.ok || json.error) {
+        throw new Error(json.error || `שגיאת שרת ${res.status}`);
+      }
+
+      const newImages: UploadedImage[] = json.urls.map((url: string, i: number) => ({
         id: `${Date.now()}-${i}`,
         url,
-        name: validFiles[i].name,
+        name: validFiles[i]?.name ?? `image-${i}`,
       }));
 
       onChange([...images, ...newImages]);
+
+      if (json.errors?.length) {
+        setUploadError(`חלק מהתמונות נכשלו: ${json.errors.join("; ")}`);
+      }
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "שגיאה לא ידועה";
+      setUploadError(msg);
       console.error("Upload failed:", err);
-      alert("שגיאה בהעלאת תמונות");
     } finally {
       setUploading(false);
     }
   }, [images, onChange, propertySlug]);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  /* ── File drop zone ── */
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
-    uploadFiles(e.dataTransfer.files);
+    setIsDraggingFiles(false);
+    if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
   }, [uploadFiles]);
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleFileDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    if (dragReorderIndex === null) setIsDraggingFiles(true);
   };
 
-  const handleDragLeave = () => setIsDragging(false);
+  const handleFileDragLeave = () => setIsDraggingFiles(false);
 
-  const removeImage = (id: string) => {
-    onChange(images.filter((img) => img.id !== id));
+  /* ── Image reorder drag ── */
+  const handleImgDragStart = (e: React.DragEvent, idx: number) => {
+    setDragReorderIndex(idx);
+    e.dataTransfer.effectAllowed = "move";
+    // Prevent the file drop zone from firing
+    e.dataTransfer.setData("text/plain", String(idx));
   };
 
-  const moveImage = (from: number, to: number) => {
-    const next = [...images];
-    const [item] = next.splice(from, 1);
-    next.splice(to, 0, item);
-    onChange(next);
+  const handleImgDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    setDropTargetIndex(idx);
   };
+
+  const handleImgDrop = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (dragReorderIndex !== null && dragReorderIndex !== idx) {
+      const next = [...images];
+      const [item] = next.splice(dragReorderIndex, 1);
+      next.splice(idx, 0, item);
+      onChange(next);
+    }
+    setDragReorderIndex(null);
+    setDropTargetIndex(null);
+  };
+
+  const handleImgDragEnd = () => {
+    setDragReorderIndex(null);
+    setDropTargetIndex(null);
+  };
+
+  const removeImage = (id: string) => onChange(images.filter((img) => img.id !== id));
 
   return (
     <div className="space-y-4">
       {/* Drop zone */}
       <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
+        onDrop={handleFileDrop}
+        onDragOver={handleFileDragOver}
+        onDragLeave={handleFileDragLeave}
         onClick={() => inputRef.current?.click()}
         className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
-          isDragging
+          isDraggingFiles
             ? "border-[#F5A623] bg-orange-50"
             : "border-gray-300 hover:border-[#F5A623] hover:bg-gray-50"
         }`}
@@ -124,59 +162,94 @@ export default function ImageUploader({ images, onChange, propertySlug }: ImageU
         )}
       </div>
 
-      {/* Thumbnails */}
+      {/* Error banner */}
+      {uploadError && (
+        <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
+          <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <span className="font-medium">שגיאה בהעלאה: </span>{uploadError}
+          </div>
+          <button
+            type="button"
+            onClick={() => setUploadError(null)}
+            className="mr-auto text-red-400 hover:text-red-600 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Thumbnails with drag-to-reorder */}
       {images.length > 0 && (
-        <div className="grid grid-cols-4 gap-3">
-          {images.map((img, idx) => (
-            <div key={img.id} className="relative group rounded-xl overflow-hidden aspect-[4/3] bg-gray-100">
-              <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+        <div className="space-y-2">
+          <p className="text-xs text-gray-400 text-right">
+            גרור תמונות לשינוי סדר · התמונה הראשונה תוצג כתמונה ראשית
+          </p>
+          <div className="grid grid-cols-4 gap-3">
+            {images.map((img, idx) => (
+              <div
+                key={img.id}
+                draggable
+                onDragStart={(e) => handleImgDragStart(e, idx)}
+                onDragOver={(e) => handleImgDragOver(e, idx)}
+                onDrop={(e) => handleImgDrop(e, idx)}
+                onDragEnd={handleImgDragEnd}
+                className={[
+                  "relative group rounded-xl overflow-hidden aspect-[4/3] bg-gray-100 cursor-grab active:cursor-grabbing transition-all duration-150 select-none",
+                  dragReorderIndex === idx ? "opacity-40 scale-95 shadow-inner" : "",
+                  dropTargetIndex === idx && dragReorderIndex !== idx
+                    ? "ring-2 ring-[#F5A623] ring-offset-2 scale-[1.02]"
+                    : "",
+                ].join(" ")}
+              >
+                <img
+                  src={img.url}
+                  alt={img.name}
+                  className="w-full h-full object-cover pointer-events-none"
+                  draggable={false}
+                />
 
-              {/* Primary badge */}
-              {idx === 0 && (
-                <span className="absolute top-1 right-1 bg-[#F5A623] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  ראשית
+                {/* Primary badge */}
+                {idx === 0 && (
+                  <span className="absolute top-1.5 right-1.5 bg-[#F5A623] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                    ראשית
+                  </span>
+                )}
+
+                {/* Order number */}
+                <span className="absolute bottom-1.5 right-1.5 bg-black/50 text-white text-[10px] font-medium w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  {idx + 1}
                 </span>
-              )}
 
-              {/* Actions overlay */}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                {idx > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => moveImage(idx, idx - 1)}
-                    className="bg-white/90 rounded-full p-1.5 text-gray-700 hover:bg-white transition-colors"
-                    title="הזז שמאלה"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => removeImage(img.id)}
-                  className="bg-red-500/90 rounded-full p-1.5 text-white hover:bg-red-500 transition-colors"
-                  title="מחק תמונה"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                {/* Drag grip (top-left) */}
+                <div className="absolute top-1.5 left-1.5 bg-black/50 rounded-md p-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/>
+                    <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                    <circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
                   </svg>
-                </button>
-                {idx < images.length - 1 && (
+                </div>
+
+                {/* Delete button */}
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button
                     type="button"
-                    onClick={() => moveImage(idx, idx + 1)}
-                    className="bg-white/90 rounded-full p-1.5 text-gray-700 hover:bg-white transition-colors"
-                    title="הזז ימינה"
+                    onClick={(e) => { e.stopPropagation(); removeImage(img.id); }}
+                    className="bg-red-500 rounded-full p-1.5 text-white hover:bg-red-600 transition-colors shadow"
+                    title="מחק תמונה"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -21,6 +21,8 @@ export async function POST(request: NextRequest) {
   const supabase = await createAdminClient();
   const urls: string[] = [];
 
+  const errors: string[] = [];
+
   for (const file of files) {
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const fileName = `${slug}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -35,6 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("Storage upload error:", error);
+      errors.push(`${file.name}: ${error.message}`);
       continue;
     }
 
@@ -45,5 +48,12 @@ export async function POST(request: NextRequest) {
     urls.push(urlData.publicUrl);
   }
 
-  return NextResponse.json({ urls });
+  if (urls.length === 0) {
+    return NextResponse.json(
+      { error: errors.length ? errors.join("; ") : "Upload failed — no files were saved" },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ urls, errors: errors.length ? errors : undefined });
 }
