@@ -65,28 +65,14 @@ const CITY_PRICES: Record<string, { avg: number; trend: string }> = {
   "כרמיאל":                  { avg: 9000,  trend: "+5%" },
 };
 
-// ─── City → representative Unsplash image ─────────────────────────────────────
-const CITY_IMAGES: Record<string, string> = {
-  "כפר סבא":    "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=75",
-  "קרית אונו":  "https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?w=800&q=75",
-  "קריית אונו": "https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?w=800&q=75",
-  "תל אביב":   "https://images.unsplash.com/photo-1597752327665-0ceb37c8917e?w=800&q=75",
-  "ירושלים":   "https://images.unsplash.com/photo-1503741095711-5a3ea9a2b1d5?w=800&q=75",
-  "חיפה":      "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=75",
-  "רמת גן":    "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=75",
-  "הרצליה":    "https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=75",
-};
-const DEFAULT_IMAGE =
-  "https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?w=800&q=75";
-
 // ─── data.gov.il — schools by city ───────────────────────────────────────────
+// "סוג מוסד" field values: "בית ספר" (school) | "גן ילדים" (kindergarten)
 const GOV_SCHOOLS_RESOURCE = "5548fd63-5868-4053-ad81-98caddc5e232";
-const SCHOOL_TYPES = ["בית ספר יסודי", "חטיבת ביניים", "תיכון", "חטיבה עליונה", "יסודי"];
 
 async function fetchSchools(city: string) {
   try {
     const filters = encodeURIComponent(JSON.stringify({ "שם ישוב": city }));
-    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_SCHOOLS_RESOURCE}&filters=${filters}&limit=500`;
+    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_SCHOOLS_RESOURCE}&filters=${filters}&limit=1000`;
     const res = await fetch(url, {
       signal: AbortSignal.timeout(8000),
       next: { revalidate: 3600 },
@@ -95,10 +81,9 @@ async function fetchSchools(city: string) {
     const json = await res.json();
     const records: Record<string, string>[] = json.result?.records ?? [];
 
-    // Keep only schools (not kindergartens)
-    const schools = records.filter((r) =>
-      SCHOOL_TYPES.some((t) => r["סוג מוסד"]?.includes(t))
-    );
+    // Keep only schools (not kindergartens) — "סוג מוסד" = "בית ספר"
+    const schools = records.filter((r) => r["סוג מוסד"] === "בית ספר");
+
     // De-duplicate by name
     const seen = new Set<string>();
     const unique = schools.filter((s) => {
@@ -107,11 +92,15 @@ async function fetchSchools(city: string) {
       return true;
     });
 
+    // Derive school level from "סוג חינוך מוסד" field
+    const levelLabel = (r: Record<string, string>) =>
+      r["סוג חינוך מוסד"] === "מיוחד" ? "חינוך מיוחד" : "בית ספר";
+
     return {
       count: unique.length,
       schools: unique
         .slice(0, 8)
-        .map((s) => ({ name: s["שם מוסד"], type: s["סוג מוסד"] })),
+        .map((s) => ({ name: s["שם מוסד"], type: levelLabel(s) })),
     };
   } catch {
     return { count: 0, schools: [] as { name: string; type: string }[] };
@@ -138,14 +127,6 @@ async function generateDescription(city: string, neighborhood: string) {
   } catch {
     return `${city} מציעה איכות חיים גבוהה, תשתיות מפותחות וקהילה חזקה — מיקום מבוקש עם נגישות מצוינת.`;
   }
-}
-
-// ─── City image helper ────────────────────────────────────────────────────────
-function getCityImage(city: string) {
-  const key = Object.keys(CITY_IMAGES).find(
-    (k) => city.includes(k) || k.includes(city)
-  );
-  return key ? CITY_IMAGES[key] : DEFAULT_IMAGE;
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
@@ -214,7 +195,7 @@ export async function getNeighborhoodData(
     updates.school_count         = schoolsResult.count;
     updates.schools_data         = schoolsResult.schools;
     updates.description          = description;
-    updates.image_url            = getCityImage(city);
+    updates.image_url            = (existing?.image_url as string | null) ?? null; // set manually via Supabase
     updates.analysis_updated_at  = new Date().toISOString();
   }
 
