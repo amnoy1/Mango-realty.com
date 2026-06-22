@@ -31,13 +31,14 @@ Hebrew-first, RTL, Next.js 15 App Router, Tailwind v4, Supabase, Vercel.
 ```
 Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 
-## מה בנוי (סטטוס 2026-06-18)
+## מה בנוי (סטטוס 2026-06-22)
 
 ### Public Site
 - Homepage: Navbar, Hero, Stats, FeaturedProperties, AIAgentSection, Neighborhoods, HowItWorks, Footer
-- `/properties/[slug]` — דף נכס: gallery slider, Google Maps embed, Street View popup, agent card
+- `/properties/[slug]` — דף נכס: gallery slider, Google Maps embed, Street View popup, agent card, related properties
 - `/properties` — דף רשימת נכסים (קיים, ריק עד שיעלו נכסים)
 - `FeaturedProperties` — server component, מושך נכסים אמיתיים מ-Supabase (ללא mock data)
+- **סקשין שכונה — הוסר** (נבנה ואחר-כך הוסר מדף הנכס. הקוד קיים ב-`lib/neighborhood.ts` ו-`components/properties/NeighborhoodSection.tsx` אם יחזור בעתיד)
 
 ### Admin Panel (`/admin`) — ✅ מוכן לשימוש
 - Google OAuth — רק `amir@mango-realty.com` נכנס
@@ -89,10 +90,8 @@ RLS: public read על `status = 'active'`, service_role לכל השאר.
 - Handle: `app/auth/handle/page.tsx` — `getSession()` מזהה hash אוטומטית, שומר session ב-cookies
 
 ## ⏭️ הצעד הבא — להמשיך מכאן
-1. **צור Supabase Storage bucket:** Storage → New bucket → שם: `property-images` → Public ✅
-2. **מלא `.env` של הסוכן** (`scripts/site-manager/.env`):
-   - `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` מ-Vercel
-3. **הרץ סוכן לראשונה:** `cd scripts/site-manager && node index.js`
+1. **הרץ סוכן:** `cd scripts/site-manager && node index.js` (Storage bucket + .env אמורים להיות מוכנים)
+2. **Phase 2** — AI Search, פילטרים ב-`/properties`, WhatsApp Agent
 
 ## Phase הבא (Phase 2)
 1. AI Search — חיפוש בשפה טבעית + pgvector
