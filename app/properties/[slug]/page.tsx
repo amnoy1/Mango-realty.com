@@ -46,8 +46,12 @@ export const dynamicParams = true;
 export const dynamic = "force-dynamic"; // always render fresh — neighborhood data changes
 
 // Async RSC — streams in when ready, doesn't block the rest of the page
-async function NeighborhoodFetcher({ city, neighborhood }: { city: string; neighborhood: string }) {
-  const data = await getNeighborhoodData(city, neighborhood);
+async function NeighborhoodFetcher({
+  city, neighborhood, lat, lng,
+}: {
+  city: string; neighborhood: string; lat: number | null; lng: number | null;
+}) {
+  const data = await getNeighborhoodData(city, neighborhood, lat ?? undefined, lng ?? undefined);
   if (!data) return null;
   return <NeighborhoodSection data={data} />;
 }
@@ -127,7 +131,12 @@ export default async function PropertyPage({
         related={related}
         neighborhoodSection={
           <Suspense fallback={<div className="mt-12 pt-10 border-t border-black/8 h-52 bg-black/[0.03] rounded-2xl animate-pulse" />}>
-            <NeighborhoodFetcher city={propertyForClient.city} neighborhood={propertyForClient.neighborhood} />
+            <NeighborhoodFetcher
+                city={propertyForClient.city}
+                neighborhood={propertyForClient.neighborhood}
+                lat={propertyForClient.lat}
+                lng={propertyForClient.lng}
+              />
           </Suspense>
         }
       />

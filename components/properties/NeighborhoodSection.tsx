@@ -1,9 +1,13 @@
 import Image from "next/image";
-import { TrendingUp, School, MapPin, Info } from "lucide-react";
+import { School, MapPin, Info, TrendingUp, Bus } from "lucide-react";
 import type { NeighborhoodData } from "@/lib/neighborhood";
 
 export default function NeighborhoodSection({ data }: { data: NeighborhoodData }) {
-  const hasContent = data.description || data.avg_price_sqm || data.school_count > 0;
+  const hasContent =
+    data.description ||
+    data.school_count > 0 ||
+    data.avg_price_sqm ||
+    data.socio_economic_cluster;
   if (!hasContent) return null;
 
   const locationLabel = data.neighborhood
@@ -39,7 +43,7 @@ export default function NeighborhoodSection({ data }: { data: NeighborhoodData }
         )}
 
         {/* ── Info (3/5) ── */}
-        <div className="md:col-span-3 flex flex-col justify-between gap-5">
+        <div className={`${data.image_url ? "md:col-span-3" : "md:col-span-5"} flex flex-col justify-between gap-5`}>
           {/* AI description */}
           {data.description && (
             <p className="text-[var(--color-luxury-black)]/65 leading-relaxed text-[0.95rem]">
@@ -49,6 +53,7 @@ export default function NeighborhoodSection({ data }: { data: NeighborhoodData }
 
           {/* Stats row */}
           <div className="flex flex-wrap gap-4">
+            {/* Avg price per sqm */}
             {data.avg_price_sqm && (
               <div className="flex-1 min-w-[130px] bg-[var(--color-gold)]/8 rounded-2xl p-4">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-luxury-black)]/35 mb-1">
@@ -57,25 +62,53 @@ export default function NeighborhoodSection({ data }: { data: NeighborhoodData }
                 <div className="font-black text-xl text-[var(--color-luxury-black)]">
                   ₪{data.avg_price_sqm.toLocaleString("he-IL")}
                 </div>
-                {data.price_trend && (
-                  <div className="flex items-center gap-1 text-emerald-600 text-xs font-bold mt-1">
+                {data.transactions_count && (
+                  <div className="flex items-center gap-1 text-[var(--color-luxury-black)]/40 text-xs mt-1">
                     <TrendingUp size={11} />
-                    {data.price_trend} · שנה אחרונה
+                    {data.transactions_count} עסקאות אחרונות
                   </div>
                 )}
               </div>
             )}
 
+            {/* Socio-economic cluster */}
+            {data.socio_economic_cluster && (
+              <div className="flex-1 min-w-[130px] bg-violet-50 rounded-2xl p-4">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-luxury-black)]/35 mb-1">
+                  אשכול סוציו-אקונומי
+                </div>
+                <div className="flex items-end gap-2">
+                  <span className="font-black text-xl text-[var(--color-luxury-black)]">
+                    {data.socio_economic_cluster}
+                  </span>
+                  <span className="text-xs text-[var(--color-luxury-black)]/40 mb-0.5">מתוך 10</span>
+                </div>
+                <div className="mt-1.5 flex gap-0.5">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-1.5 flex-1 rounded-full ${
+                        i < data.socio_economic_cluster!
+                          ? "bg-violet-400"
+                          : "bg-[var(--color-luxury-black)]/10"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Schools count */}
             {data.school_count > 0 && (
               <div className="flex-1 min-w-[130px] bg-sky-50 rounded-2xl p-4">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-luxury-black)]/35 mb-1">
-                  מוסדות חינוך
+                  מוסדות חינוך בסביבה
                 </div>
                 <div className="font-black text-xl text-[var(--color-luxury-black)]">
                   {data.school_count}
                 </div>
                 <div className="text-xs text-[var(--color-luxury-black)]/35 mt-1">
-                  בתי ספר בעיר
+                  בתי ספר
                 </div>
               </div>
             )}
@@ -85,7 +118,7 @@ export default function NeighborhoodSection({ data }: { data: NeighborhoodData }
           {data.schools.length > 0 && (
             <div>
               <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-luxury-black)]/30 mb-2">
-                מוסדות חינוך בולטים
+                בתי ספר בסביבה
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                 {data.schools.slice(0, 6).map((s, i) => (
@@ -98,12 +131,33 @@ export default function NeighborhoodSection({ data }: { data: NeighborhoodData }
             </div>
           )}
 
+          {/* Transport lines */}
+          {data.transport_lines && data.transport_lines.length > 0 && (
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-luxury-black)]/30 mb-2">
+                תחבורה ציבורית בסביבה
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {data.transport_lines.slice(0, 8).map((line, i) => (
+                  <span
+                    key={i}
+                    className="flex items-center gap-1 text-xs font-bold bg-emerald-50 text-emerald-700 rounded-full px-3 py-1"
+                  >
+                    <Bus size={10} />
+                    {line.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Disclaimer */}
           <div className="flex items-start gap-1.5 text-[10px] text-[var(--color-luxury-black)]/25">
             <Info size={10} className="mt-0.5 shrink-0" />
             <span>
-              מחיר ממוצע הוא הערכה לפי נתוני שוק — לא מתחייבים על דיוקו.
-              נתוני חינוך: משרד החינוך / data.gov.il
+              נתוני חינוך: משרד החינוך / data.gov.il.
+              {data.avg_price_sqm && " מחיר ממוצע מחושב מעסקאות אחרונות — להערכה בלבד."}
+              {data.socio_economic_cluster && " אשכול סוציו-אקונומי: הלמ\"ס."}
             </span>
           </div>
         </div>
