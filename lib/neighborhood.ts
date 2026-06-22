@@ -71,10 +71,10 @@ const GOV_SCHOOLS_RESOURCE = "5548fd63-5868-4053-ad81-98caddc5e232";
 
 async function fetchSchools(city: string) {
   try {
-    // Sort "בית ספר" (ב) before "גן ילדים" (ג) — schools come first alphabetically
+    // q="בית ספר" full-text search returns only school records (not kindergartens)
     const filters = encodeURIComponent(JSON.stringify({ "שם ישוב": city }));
-    const sort = encodeURIComponent("סוג מוסד asc, שם מוסד asc");
-    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_SCHOOLS_RESOURCE}&filters=${filters}&sort=${sort}&limit=200`;
+    const q = encodeURIComponent("בית ספר");
+    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_SCHOOLS_RESOURCE}&filters=${filters}&q=${q}&limit=200`;
     const res = await fetch(url, {
       signal: AbortSignal.timeout(12000),
       next: { revalidate: 3600 },
@@ -83,8 +83,8 @@ async function fetchSchools(city: string) {
     const json = await res.json();
     const records: Record<string, string>[] = json.result?.records ?? [];
 
-    // Filter client-side: keep only schools (not kindergartens)
-    const schools = records.filter((r) => r["סוג מוסד"] === "בית ספר");
+    // All results already match "בית ספר" via full-text search
+    const schools = records;
 
     // De-duplicate by name
     const seen = new Set<string>();
@@ -120,7 +120,8 @@ async function generateDescription(city: string, neighborhood: string) {
       messages: [
         {
           role: "user",
-          content: `כתוב תיאור קצר ואטרקטיבי (2-3 משפטים בעברית, ללא כותרת) של ${location} לרוכש פוטנציאלי של נכס.
+          content: `כתוב תיאור קצר ואטרקטיבי של ${location} לרוכש פוטנציאלי של נכס.
+חוקים: עברית בלבד (ללא מילים באנגלית), 2-3 משפטים, ללא כותרת, ללא סימני markdown (ללא # * - וכו'), ללא מספור, פסקה אחת רציפה בלבד.
 התמקד: אווירה, קהילה, איכות חיים, יתרונות מיקומיים. שפה חיובית ומרשימה. ללא מחירים.`,
         },
       ],
