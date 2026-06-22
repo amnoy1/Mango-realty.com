@@ -72,6 +72,8 @@ export default function ImageUploader({ images, onChange, propertySlug }: ImageU
       console.error("Upload failed:", err);
     } finally {
       setUploading(false);
+      // Reset input so the same file(s) can be re-selected or new files chosen
+      if (inputRef.current) inputRef.current.value = "";
     }
   }, [images, onChange, propertySlug]);
 
