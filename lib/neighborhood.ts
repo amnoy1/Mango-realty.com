@@ -199,7 +199,10 @@ export async function getNeighborhoodData(
     updates.schools_data         = schoolsResult.schools;
     updates.description          = description;
     updates.image_url            = (existing?.image_url as string | null) ?? null; // set manually via Supabase
-    updates.analysis_updated_at  = new Date().toISOString();
+    // Only lock the cache if we got real school data — otherwise retry on next request
+    if (schoolsResult.count > 0) {
+      updates.analysis_updated_at = new Date().toISOString();
+    }
   }
 
   // ── 4. Persist to Supabase ──
