@@ -112,7 +112,7 @@ function extractJson(
   const textBlock = [...res.content].reverse().find(b => b.type === "text");
   if (!textBlock || textBlock.type !== "text") return null;
   try {
-    const match = textBlock.text.match(/\{[\s\S]*?\}/s);
+    const match = textBlock.text.match(/\{[\s\S]*?\}/);
     if (!match) return null;
     const d = JSON.parse(match[0]);
     if (!d.description && !d.transport) return null; // sanity check
