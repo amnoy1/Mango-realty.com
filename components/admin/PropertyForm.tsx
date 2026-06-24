@@ -145,6 +145,30 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
     setForm((prev) => ({ ...prev, features: { ...prev.features, [key]: value } }));
   }
 
+  function autoFillSEO() {
+    const typeLabel = PROPERTY_TYPES.find(t => t.value === form.property_type)?.label ?? "נכס";
+    const txLabel   = form.price_type === "rent" ? "להשכרה" : "למכירה";
+    const location  = [form.neighborhood, form.city].filter(Boolean).join(", ");
+    const priceStr  = form.price
+      ? `${Number(form.price).toLocaleString("he-IL")} ₪`
+      : "";
+
+    const rawTitle = form.title
+      ? `${form.title} | Mango Realty`
+      : `${typeLabel} ${txLabel}${location ? ` ב${location}` : ""} | Mango Realty`;
+
+    const descParts = [
+      `${typeLabel} ${txLabel}${location ? ` ב${location}` : ""}`,
+      form.rooms    && `${form.rooms} חדרים`,
+      form.area_sqm && `${form.area_sqm} מ"ר`,
+      priceStr,
+      "מנגו ריאלטי — נדל\"ן יוקרתי.",
+    ].filter(Boolean).join(" · ");
+
+    set("meta_title",       rawTitle.slice(0, 60));
+    set("meta_description", descParts.slice(0, 160));
+  }
+
   function handleSlugChange(value: string) {
     setSlugManual(true);
     set("slug", value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
@@ -391,7 +415,16 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
 
       {/* ── SEO ── */}
       <div className={sectionClass}>
-        <h2 className="font-semibold text-gray-800 text-base">SEO</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-gray-800 text-base">SEO</h2>
+          <button
+            type="button"
+            onClick={autoFillSEO}
+            className="text-xs text-[#F5A623] hover:underline font-medium"
+          >
+            ✨ מלא אוטומטית
+          </button>
+        </div>
         <div>
           <label className={labelClass}>Meta Title</label>
           <input
