@@ -50,6 +50,7 @@ interface PropertyFormData {
 
 const PROPERTY_TYPES: { value: string; label: string }[] = [
   { value: "apartment",      label: "דירה" },
+  { value: "roof_apt",       label: "דירת גג" },
   { value: "garden_apt",     label: "דירת גן" },
   { value: "penthouse",      label: "פנטהאוז" },
   { value: "mini_penthouse", label: "מיני פנטהאוז" },
