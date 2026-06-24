@@ -1,8 +1,11 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import PropertyPageClient from "./PropertyPageClient";
+import NeighborhoodSection from "@/components/properties/NeighborhoodSection";
+import { getNeighborhoodData } from "@/lib/neighborhood";
 import type { Property } from "@/components/ui/PropertyCard";
 
 const FEATURE_LABELS: Record<string, string> = {
@@ -40,6 +43,14 @@ export async function generateStaticParams() {
 }
 
 export const dynamicParams = true;
+export const dynamic = "force-dynamic";
+
+// Streams in after the rest of the page — doesn't block LCP
+async function NeighborhoodFetcher({ city, neighborhood }: { city: string; neighborhood: string }) {
+  const data = await getNeighborhoodData(city, neighborhood);
+  if (!data) return null;
+  return <NeighborhoodSection data={data} />;
+}
 
 export default async function PropertyPage({
   params,
@@ -114,6 +125,16 @@ export default async function PropertyPage({
       <PropertyPageClient
         property={propertyForClient}
         related={related}
+        neighborhoodSection={
+          <Suspense fallback={
+            <div className="mt-12 pt-10 border-t border-black/8 h-48 bg-black/[0.02] rounded-2xl animate-pulse" />
+          }>
+            <NeighborhoodFetcher
+              city={propertyForClient.city}
+              neighborhood={propertyForClient.neighborhood}
+            />
+          </Suspense>
+        }
       />
       <Footer />
     </>
