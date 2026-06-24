@@ -17,20 +17,50 @@ const BOOL_FEATURE_LABELS: Record<string, string> = {
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&q=85";
 
+const SITE_URL = "https://mango-realty-com.vercel.app";
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();
   const { data } = await supabase
     .from("properties")
-    .select("title, meta_title, meta_description, city")
+    .select("title, meta_title, meta_description, city, neighborhood, street, images, lat, lng, price, price_type, rooms, area_sqm")
     .eq("slug", slug)
     .single();
 
   if (!data) return { title: "נכס | Mango Realty" };
 
+  const title       = data.meta_title || `${data.title} | Mango Realty`;
+  const description = data.meta_description || `נכס ${data.price_type === "rent" ? "להשכרה" : "למכירה"} ב${[data.neighborhood, data.city].filter(Boolean).join(", ")} — ${data.rooms ? `${data.rooms} חדרים, ` : ""}${data.area_sqm ? `${data.area_sqm} מ"ר — ` : ""}Mango Realty`;
+  const ogImage     = (data.images as string[])?.[0] || FALLBACK_IMAGE;
+  const canonical   = `${SITE_URL}/properties/${slug}`;
+
   return {
-    title: data.meta_title || `${data.title} | Mango Realty`,
-    description: data.meta_description || `נכס למכירה ב${data.city} — Mango Realty`,
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: data.title }],
+      locale: "he_IL",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+    other: {
+      "geo.region":    "IL",
+      "geo.placename": [data.neighborhood, data.city].filter(Boolean).join(", "),
+      ...(data.lat && data.lng ? {
+        "geo.position": `${data.lat};${data.lng}`,
+        "ICBM":         `${data.lat}, ${data.lng}`,
+      } : {}),
+    },
   };
 }
 
@@ -137,8 +167,47 @@ export default async function PropertyPage({
     garden_sqm,
   };
 
+  // ── JSON-LD structured data ──────────────────────────────────────────────────
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    "name": property.title,
+    "description": property.description || undefined,
+    "url": `${SITE_URL}/properties/${property.slug}`,
+    "image": images,
+    "price": property.price || undefined,
+    "priceCurrency": "ILS",
+    "numberOfRooms": property.rooms || undefined,
+    "floorSize": property.area_sqm
+      ? { "@type": "QuantitativeValue", "value": property.area_sqm, "unitCode": "MTK" }
+      : undefined,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress":   property.street      || undefined,
+      "addressLocality": property.city        || undefined,
+      "addressRegion":   property.neighborhood || undefined,
+      "addressCountry":  "IL",
+    },
+    ...(property.lat && property.lng ? {
+      "geo": {
+        "@type":     "GeoCoordinates",
+        "latitude":  property.lat,
+        "longitude": property.lng,
+      }
+    } : {}),
+    "offeredBy": {
+      "@type": "RealEstateAgent",
+      "name":  "Mango Realty",
+      "url":   SITE_URL,
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
       <PropertyPageClient
         property={propertyForClient}
