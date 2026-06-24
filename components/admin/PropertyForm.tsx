@@ -10,57 +10,86 @@ interface UploadedImage {
   name: string;
 }
 
+interface PropertyFeatures {
+  // Boolean amenities
+  elevator:  boolean;
+  renovated: boolean;
+  aircon:    boolean;
+  saferoom:  boolean;
+  // Sized / counted fields
+  parking:     string;   // "ללא" | "1" | "2" | "3"
+  balcony_sqm: string;
+  storage_sqm: string;
+  garden_sqm:  string;
+  // Condition & age
+  condition:  string;
+  year_built: string;
+}
+
 interface PropertyFormData {
-  title: string;
-  slug: string;
-  price: string;
-  price_type: "sale" | "rent";
-  property_type: "apartment" | "house" | "commercial" | "land";
-  status: "active" | "draft" | "sold" | "rented";
-  city: string;
-  neighborhood: string;
-  street: string;
-  rooms: string;
-  bathrooms: string;
-  area_sqm: string;
-  floor: string;
-  total_floors: string;
-  description: string;
-  features: {
-    parking: boolean;
-    balcony: boolean;
-    elevator: boolean;
-    storage: boolean;
-    renovated: boolean;
-    aircon: boolean;
-    saferoom: boolean;
-    garden: boolean;
-  };
-  images: UploadedImage[];
-  meta_title: string;
+  title:            string;
+  slug:             string;
+  price:            string;
+  price_type:       "sale" | "rent";
+  property_type:    string;
+  status:           "active" | "draft" | "sold" | "rented";
+  city:             string;
+  neighborhood:     string;
+  street:           string;
+  rooms:            string;
+  bathrooms:        string;
+  area_sqm:         string;
+  floor:            string;
+  total_floors:     string;
+  description:      string;
+  features:         PropertyFeatures;
+  images:           UploadedImage[];
+  meta_title:       string;
   meta_description: string;
 }
 
-const FEATURE_LABELS: Record<keyof PropertyFormData["features"], string> = {
-  parking: "חניה",
-  balcony: "מרפסת",
-  elevator: "מעלית",
-  storage: "מחסן",
-  renovated: "משופץ",
-  aircon: "מיזוג אוויר",
-  saferoom: "ממ\"ד",
-  garden: "גינה",
-};
+const PROPERTY_TYPES: { value: string; label: string }[] = [
+  { value: "apartment",      label: "דירה" },
+  { value: "garden_apt",     label: "דירת גן" },
+  { value: "penthouse",      label: "פנטהאוז" },
+  { value: "mini_penthouse", label: "מיני פנטהאוז" },
+  { value: "duplex",         label: "דופלקס" },
+  { value: "cottage",        label: "קוטג'" },
+  { value: "townhouse",      label: "קוטג' טורי" },
+  { value: "semi_detached",  label: "דו-משפחתי" },
+  { value: "house",          label: "בית פרטי / וילה" },
+  { value: "unit",           label: "יחידת דיור" },
+  { value: "studio",         label: "סטודיו / לופט" },
+  { value: "building",       label: "בניין מגורים" },
+  { value: "land",           label: "מגרש" },
+  { value: "commercial",     label: "מסחרי" },
+  { value: "other",          label: "אחר" },
+];
+
+const CONDITION_OPTIONS = [
+  "חדש מקבלן (לא גרו בו)",
+  "חדש עד 5 שנים",
+  "משופץ",
+  "שמור",
+  "ישן",
+];
+
+const BOOLEAN_FEATURES: { key: keyof PropertyFeatures; label: string }[] = [
+  { key: "elevator",  label: "מעלית" },
+  { key: "renovated", label: "משופץ" },
+  { key: "aircon",    label: "מיזוג אוויר" },
+  { key: "saferoom",  label: "ממ\"ד" },
+];
 
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
     .replace(/[֐-׿]+/g, (m) => {
       const map: Record<string, string> = {
-        "א": "a","ב": "b","ג": "g","ד": "d","ה": "h","ו": "v","ז": "z",
-        "ח": "h","ט": "t","י": "y","כ": "k","ל": "l","מ": "m","נ": "n",
-        "ס": "s","ע": "a","פ": "p","צ": "tz","ק": "k","ר": "r","ש": "sh","ת": "t",
-        "ך": "k","ם": "m","ן": "n","ף": "p","ץ": "tz",
+        "א":"a","ב":"b","ג":"g","ד":"d","ה":"h","ו":"v","ז":"z",
+        "ח":"h","ט":"t","י":"y","כ":"k","ל":"l","מ":"m","נ":"n",
+        "ס":"s","ע":"a","פ":"p","צ":"tz","ק":"k","ר":"r","ש":"sh","ת":"t",
+        "ך":"k","ם":"m","ן":"n","ף":"p","ץ":"tz",
       };
       return m.split("").map((c) => map[c] || "").join("");
     })
@@ -78,10 +107,14 @@ interface Props {
 
 const emptyForm: PropertyFormData = {
   title: "", slug: "", price: "", price_type: "sale", property_type: "apartment",
-  status: "active", city: "", neighborhood: "", street: "", rooms: "", bathrooms: "",
-  area_sqm: "", floor: "", total_floors: "", description: "",
-  features: { parking: false, balcony: false, elevator: false, storage: false,
-    renovated: false, aircon: false, saferoom: false, garden: false },
+  status: "active", city: "", neighborhood: "", street: "",
+  rooms: "", bathrooms: "", area_sqm: "", floor: "", total_floors: "",
+  description: "",
+  features: {
+    elevator: false, renovated: false, aircon: false, saferoom: false,
+    parking: "ללא", balcony_sqm: "", storage_sqm: "", garden_sqm: "",
+    condition: "", year_built: "",
+  },
   images: [], meta_title: "", meta_description: "",
 };
 
@@ -91,7 +124,7 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
   const [form, setForm] = useState<PropertyFormData>({
     ...emptyForm,
     ...initialData,
-    features: { ...emptyForm.features, ...(initialData?.features as PropertyFormData["features"]) },
+    features: { ...emptyForm.features, ...(initialData?.features as PropertyFeatures) },
     images: (initialData?.images as UploadedImage[]) || [],
   });
   const [slugManual, setSlugManual] = useState(!!initialData?.slug);
@@ -107,7 +140,7 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
     });
   }
 
-  function setFeature(key: keyof PropertyFormData["features"], value: boolean) {
+  function setFeat(key: keyof PropertyFeatures, value: boolean | string) {
     setForm((prev) => ({ ...prev, features: { ...prev.features, [key]: value } }));
   }
 
@@ -119,7 +152,6 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-
     startTransition(async () => {
       const result = await onSubmit(form);
       if (result.error) {
@@ -143,19 +175,16 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
         </div>
       )}
 
-      {/* Basic */}
+      {/* ── Basic ── */}
       <div className={sectionClass}>
         <h2 className="font-semibold text-gray-800 text-base">פרטים בסיסיים</h2>
 
         <div>
           <label className={labelClass}>כותרת הנכס *</label>
           <input
-            type="text"
-            className={inputClass}
-            value={form.title}
+            type="text" className={inputClass} value={form.title} required
             onChange={(e) => set("title", e.target.value)}
             placeholder="למשל: דירת 4 חדרות ברחוב רפפורט 3, כפר סבא"
-            required
           />
         </div>
 
@@ -163,12 +192,9 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
           <label className={labelClass}>Slug (URL)</label>
           <div className="flex gap-2">
             <input
-              type="text"
-              className={inputClass}
-              value={form.slug}
+              type="text" className={inputClass} value={form.slug} dir="ltr"
               onChange={(e) => handleSlugChange(e.target.value)}
               placeholder="rappaport-3-kfar-saba"
-              dir="ltr"
             />
             <button
               type="button"
@@ -184,12 +210,8 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
           <div>
             <label className={labelClass}>מחיר (₪) *</label>
             <input
-              type="number"
-              className={inputClass}
-              value={form.price}
-              onChange={(e) => set("price", e.target.value)}
-              placeholder="2500000"
-              required
+              type="number" className={inputClass} value={form.price} required
+              onChange={(e) => set("price", e.target.value)} placeholder="2500000"
             />
           </div>
           <div>
@@ -204,11 +226,10 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>סוג נכס</label>
-            <select className={inputClass} value={form.property_type} onChange={(e) => set("property_type", e.target.value as PropertyFormData["property_type"])}>
-              <option value="apartment">דירה</option>
-              <option value="house">בית פרטי</option>
-              <option value="commercial">מסחרי</option>
-              <option value="land">קרקע</option>
+            <select className={inputClass} value={form.property_type} onChange={(e) => set("property_type", e.target.value)}>
+              {PROPERTY_TYPES.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -223,53 +244,112 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
         </div>
       </div>
 
-      {/* Location */}
+      {/* ── Location ── */}
       <div className={sectionClass}>
         <h2 className="font-semibold text-gray-800 text-base">מיקום</h2>
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className={labelClass}>עיר *</label>
-            <input type="text" className={inputClass} value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="כפר סבא" required />
+            <input type="text" className={inputClass} value={form.city} required
+              onChange={(e) => set("city", e.target.value)} placeholder="כפר סבא" />
           </div>
           <div>
             <label className={labelClass}>שכונה</label>
-            <input type="text" className={inputClass} value={form.neighborhood} onChange={(e) => set("neighborhood", e.target.value)} placeholder="מרכז העיר" />
+            <input type="text" className={inputClass} value={form.neighborhood}
+              onChange={(e) => set("neighborhood", e.target.value)} placeholder="מרכז העיר" />
           </div>
           <div>
             <label className={labelClass}>רחוב</label>
-            <input type="text" className={inputClass} value={form.street} onChange={(e) => set("street", e.target.value)} placeholder="רחוב רפפורט 3" />
+            <input type="text" className={inputClass} value={form.street}
+              onChange={(e) => set("street", e.target.value)} placeholder="רחוב רפפורט 3" />
           </div>
         </div>
       </div>
 
-      {/* Details */}
+      {/* ── Technical Details ── */}
       <div className={sectionClass}>
         <h2 className="font-semibold text-gray-800 text-base">פרטים טכניים</h2>
+
+        {/* Row 1: rooms / bathrooms / area */}
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className={labelClass}>חדרים</label>
-            <input type="number" step="0.5" className={inputClass} value={form.rooms} onChange={(e) => set("rooms", e.target.value)} placeholder="4" />
+            <input type="number" step="0.5" className={inputClass} value={form.rooms}
+              onChange={(e) => set("rooms", e.target.value)} placeholder="4" />
           </div>
           <div>
             <label className={labelClass}>חדרי רחצה</label>
-            <input type="number" className={inputClass} value={form.bathrooms} onChange={(e) => set("bathrooms", e.target.value)} placeholder="2" />
+            <input type="number" className={inputClass} value={form.bathrooms}
+              onChange={(e) => set("bathrooms", e.target.value)} placeholder="2" />
           </div>
           <div>
             <label className={labelClass}>שטח מ"ר</label>
-            <input type="number" className={inputClass} value={form.area_sqm} onChange={(e) => set("area_sqm", e.target.value)} placeholder="110" />
+            <input type="number" className={inputClass} value={form.area_sqm}
+              onChange={(e) => set("area_sqm", e.target.value)} placeholder="110" />
           </div>
+        </div>
+
+        {/* Row 2: floor / total floors / year */}
+        <div className="grid grid-cols-3 gap-4">
           <div>
             <label className={labelClass}>קומה</label>
-            <input type="number" className={inputClass} value={form.floor} onChange={(e) => set("floor", e.target.value)} placeholder="3" />
+            <input type="number" className={inputClass} value={form.floor}
+              onChange={(e) => set("floor", e.target.value)} placeholder="3" />
           </div>
           <div>
             <label className={labelClass}>סה"כ קומות</label>
-            <input type="number" className={inputClass} value={form.total_floors} onChange={(e) => set("total_floors", e.target.value)} placeholder="8" />
+            <input type="number" className={inputClass} value={form.total_floors}
+              onChange={(e) => set("total_floors", e.target.value)} placeholder="8" />
+          </div>
+          <div>
+            <label className={labelClass}>שנת בנייה</label>
+            <input type="number" className={inputClass} value={form.features.year_built}
+              onChange={(e) => setFeat("year_built", e.target.value)}
+              placeholder="2010" min="1900" max="2030" />
+          </div>
+        </div>
+
+        {/* Condition */}
+        <div>
+          <label className={labelClass}>מצב הנכס</label>
+          <select className={inputClass} value={form.features.condition}
+            onChange={(e) => setFeat("condition", e.target.value)}>
+            <option value="">— לא צוין —</option>
+            {CONDITION_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+
+        {/* Row 3: balcony / storage / garden / parking */}
+        <div className="grid grid-cols-4 gap-4">
+          <div>
+            <label className={labelClass}>מרפסת מ"ר</label>
+            <input type="number" className={inputClass} value={form.features.balcony_sqm}
+              onChange={(e) => setFeat("balcony_sqm", e.target.value)} placeholder="12" min="0" />
+          </div>
+          <div>
+            <label className={labelClass}>מחסן מ"ר</label>
+            <input type="number" className={inputClass} value={form.features.storage_sqm}
+              onChange={(e) => setFeat("storage_sqm", e.target.value)} placeholder="6" min="0" />
+          </div>
+          <div>
+            <label className={labelClass}>גינה מ"ר</label>
+            <input type="number" className={inputClass} value={form.features.garden_sqm}
+              onChange={(e) => setFeat("garden_sqm", e.target.value)} placeholder="50" min="0" />
+          </div>
+          <div>
+            <label className={labelClass}>חניה</label>
+            <select className={inputClass} value={form.features.parking}
+              onChange={(e) => setFeat("parking", e.target.value)}>
+              <option value="ללא">ללא</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
           </div>
         </div>
       </div>
 
-      {/* Description */}
+      {/* ── Description ── */}
       <div className={sectionClass}>
         <h2 className="font-semibold text-gray-800 text-base">תיאור</h2>
         <textarea
@@ -280,25 +360,25 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
         />
       </div>
 
-      {/* Features */}
+      {/* ── Amenities ── */}
       <div className={sectionClass}>
         <h2 className="font-semibold text-gray-800 text-base">מאפיינים</h2>
         <div className="grid grid-cols-4 gap-3">
-          {(Object.keys(FEATURE_LABELS) as Array<keyof PropertyFormData["features"]>).map((key) => (
+          {BOOLEAN_FEATURES.map(({ key, label }) => (
             <label key={key} className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={form.features[key]}
-                onChange={(e) => setFeature(key, e.target.checked)}
+                checked={form.features[key] as boolean}
+                onChange={(e) => setFeat(key, e.target.checked)}
                 className="w-4 h-4 accent-[#F5A623] rounded"
               />
-              <span className="text-sm text-gray-700">{FEATURE_LABELS[key]}</span>
+              <span className="text-sm text-gray-700">{label}</span>
             </label>
           ))}
         </div>
       </div>
 
-      {/* Images */}
+      {/* ── Images ── */}
       <div className={sectionClass}>
         <h2 className="font-semibold text-gray-800 text-base">תמונות</h2>
         <ImageUploader
@@ -308,19 +388,15 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
         />
       </div>
 
-      {/* SEO */}
+      {/* ── SEO ── */}
       <div className={sectionClass}>
         <h2 className="font-semibold text-gray-800 text-base">SEO</h2>
         <div>
           <label className={labelClass}>Meta Title</label>
           <input
-            type="text"
-            className={inputClass}
-            value={form.meta_title}
+            type="text" className={inputClass} value={form.meta_title} dir="auto"
             onChange={(e) => set("meta_title", e.target.value)}
-            placeholder="כותרת עד 60 תווים"
-            maxLength={60}
-            dir="auto"
+            placeholder="כותרת עד 60 תווים" maxLength={60}
           />
           <p className="text-xs text-gray-400 mt-1">{form.meta_title.length}/60</p>
         </div>
@@ -328,28 +404,24 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
           <label className={labelClass}>Meta Description</label>
           <textarea
             className={`${inputClass} h-20 resize-none`}
-            value={form.meta_description}
+            value={form.meta_description} dir="auto"
             onChange={(e) => set("meta_description", e.target.value)}
-            placeholder="תיאור עד 160 תווים"
-            maxLength={160}
-            dir="auto"
+            placeholder="תיאור עד 160 תווים" maxLength={160}
           />
           <p className="text-xs text-gray-400 mt-1">{form.meta_description.length}/160</p>
         </div>
       </div>
 
-      {/* Actions */}
+      {/* ── Actions ── */}
       <div className="flex items-center gap-3 pb-8">
         <button
-          type="submit"
-          disabled={isPending}
+          type="submit" disabled={isPending}
           className="bg-[#F5A623] hover:bg-[#D4881A] disabled:opacity-60 text-white font-medium px-8 py-2.5 rounded-xl transition-colors"
         >
           {isPending ? "שומר..." : initialData?.id ? "עדכן נכס" : "פרסם נכס"}
         </button>
         <button
-          type="button"
-          onClick={() => router.push("/admin/properties")}
+          type="button" onClick={() => router.push("/admin/properties")}
           className="text-gray-500 hover:text-gray-700 px-4 py-2.5 text-sm transition-colors"
         >
           ביטול
