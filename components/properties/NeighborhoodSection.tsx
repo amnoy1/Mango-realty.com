@@ -1,15 +1,20 @@
-import { MapPin, Bus, School, TreePine, ShoppingBag, Users, Info } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { MapPin, Bus, School, TreePine, ShoppingBag, Users, Info, Plus, Minus } from "lucide-react";
 import type { NeighborhoodData } from "@/lib/neighborhood";
 
 const CATEGORIES = [
-  { key: "transport" as const, icon: Bus,         label: "תחבורה",  bg: "bg-sky-50",      color: "text-sky-600"    },
-  { key: "schools"   as const, icon: School,      label: "חינוך",   bg: "bg-amber-50",    color: "text-amber-600"  },
-  { key: "lifestyle" as const, icon: TreePine,    label: "פנאי",    bg: "bg-emerald-50",  color: "text-emerald-600"},
-  { key: "commerce"  as const, icon: ShoppingBag, label: "מסחר",    bg: "bg-violet-50",   color: "text-violet-600" },
-  { key: "character" as const, icon: Users,       label: "קהילה",   bg: "bg-rose-50",     color: "text-rose-600"   },
+  { key: "transport" as const, icon: Bus,         label: "תחבורה"  },
+  { key: "schools"   as const, icon: School,      label: "חינוך"   },
+  { key: "lifestyle" as const, icon: TreePine,    label: "פנאי"    },
+  { key: "commerce"  as const, icon: ShoppingBag, label: "מסחר"    },
+  { key: "character" as const, icon: Users,       label: "קהילה"   },
 ] as const;
 
 export default function NeighborhoodSection({ data }: { data: NeighborhoodData }) {
+  const [openKey, setOpenKey] = useState<string | null>(null);
+
   const hasContent = data.description || CATEGORIES.some(c => data[c.key]);
   if (!hasContent) return null;
 
@@ -28,33 +33,44 @@ export default function NeighborhoodSection({ data }: { data: NeighborhoodData }
         <span className="text-xs text-[var(--color-luxury-black)]/30 mr-auto">{locationLabel}</span>
       </div>
 
-      {/* AI marketing description */}
+      {/* Description */}
       {data.description && (
-        <p className="text-[var(--color-luxury-black)]/65 leading-relaxed text-[0.95rem] mb-7 max-w-3xl">
+        <p className="text-[var(--color-luxury-black)]/65 leading-relaxed text-[0.95rem] mb-6 max-w-3xl">
           {data.description}
         </p>
       )}
 
-      {/* 5 category cards */}
+      {/* Accordion */}
       {CATEGORIES.some(c => data[c.key]) && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
-          {CATEGORIES.map(({ key, icon: Icon, label, bg, color }) => {
+        <div className="divide-y divide-black/[0.06] mb-5">
+          {CATEGORIES.map(({ key, icon: Icon, label }) => {
             const text = data[key];
             if (!text) return null;
+            const isOpen = openKey === key;
             return (
-              <div
-                key={key}
-                className={`${bg} rounded-2xl p-4 border border-black/5`}
-              >
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Icon size={13} className={color} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-luxury-black)]/40">
-                    {label}
+              <div key={key}>
+                <button
+                  onClick={() => setOpenKey(isOpen ? null : key)}
+                  className="flex items-center justify-between w-full py-3.5 cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon size={14} className="text-[var(--color-gold)] shrink-0" />
+                    <span className="text-sm font-semibold text-[var(--color-luxury-black)]">
+                      {label}
+                    </span>
+                  </div>
+                  <span className="text-[var(--color-luxury-black)]/35">
+                    {isOpen ? <Minus size={14} /> : <Plus size={14} />}
                   </span>
-                </div>
-                <p className="text-xs text-[var(--color-luxury-black)]/70 leading-relaxed">
-                  {text}
-                </p>
+                </button>
+
+                {isOpen && (
+                  <div className="mb-3.5 border border-black/[0.09] rounded-xl px-4 py-3.5">
+                    <p className="text-sm text-[var(--color-luxury-black)]/70 leading-relaxed">
+                      {text}
+                    </p>
+                  </div>
+                )}
               </div>
             );
           })}
