@@ -31,38 +31,51 @@ Hebrew-first, RTL, Next.js 15 App Router, Tailwind v4, Supabase, Vercel.
 ```
 Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 
-## מה בנוי (סטטוס 2026-06-22)
+## מה בנוי (סטטוס 2026-06-24)
 
 ### Public Site
 - Homepage: Navbar, Hero, Stats, FeaturedProperties, AIAgentSection, Neighborhoods, HowItWorks, Footer
-- `/properties/[slug]` — דף נכס: gallery slider, Google Maps embed, Street View popup, agent card, related properties
-- `/properties` — דף רשימת נכסים (קיים, ריק עד שיעלו נכסים)
-- `FeaturedProperties` — server component, מושך נכסים אמיתיים מ-Supabase (ללא mock data)
-- **סקשין שכונה — הוסר** (נבנה ואחר-כך הוסר מדף הנכס. הקוד קיים ב-`lib/neighborhood.ts` ו-`components/properties/NeighborhoodSection.tsx` אם יחזור בעתיד)
+- `/properties/[slug]` — דף נכס מלא:
+  - Gallery slider + thumbnails
+  - Google Maps embed + Street View popup
+  - Stats bar (חדרים, אמבטיות, מ"ר, קומה)
+  - תיאור הנכס
+  - **יתרונות הנכס** — chips עם אייקונים: מעלית, ממ"ד, מיזוג, חניה xN, מרפסת Nמ"ר, מחסן, גינה, מצב
+  - **סקשין שכונה** — accordion (לחץ + לפתוח): תחבורה, חינוך, פנאי, מסחר, קהילה — AI Sonnet + web search, cache 6 חודשים בסופרבייס
+  - Agent card + CTA
+  - Related properties
+- `/properties` — דף רשימת נכסים (קיים)
+- `FeaturedProperties` — server component, נכסים אמיתיים מ-Supabase
 
 ### Admin Panel (`/admin`) — ✅ מוכן לשימוש
 - Google OAuth — רק `amir@mango-realty.com` נכנס
-- Middleware (`middleware.ts`) — מגן על `/admin/*`, מפנה ל-login אם לא מחובר
-- `AdminLayout` — מציג chrome רק למשתמש מאומת, אחרת מעביר children (middleware עושה redirect)
-- `/admin/login` — Google Sign-In page
 - `/admin/properties` — רשימת נכסים + עריכה + מחיקה
-- `/admin/properties/new` — יצירת נכס חדש
-- `/admin/properties/[id]/edit` — עריכת נכס
-- `components/admin/PropertyForm.tsx` — טופס מלא
+- `/admin/properties/new` + `[id]/edit` — טופס מלא
+- `components/admin/PropertyForm.tsx`:
+  - **15 סוגי נכס**: דירה, דירת גג, דירת גן, פנטהאוז, מיני פנטהאוז, דופלקס, קוטג', קוטג' טורי, דו-משפחתי, בית פרטי/וילה, יחידת דיור, סטודיו/לופט, בניין, מגרש, מסחרי, אחר
+  - **פרטים טכניים**: חדרים, אמבטיות, שטח, קומה, סה"כ קומות, שנת בנייה, מצב הנכס (5 אפשרויות), מרפסת/מחסן/גינה (מ"ר), חניה (ללא/1/2/3)
+  - **מאפיינים**: מעלית, משופץ, מיזוג, ממ"ד
+  - **SEO** — כפתור "✨ מלא אוטומטית" מייצר meta_title + meta_description מנתוני הטופס
 - `components/admin/ImageUploader.tsx` — drag & drop, עד 20 תמונות
+
+### DB — שינויים ידניים שבוצעו
+- `DROP CONSTRAINT properties_property_type_check` — מאפשר כל סוג נכס חופשי
+- טבלת `neighborhoods` נוצרה לcaching שכונות AI
+
+### SEO / GEO — ✅ מוכן
+- `generateMetadata` לכל נכס: og:image (תמונה אמיתית), twitter card, canonical URL
+- **GEO meta tags**: `geo.region=IL`, `geo.placename`, `geo.position`, `ICBM` (lat/lng)
+- **JSON-LD** `RealEstateListing`: מחיר, כתובת, geocoordinates, חדרים, שטח, תמונות
+- **Sitemap**: `app/sitemap.ts` — auto-generates מכל נכסים פעילים
+- `NEXT_PUBLIC_SITE_URL` env var — מעבר לדומיין = שינוי env אחד בלבד
 
 ### API Routes
 - `POST /api/admin/properties` — יצירת נכס
 - `PATCH/DELETE /api/admin/properties/[id]` — עדכון/מחיקה
 - `POST /api/admin/upload-images` — העלאה ל-Supabase Storage
 
-### SiteManager (`scripts/site-manager/`)
-- סוכן Node.js: סורק תיקיות → Claude מחלץ → WhatsApp לאישור → Supabase
-- Watch folder: `C:\תיקייה ציבורית\תיקייה ציבורית חדשה`
-- Selected photos folder: מחפש `נבחרו` / `תמונות נבחרות` / `נבחרות` / `selected`
-- `.env` נדרש: `WATCH_FOLDER`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`
-- הרצה: `node index.js` | בדיקה ללא WhatsApp: `SKIP_WHATSAPP=true` ב-.env
-- **npm install בוצע** — חבילות מותקנות
+### SiteManager (`scripts/site-manager/`) — ⏭️ דחוי
+- קוד קיים, npm install בוצע — נדחה להמשך
 
 ## DB Schema (עיקרי)
 ```sql
@@ -89,13 +102,23 @@ RLS: public read על `status = 'active'`, service_role לכל השאר.
 - Login: `app/admin/login/page.tsx` — `flowType: "implicit"` + `redirectTo: /auth/handle`
 - Handle: `app/auth/handle/page.tsx` — `getSession()` מזהה hash אוטומטית, שומר session ב-cookies
 
-## ⏭️ הצעד הבא — להמשיך מכאן
-1. **הרץ סוכן:** `cd scripts/site-manager && node index.js` (Storage bucket + .env אמורים להיות מוכנים)
-2. **Phase 2** — AI Search, פילטרים ב-`/properties`, WhatsApp Agent
+## ⏭️ הצעד הבא — סוכן הקונים
+**הפוקוס הבא: Buyers Agent** — סוכן AI לקונים/שוכרים באתר
 
-## Phase הבא (Phase 2)
-1. AI Search — חיפוש בשפה טבעית + pgvector
-2. `/properties` — פילטרים (עיר, מחיר, חדרים)
-3. Google Auth לקונים
-4. WhatsApp Agent — Claude + Twilio
-5. SEO — JSON-LD schema, sitemap
+רעיון: קונה מתאר מה הוא מחפש בשפה טבעית → הסוכן מחפש נכסים מתאימים (pgvector similarity search), שואל שאלות הבהרה, ומציג תוצאות.
+
+### אפשרויות מימוש:
+1. **Chat widget באתר** — floating button → chat panel → Claude API stream
+2. **WhatsApp bot** — Claude + Twilio (כבר יש env vars)
+3. **שניהם** — chat באתר + WhatsApp
+
+### מה נדרש:
+- `embedding` column ב-properties כבר קיים (vector(1536))
+- צריך: לחשב embeddings לכל נכס, endpoint לחיפוש semantic, UI לצ'אט
+
+## Domain Migration — כשעוברים לדומיין
+Vercel → Settings → Environment Variables:
+```
+NEXT_PUBLIC_SITE_URL = https://mango-realty.com
+```
+→ Redeploy. הכל מתעדכן אוטומטית (canonical, og, sitemap, JSON-LD).
