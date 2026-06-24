@@ -8,9 +8,11 @@ import NeighborhoodSection from "@/components/properties/NeighborhoodSection";
 import { getNeighborhoodData } from "@/lib/neighborhood";
 import type { Property } from "@/components/ui/PropertyCard";
 
-const FEATURE_LABELS: Record<string, string> = {
-  parking: "חניה", balcony: "מרפסת", elevator: "מעלית", storage: "מחסן",
-  renovated: "שיפוץ מלא", aircon: "מיזוג אוויר", saferoom: "ממ\"ד", garden: "גינה",
+// Legacy boolean features (old schema)
+const BOOL_FEATURE_LABELS: Record<string, string> = {
+  elevator: "מעלית", renovated: "שיפוץ מלא", aircon: "מיזוג אוויר", saferoom: "ממ\"ד",
+  // backward-compat with old boolean parking/balcony/storage/garden
+  parking: "חניה", balcony: "מרפסת", storage: "מחסן", garden: "גינה",
 };
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&q=85";
@@ -68,10 +70,20 @@ export default async function PropertyPage({
 
   if (!property) notFound();
 
-  // Convert features JSONB → string[]
+  // Boolean features → display labels
   const featuresArr: string[] = Object.entries(property.features || {})
     .filter(([, v]) => v === true)
-    .map(([k]) => FEATURE_LABELS[k] || k);
+    .map(([k]) => BOOL_FEATURE_LABELS[k] || k)
+    .filter(Boolean);
+
+  // New sized / counted fields from features JSONB
+  const feat = (property.features || {}) as Record<string, unknown>;
+  const condition   = (feat.condition   as string) || null;
+  const year_built  = (feat.year_built  as string) || null;
+  const parking     = feat.parking && feat.parking !== "ללא" ? String(feat.parking) : null;
+  const balcony_sqm = feat.balcony_sqm ? String(feat.balcony_sqm) : null;
+  const storage_sqm = feat.storage_sqm ? String(feat.storage_sqm) : null;
+  const garden_sqm  = feat.garden_sqm  ? String(feat.garden_sqm)  : null;
 
   const images: string[] =
     (property.images as string[])?.length
@@ -117,6 +129,12 @@ export default async function PropertyPage({
     description: property.description || "",
     features: featuresArr,
     images,
+    condition,
+    year_built,
+    parking,
+    balcony_sqm,
+    storage_sqm,
+    garden_sqm,
   };
 
   return (

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import React, { useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Bed, Bath, Square, Layers, MapPin, Phone,
   Heart, Share2, ChevronRight, ChevronLeft, Check,
   ArrowLeft, ExternalLink, Navigation, X,
+  Car, Wind, Package, Fence, TreePine, Shield, MoveUp, Wrench, Calendar, Tag,
 } from "lucide-react";
 import PropertyCard, { type Property } from "@/components/ui/PropertyCard";
 
@@ -28,6 +29,12 @@ interface PropertyData {
   description: string;
   features: string[];
   images: string[];
+  condition:   string | null;
+  year_built:  string | null;
+  parking:     string | null;
+  balcony_sqm: string | null;
+  storage_sqm: string | null;
+  garden_sqm:  string | null;
 }
 
 function formatPrice(n: number) {
@@ -211,19 +218,39 @@ export default function PropertyPageClient({
                 </div>
               )}
 
-              {property.features.length > 0 && (
-                <div>
-                  <h2 className="font-black text-[var(--color-luxury-black)] mb-4">מאפיינים</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {property.features.map((f) => (
-                      <div key={f} className="flex items-center gap-2 text-sm text-[var(--color-luxury-black)]/65">
-                        <Check size={13} className="text-[var(--color-gold)] shrink-0" />
-                        {f}
-                      </div>
-                    ))}
+              {(() => {
+                // Build all chips: boolean features + sized fields
+                const chips: { icon: React.ElementType; label: string; value?: string }[] = [
+                  ...property.features.map((f) => {
+                    const iconMap: Record<string, React.ElementType> = {
+                      "מעלית": MoveUp, "שיפוץ מלא": Wrench, "מיזוג אוויר": Wind, "ממ\"ד": Shield,
+                      "חניה": Car, "מרפסת": Fence, "מחסן": Package, "גינה": TreePine,
+                    };
+                    return { icon: iconMap[f] ?? Check, label: f };
+                  }),
+                  ...(property.parking     ? [{ icon: Car,     label: "חניה",    value: `x${property.parking}` }] : []),
+                  ...(property.balcony_sqm ? [{ icon: Fence,   label: "מרפסת",   value: `${property.balcony_sqm} מ"ר` }] : []),
+                  ...(property.storage_sqm ? [{ icon: Package, label: "מחסן",    value: `${property.storage_sqm} מ"ר` }] : []),
+                  ...(property.garden_sqm  ? [{ icon: TreePine,label: "גינה",    value: `${property.garden_sqm} מ"ר` }]  : []),
+                  ...(property.condition   ? [{ icon: Tag,     label: property.condition }] : []),
+                  ...(property.year_built  ? [{ icon: Calendar,label: `נבנה ${property.year_built}` }] : []),
+                ];
+                if (!chips.length) return null;
+                return (
+                  <div>
+                    <h2 className="font-black text-[var(--color-luxury-black)] mb-4">יתרונות הנכס</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {chips.map(({ icon: Icon, label, value }, i) => (
+                        <div key={i}
+                          className="flex items-center gap-2 border border-black/10 rounded-xl px-3.5 py-2 text-sm text-[var(--color-luxury-black)]/70 bg-white">
+                          <Icon size={14} className="text-[var(--color-gold)] shrink-0" />
+                          <span>{label}{value ? ` ${value}` : ""}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Location + map */}
               <div>
