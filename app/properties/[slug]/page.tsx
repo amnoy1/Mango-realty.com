@@ -17,7 +17,7 @@ const BOOL_FEATURE_LABELS: Record<string, string> = {
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&q=85";
 
-const SITE_URL = "https://mango-realty-com.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mango-realty-com.vercel.app";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

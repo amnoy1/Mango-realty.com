@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import type { MetadataRoute } from "next";
 
-const SITE_URL = "https://mango-realty-com.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mango-realty-com.vercel.app";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = await createAdminClient();
