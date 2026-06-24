@@ -7,7 +7,7 @@ import {
   Bed, Bath, Square, Layers, MapPin, Phone,
   Heart, Share2, ChevronRight, ChevronLeft, Check,
   ArrowLeft, ExternalLink, Navigation, X,
-  Car, Wind, Package, Fence, TreePine, Shield, MoveUp, Wrench, Calendar, Tag,
+  Car, Wind, Package, Fence, TreePine, Shield, MoveUp, Wrench, Tag,
 } from "lucide-react";
 import PropertyCard, { type Property } from "@/components/ui/PropertyCard";
 
@@ -220,20 +220,26 @@ export default function PropertyPageClient({
 
               {(() => {
                 // Build all chips: boolean features + sized fields
+                // Labels that have a sized version — skip boolean duplicate
+                const skipIfSized = new Set([
+                  ...(property.parking     ? ["חניה"]   : []),
+                  ...(property.balcony_sqm ? ["מרפסת"]  : []),
+                  ...(property.storage_sqm ? ["מחסן"]   : []),
+                  ...(property.garden_sqm  ? ["גינה"]   : []),
+                ]);
+                const iconMap: Record<string, React.ElementType> = {
+                  "מעלית": MoveUp, "שיפוץ מלא": Wrench, "מיזוג אוויר": Wind, "ממ\"ד": Shield,
+                  "חניה": Car, "מרפסת": Fence, "מחסן": Package, "גינה": TreePine,
+                };
                 const chips: { icon: React.ElementType; label: string; value?: string }[] = [
-                  ...property.features.map((f) => {
-                    const iconMap: Record<string, React.ElementType> = {
-                      "מעלית": MoveUp, "שיפוץ מלא": Wrench, "מיזוג אוויר": Wind, "ממ\"ד": Shield,
-                      "חניה": Car, "מרפסת": Fence, "מחסן": Package, "גינה": TreePine,
-                    };
-                    return { icon: iconMap[f] ?? Check, label: f };
-                  }),
-                  ...(property.parking     ? [{ icon: Car,     label: "חניה",    value: `x${property.parking}` }] : []),
-                  ...(property.balcony_sqm ? [{ icon: Fence,   label: "מרפסת",   value: `${property.balcony_sqm} מ"ר` }] : []),
-                  ...(property.storage_sqm ? [{ icon: Package, label: "מחסן",    value: `${property.storage_sqm} מ"ר` }] : []),
-                  ...(property.garden_sqm  ? [{ icon: TreePine,label: "גינה",    value: `${property.garden_sqm} מ"ר` }]  : []),
-                  ...(property.condition   ? [{ icon: Tag,     label: property.condition }] : []),
-                  ...(property.year_built  ? [{ icon: Calendar,label: `נבנה ${property.year_built}` }] : []),
+                  ...property.features
+                    .filter(f => !skipIfSized.has(f))
+                    .map(f => ({ icon: iconMap[f] ?? Check, label: f })),
+                  ...(property.parking     ? [{ icon: Car,      label: "חניה",   value: `x${property.parking}` }] : []),
+                  ...(property.balcony_sqm ? [{ icon: Fence,    label: "מרפסת",  value: `${property.balcony_sqm} מ"ר` }] : []),
+                  ...(property.storage_sqm ? [{ icon: Package,  label: "מחסן",   value: `${property.storage_sqm} מ"ר` }] : []),
+                  ...(property.garden_sqm  ? [{ icon: TreePine, label: "גינה",   value: `${property.garden_sqm} מ"ר` }]  : []),
+                  ...(property.condition   ? [{ icon: Tag,      label: property.condition }] : []),
                 ];
                 if (!chips.length) return null;
                 return (
