@@ -13,40 +13,75 @@ export interface NeighborhoodData {
   image_url: string | null;
 }
 
-// ─── Claude + web search ──────────────────────────────────────────────────────
+// ─── data.gov.il — real school names (Ministry of Education) ─────────────────
+const GOV_SCHOOLS_RESOURCE = "5548fd63-5868-4053-ad81-98caddc5e232";
+
+async function fetchSchoolNames(city: string): Promise<string[]> {
+  try {
+    const f = encodeURIComponent(JSON.stringify({ "שם ישוב": city }));
+    const q = encodeURIComponent("בית ספר");
+    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_SCHOOLS_RESOURCE}&filters=${f}&q=${q}&fields=${encodeURIComponent("שם מוסד")}&limit=60`;
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return [];
+
+    const records: Record<string, string>[] = (await res.json()).result?.records ?? [];
+    const seen = new Set<string>();
+    const names: string[] = [];
+    for (const r of records) {
+      const name = r["שם מוסד"];
+      if (name && !seen.has(name)) {
+        seen.add(name);
+        names.push(name);
+      }
+    }
+    return names.slice(0, 8);
+  } catch {
+    return [];
+  }
+}
+
+// ─── Claude Sonnet — neighborhood profile with specific facts ─────────────────
 async function generateNeighborhoodData(
   city: string,
-  neighborhood: string
+  neighborhood: string,
+  schoolNames: string[]
 ): Promise<Omit<NeighborhoodData, "city" | "neighborhood" | "image_url"> | null> {
   const client = new Anthropic();
-  const location = neighborhood ? `"${neighborhood}" ב${city}, ישראל` : `${city}, ישראל`;
+  const location = neighborhood ? `"${neighborhood}" ב${city}` : city;
 
-  const prompt = `אתה כותב תוכן נדל"ן מקצועי בישראל.
-חקור את השכונה ${location} ומצא מידע עדכני ומדויק על:
-1. נגישות ותחבורה (כבישים ראשיים, אוטובוסים, רכבת/רכבת קלה)
-2. מוסדות חינוך (בתי ספר, גנים, מרכזים קהילתיים)
-3. פנאי ותרבות (פארקים, מתקני ספורט, בידור)
-4. מסחר ושירותים (קניונים, סופרמרקטים, רחובות מסחריים)
-5. אופי הקהילה (דמוגרפיה, אווירה, סוג תושבים)
+  const schoolsContext = schoolNames.length > 0
+    ? `\nבתי ספר אמיתיים ב${city} (מנתוני משרד החינוך): ${schoolNames.join(", ")}.`
+    : "";
 
-החזר JSON בלבד (ללא תגי markdown, ללא הסברים):
+  const prompt = `אתה כותב תוכן נדל"ן מקצועי בישראל. עליך לכתוב פרופיל שכונה עבור ${location}.
+${schoolsContext}
+
+חוקים דווקניים:
+- כתוב פרטים ספציפיים ואמיתיים: שמות כבישים אמיתיים (כביש X), שמות קניונים/מרכזים מסחריים אמיתיים, שמות פארקים אמיתיים, מספרי קווי אוטובוס אמיתיים אם ידועים.
+- אם אתה יודע ששכונה ספציפית קרובה לתחנת רכבת, ציין זאת. אם לא ידוע — אל תמציא.
+- אל תכתוב ביטויים גנריים כמו "קרוב לכבישים ראשיים" או "מספר בתי ספר". כתוב את השמות בפועל.
+- עברית בלבד, ללא markdown.
+- השתמש בבתי הספר שסופקו לך (אם סופקו) בתיאור "מוסדות חינוך".
+
+החזר JSON בלבד (ללא טקסט לפני/אחרי, ללא גרשיים נוספים):
 {
-  "description": "תיאור שיווקי מרשים 4-5 משפטים בעברית לרוכש פוטנציאלי. ללא markdown.",
-  "transport": "משפט קצר על תחבורה ונגישות",
-  "schools": "משפט קצר על מוסדות חינוך",
-  "lifestyle": "משפט קצר על פנאי ואורח חיים",
-  "commerce": "משפט קצר על קניות ושירותים",
-  "character": "משפט קצר על אופי הקהילה"
+  "description": "תיאור שיווקי מרשים 4-5 משפטים בעברית. ציין שמות ספציפיים אמיתיים.",
+  "transport": "שמות כבישים ספציפיים, קווי אוטובוס, רכבת אם רלוונטי — כ-2 משפטים",
+  "schools": "שמות בתי ספר ספציפיים מהרשימה + מוסדות נוספים — כ-2 משפטים",
+  "lifestyle": "שמות פארקים ומתקני פנאי ספציפיים — כ-2 משפטים",
+  "commerce": "שמות קניונים, רחובות מסחריים, מרכזי קניות ספציפיים — כ-2 משפטים",
+  "character": "אופי הקהילה, דמוגרפיה, אווירה — כ-2 משפטים"
 }`;
 
-  // ── Try with web search first ──
+  // ── Try with web search (Sonnet) ──
   try {
     const res = await client.messages.create(
       {
         model: "claude-sonnet-4-6",
-        max_tokens: 1024,
+        max_tokens: 1500,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 5 } as any],
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 4 } as any],
         messages: [{ role: "user", content: prompt }],
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,14 +90,14 @@ async function generateNeighborhoodData(
     const parsed = extractJson(res);
     if (parsed) return parsed;
   } catch {
-    // Web search not available or failed — fall through to fallback
+    // Web search not available — fall through
   }
 
-  // ── Fallback: Claude knowledge only ──
+  // ── Fallback: Sonnet without web search ──
   try {
     const res = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 700,
+      model: "claude-sonnet-4-6",
+      max_tokens: 1200,
       messages: [{ role: "user", content: prompt }],
     });
     return extractJson(res);
@@ -77,9 +112,10 @@ function extractJson(
   const textBlock = [...res.content].reverse().find(b => b.type === "text");
   if (!textBlock || textBlock.type !== "text") return null;
   try {
-    const match = textBlock.text.match(/\{[\s\S]*\}/);
+    const match = textBlock.text.match(/\{[\s\S]*?\}/s);
     if (!match) return null;
     const d = JSON.parse(match[0]);
+    if (!d.description && !d.transport) return null; // sanity check
     return {
       description: d.description ?? null,
       transport:   d.transport   ?? null,
@@ -137,8 +173,10 @@ export async function getNeighborhoodData(
     };
   }
 
-  // ── 3. Generate fresh data ──
-  const generated = await generateNeighborhoodData(city, neighborhood);
+  // ── 3. Fetch real school names + generate AI content in parallel ──
+  const schoolNames = await fetchSchoolNames(city);
+  const generated = await generateNeighborhoodData(city, neighborhood, schoolNames);
+
   if (!generated && !existing) return null;
 
   const updates: Record<string, unknown> = {
