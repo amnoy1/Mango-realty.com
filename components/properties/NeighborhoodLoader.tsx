@@ -7,16 +7,18 @@ import type { NeighborhoodData } from "@/lib/neighborhood";
 export default function NeighborhoodLoader({
   city,
   neighborhood,
+  street = "",
 }: {
   city: string;
   neighborhood: string;
+  street?: string;
 }) {
   const [data, setData]     = useState<NeighborhoodData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!city) { setLoading(false); return; }
-    const params = new URLSearchParams({ city, neighborhood });
+    const params = new URLSearchParams({ city, neighborhood, street });
     fetch(`/api/neighborhood?${params}`)
       .then(r => r.json())
       .then(d => setData(d))

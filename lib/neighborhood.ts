@@ -80,15 +80,25 @@ const SOCIO_ECONOMIC_CLUSTERS: Record<string, number> = {
   "קרית שמונה": 4, "קרית ביאליק": 6, "קרית מוצקין": 5,
 };
 
+type GeneratedNeighborhood = Omit<NeighborhoodData, "city" | "neighborhood" | "image_url"> & {
+  neighborhood_name?: string; // resolved from street when neighborhood field was empty
+};
+
 // ─── Claude Sonnet — neighborhood-focused profile via web search ──────────────
 async function generateNeighborhoodData(
   city: string,
   neighborhood: string,
+  street: string,
   transportStops: number | null,
   demographics: Demographics | null,
   clusterLevel: number | null,
-): Promise<Omit<NeighborhoodData, "city" | "neighborhood" | "image_url"> | null> {
-  const target = neighborhood ? `שכונת "${neighborhood}" ב${city}` : city;
+): Promise<GeneratedNeighborhood | null> {
+  const needsResolution = !neighborhood && !!street;
+  const target = neighborhood
+    ? `שכונת "${neighborhood}" ב${city}`
+    : street
+      ? `הכתובת "${street}", ${city}`
+      : city;
 
   // City-level background (brief — not school lists)
   const bg: string[] = [];
@@ -103,27 +113,35 @@ async function generateNeighborhoodData(
 
   const bgText = bg.length > 0 ? `\nרקע על ${city}: ${bg.join(" | ")}` : "";
 
-  const prompt = `אתה copywriter נדל"ן ישראלי בכיר. כתוב פרופיל עבור ${target}.
-קהל היעד: משפחות וזוגות שמחשבים לגור דווקא בשכונה הזו.${bgText}
+  const resolveInstruction = needsResolution
+    ? `\nהנכס נמצא ב${target}. תחילה חפש באינטרנט לאיזו שכונה שייך הרחוב הזה ב${city}, ולאחר מכן כתוב את הפרופיל עבור אותה שכונה. כלול את שם השכונה שמצאת בשדה "neighborhood_name" ב-JSON.`
+    : "";
 
-השתמש ב-web search לאיסוף מידע ספציפי על ${target}:
-- בתי ספר וגני ילדים הסמוכים לשכונה (שמות מדויקים)
-- מרכזי מסחר, סופרמרקטים, קופות חולים בסביבה
-- פארקים, מתקנים, מרכזי קהילה בשכונה
-- אופי השכונה, סוג האוכלוסייה, מגמות פיתוח
+  const neighborhoodNameField = needsResolution
+    ? `\n  "neighborhood_name": "שם השכונה שמצאת — בעברית בלבד (לדוגמה: נווה אדיר, גבעת הורדים)",`
+    : "";
+
+  const prompt = `אתה copywriter נדל"ן ישראלי בכיר. כתוב פרופיל שכונה עבור ${target}.
+קהל היעד: משפחות וזוגות שמחשבים לגור כאן.${bgText}${resolveInstruction}
+
+השתמש ב-web search לאיסוף מידע ספציפי על השכונה:
+- בתי ספר וגני ילדים סמוכים (שמות מדויקים)
+- מרכזי מסחר, סופרמרקטים, קופות חולים
+- פארקים, מתקנים, מרכזי קהילה
+- אופי השכונה ואוכלוסייתה
 
 כללים:
-- כתוב רק על ${target} — לא על ${city} כולה
-- אל תמציא שמות. אם לא מצאת שם מדויק — תאר בכלליות
-- עברית חיה, קצרה, ישירה — כמו חבר שמכיר את השכונה
+- כתוב רק על השכונה הספציפית — לא על ${city} כולה
+- אל תמציא שמות. אם לא מצאת — תאר בכלליות
+- עברית חיה, קצרה, ישירה
 
 החזר JSON בלבד:
-{
-  "description": "3-4 משפטים: מה ייחודי בשכונה הזו, מה מרוויח מי שגר כאן — נגישות, חינוך, אופי. ישיר וספציפי.",
+{${neighborhoodNameField}
+  "description": "3-4 משפטים: מה ייחודי בשכונה, מה מרוויח מי שגר כאן. ישיר וספציפי.",
   "transport": "2 משפטים: כבישים ספציפיים, זמן נסיעה לתל אביב/מרכז, קווי אוטובוס.",
-  "schools": "2 משפטים: בתי ספר וגנים סמוכים לשכונה — שמות, גילאים, מגוון.",
-  "lifestyle": "2 משפטים: פארקים, מרכז קהילה, בריכה, ספרייה — בשכונה או סמוך.",
-  "commerce": "2 משפטים: מרכזי קניות, רשתות מזון, קופת חולים — מה ניתן לפתור ברגל.",
+  "schools": "2 משפטים: בתי ספר וגנים סמוכים — שמות, גילאים, מגוון.",
+  "lifestyle": "2 משפטים: פארקים, מרכז קהילה, בריכה, ספרייה.",
+  "commerce": "2 משפטים: מרכזי קניות, רשתות מזון, קופת חולים.",
   "character": "2 משפטים: מי גר כאן, אווירה, וותיקות/התחדשות, רמה סוציו-אקונומית."
 }`;
 
@@ -164,9 +182,7 @@ async function generateNeighborhoodData(
   }
 }
 
-function extractJson(
-  res: Anthropic.Message
-): Omit<NeighborhoodData, "city" | "neighborhood" | "image_url"> | null {
+function extractJson(res: Anthropic.Message): GeneratedNeighborhood | null {
   const textBlock = [...res.content].reverse().find(b => b.type === "text");
   if (!textBlock || textBlock.type !== "text") return null;
 
@@ -187,12 +203,13 @@ function extractJson(
     // Ensure all fields are strings — Claude sometimes returns objects for large cities
     const str = (v: unknown) => typeof v === "string" ? v : null;
     return {
-      description: str(d.description),
-      transport:   str(d.transport),
-      schools:     str(d.schools),
-      lifestyle:   str(d.lifestyle),
-      commerce:    str(d.commerce),
-      character:   str(d.character),
+      description:       str(d.description),
+      transport:         str(d.transport),
+      schools:           str(d.schools),
+      lifestyle:         str(d.lifestyle),
+      commerce:          str(d.commerce),
+      character:         str(d.character),
+      neighborhood_name: str(d.neighborhood_name) ?? undefined,
     };
   } catch (e) {
     console.error("[neighborhood] JSON.parse failed:", e, "raw:", text.slice(start, end + 1).slice(0, 300));
@@ -203,7 +220,8 @@ function extractJson(
 // ─── Main export ──────────────────────────────────────────────────────────────
 export async function getNeighborhoodData(
   city: string,
-  neighborhood: string
+  neighborhood: string,
+  street = "",
 ): Promise<NeighborhoodData | null> {
   if (!city) return null;
 
@@ -253,16 +271,20 @@ export async function getNeighborhoodData(
   const clusterLevel = SOCIO_ECONOMIC_CLUSTERS[city] ?? null;
 
   const generated = await generateNeighborhoodData(
-    city, neighborhood, transportStops, demographics, clusterLevel
+    city, neighborhood, street, transportStops, demographics, clusterLevel
   );
 
   if (!generated && !existing) return null;
 
+  // If neighborhood was empty, use the name Claude resolved from the street
+  const cacheNeighborhood = neighborhood || generated?.neighborhood_name || "";
+
+  const { neighborhood_name: _drop, ...generatedFields } = generated ?? {};
   const updates: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
     image_url:  (existing?.image_url as string | null) ?? null,
     ...(generated
-      ? { ...generated, analysis_updated_at: new Date().toISOString() }
+      ? { ...generatedFields, analysis_updated_at: new Date().toISOString() }
       : {}),
   };
 
@@ -274,11 +296,11 @@ export async function getNeighborhoodData(
         .from("neighborhoods")
         .update(updates)
         .eq("city", city)
-        .eq("neighborhood", neighborhood);
+        .eq("neighborhood", cacheNeighborhood);
     } else {
       await admin
         .from("neighborhoods")
-        .insert({ city, neighborhood, ...updates });
+        .insert({ city, neighborhood: cacheNeighborhood, ...updates });
     }
   } catch {
     /* silently ignore */
@@ -287,7 +309,7 @@ export async function getNeighborhoodData(
   const m = { ...(existing ?? {}), ...updates };
   return {
     city,
-    neighborhood,
+    neighborhood: cacheNeighborhood,
     description: (m.description ?? null) as string | null,
     transport:   (m.transport   ?? null) as string | null,
     schools:     (m.schools     ?? null) as string | null,

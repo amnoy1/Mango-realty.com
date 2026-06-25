@@ -207,6 +207,7 @@ export default async function PropertyPage({
           <NeighborhoodLoader
             city={propertyForClient.city}
             neighborhood={propertyForClient.neighborhood}
+            street={propertyForClient.street}
           />
         }
       />

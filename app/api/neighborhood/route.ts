@@ -6,11 +6,12 @@ export const maxDuration = 60;
 export async function GET(req: NextRequest) {
   const city         = req.nextUrl.searchParams.get("city")         || "";
   const neighborhood = req.nextUrl.searchParams.get("neighborhood") || "";
+  const street       = req.nextUrl.searchParams.get("street")       || "";
 
   if (!city) return NextResponse.json(null, { status: 400 });
 
   try {
-    const data = await getNeighborhoodData(city, neighborhood);
+    const data = await getNeighborhoodData(city, neighborhood, street);
     return NextResponse.json(data);
   } catch {
     return NextResponse.json(null, { status: 500 });
