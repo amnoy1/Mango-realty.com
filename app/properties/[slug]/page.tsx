@@ -214,7 +214,17 @@ export default async function PropertyPage({
         related={related}
         neighborhoodSection={
           <Suspense fallback={
-            <div className="mt-12 pt-10 border-t border-black/8 h-48 bg-black/[0.02] rounded-2xl animate-pulse" />
+            <div className="mt-12 pt-10 border-t border-black/8">
+              <div className="flex items-center gap-2.5 mb-4">
+                <span className="block w-2 h-2 rounded-full bg-[var(--color-gold)] animate-ping" />
+                <span className="text-base font-bold text-[var(--color-luxury-black)]">מנתח שכונה</span>
+              </div>
+              <div className="space-y-1.5 text-[0.85rem] text-[var(--color-luxury-black)]/40 leading-relaxed">
+                <p>אוסף נתוני בתי ספר ומוסדות חינוך...</p>
+                <p>מאחזר נתוני תחבורה ציבורית ודמוגרפיה...</p>
+                <p>מנתח איכות חיים בשכונה בעזרת בינה מלאכותית...</p>
+              </div>
+            </div>
           }>
             <NeighborhoodFetcher
               city={propertyForClient.city}
