@@ -15,14 +15,25 @@ export default function NeighborhoodLoader({
 }) {
   const [data, setData]     = useState<NeighborhoodData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError]   = useState<string | null>(null);
 
   useEffect(() => {
     if (!city) { setLoading(false); return; }
     const params = new URLSearchParams({ city, neighborhood, street });
     fetch(`/api/neighborhood?${params}`)
-      .then(r => r.json())
-      .then(d => setData(d))
-      .catch(() => {})
+      .then(r => {
+        console.log("[neighborhood] status:", r.status);
+        return r.json();
+      })
+      .then(d => {
+        console.log("[neighborhood] data:", d);
+        if (d) setData(d);
+        else setError("API החזיר null");
+      })
+      .catch(e => {
+        console.error("[neighborhood] fetch error:", e);
+        setError(String(e));
+      })
       .finally(() => setLoading(false));
   }, [city, neighborhood]);
 
@@ -34,10 +45,16 @@ export default function NeighborhoodLoader({
           <span className="text-base font-bold text-[var(--color-luxury-black)]">מנתח שכונה</span>
         </div>
         <div className="space-y-1.5 text-[0.85rem] text-[var(--color-luxury-black)]/40 leading-relaxed">
-          <p>אוסף נתוני בתי ספר ומוסדות חינוך...</p>
-          <p>מאחזר נתוני תחבורה ציבורית ודמוגרפיה...</p>
-          <p>מנתח איכות חיים בשכונה בעזרת בינה מלאכותית...</p>
+          <p>מנתח שכונה בעזרת בינה מלאכותית...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-12 pt-10 border-t border-black/8">
+        <p className="text-sm text-red-500">שגיאה בטעינת נתוני שכונה: {error}</p>
       </div>
     );
   }
