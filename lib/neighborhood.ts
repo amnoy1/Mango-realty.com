@@ -185,19 +185,22 @@ ${dataContext}
     );
     const parsed = extractJson(res);
     if (parsed) return parsed;
-  } catch {
-    // Web search not available — fall through
+  } catch (e) {
+    console.error("[neighborhood] web-search call failed:", e);
+    // fall through to fallback
   }
 
   // ── Fallback: Sonnet without web search ──
   try {
+    console.log("[neighborhood] generating without web search for:", location);
     const res = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 1200,
+      max_tokens: 2000,
       messages: [{ role: "user", content: prompt }],
     });
     return extractJson(res);
-  } catch {
+  } catch (e) {
+    console.error("[neighborhood] fallback Claude call failed:", e);
     return null;
   }
 }
@@ -207,11 +210,21 @@ function extractJson(
 ): Omit<NeighborhoodData, "city" | "neighborhood" | "image_url"> | null {
   const textBlock = [...res.content].reverse().find(b => b.type === "text");
   if (!textBlock || textBlock.type !== "text") return null;
+
+  const text = textBlock.text;
+  const start = text.indexOf("{");
+  const end   = text.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) {
+    console.error("[neighborhood] no JSON braces found in response:", text.slice(0, 200));
+    return null;
+  }
+
   try {
-    const match = textBlock.text.match(/\{[\s\S]*?\}/);
-    if (!match) return null;
-    const d = JSON.parse(match[0]);
-    if (!d.description && !d.transport) return null; // sanity check
+    const d = JSON.parse(text.slice(start, end + 1));
+    if (!d.description && !d.transport) {
+      console.error("[neighborhood] JSON missing required fields:", JSON.stringify(d).slice(0, 200));
+      return null;
+    }
     return {
       description: d.description ?? null,
       transport:   d.transport   ?? null,
@@ -220,7 +233,8 @@ function extractJson(
       commerce:    d.commerce    ?? null,
       character:   d.character   ?? null,
     };
-  } catch {
+  } catch (e) {
+    console.error("[neighborhood] JSON.parse failed:", e, "raw:", text.slice(start, end + 1).slice(0, 300));
     return null;
   }
 }
