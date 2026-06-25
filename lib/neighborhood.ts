@@ -199,7 +199,7 @@ export async function getNeighborhoodData(
   try {
     const supabase = await createClient();
     const result = await withTimeout(
-      supabase.from("neighborhoods").select("*").eq("city", city).eq("neighborhood", neighborhood).single(),
+      Promise.resolve(supabase.from("neighborhoods").select("*").eq("city", city).eq("neighborhood", neighborhood).single()),
       4000,
     );
     existing = (result as { data?: Record<string, unknown> } | null)?.data ?? null;
