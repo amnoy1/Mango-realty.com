@@ -29,7 +29,7 @@ async function fetchEducationData(city: string): Promise<EducationData> {
     const fields = encodeURIComponent("שם מוסד,סוג מוסד");
     const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_SCHOOLS_RESOURCE}&filters=${f}&fields=${fields}&limit=150`;
 
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
     if (!res.ok) return empty;
 
     const records: Record<string, string>[] = (await res.json()).result?.records ?? [];
@@ -69,7 +69,7 @@ async function fetchTransportStops(city: string): Promise<number | null> {
     const f = encodeURIComponent(JSON.stringify({ CityName: city }));
     const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_TRANSPORT_RESOURCE}&filters=${f}&limit=1`;
 
-    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
     if (!res.ok) return null;
 
     const total: number = (await res.json()).result?.total ?? 0;
@@ -90,7 +90,7 @@ async function fetchDemographics(city: string): Promise<Demographics | null> {
   try {
     const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_DEMOGRAPHICS_RESOURCE}&q=${encodeURIComponent(city)}&limit=5`;
 
-    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
     if (!res.ok) return null;
 
     const records: Record<string, unknown>[] = (await res.json()).result?.records ?? [];

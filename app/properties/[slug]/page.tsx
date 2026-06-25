@@ -76,6 +76,7 @@ export async function generateStaticParams() {
 
 export const dynamicParams = true;
 export const dynamic = "force-dynamic";
+export const maxDuration = 60; // allow up to 60s for AI neighborhood generation
 
 // Streams in after the rest of the page — doesn't block LCP
 async function NeighborhoodFetcher({ city, neighborhood }: { city: string; neighborhood: string }) {
