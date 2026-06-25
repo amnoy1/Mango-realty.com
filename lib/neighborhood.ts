@@ -121,18 +121,19 @@ async function generateNeighborhoodData(
     ? `\n  "neighborhood_name": "שם השכונה שמצאת — בעברית בלבד (לדוגמה: נווה אדיר, גבעת הורדים)",`
     : "";
 
-  const prompt = `אתה copywriter נדל"ן ישראלי בכיר. כתוב פרופיל שכונה עבור ${target}.
+  const prompt = `אתה copywriter נדל"ן ישראלי בכיר עם ידע מעמיק על שכונות בישראל. כתוב פרופיל שכונה עבור ${target}.
 קהל היעד: משפחות וזוגות שמחשבים לגור כאן.${bgText}${resolveInstruction}
 
-השתמש ב-web search לאיסוף מידע ספציפי על השכונה:
-- בתי ספר וגני ילדים סמוכים (שמות מדויקים)
-- מרכזי מסחר, סופרמרקטים, קופות חולים
-- פארקים, מתקנים, מרכזי קהילה
-- אופי השכונה ואוכלוסייתה
+כתוב על הנושאים הבאים בהתבסס על הידע שלך:
+- בתי ספר וגני ילדים סמוכים (שמות אמיתיים אם ידוע)
+- תחבורה ונגישות (כבישים, קווי אוטובוס, זמן לתל אביב)
+- מסחר ושירותים (קניונים, סופרמרקטים, קופות חולים)
+- פנאי ואיכות חיים (פארקים, מרכזי קהילה)
+- אופי האוכלוסייה
 
 כללים:
 - כתוב רק על השכונה הספציפית — לא על ${city} כולה
-- אל תמציא שמות. אם לא מצאת — תאר בכלליות
+- אל תמציא שמות שאינך בטוח בהם — תאר בכלליות אם צריך
 - עברית חיה, קצרה, ישירה
 
 החזר JSON בלבד:
@@ -145,39 +146,17 @@ async function generateNeighborhoodData(
   "character": "2 משפטים: מי גר כאן, אווירה, וותיקות/התחדשות, רמה סוציו-אקונומית."
 }`;
 
-  // ── Try with web search (Sonnet, max 2 searches, 30s timeout) ──
+  // ── Claude knowledge-based generation (25s timeout, no external dependencies) ──
   try {
-    const client = new Anthropic({ timeout: 30_000 });
-    const res = await client.messages.create(
-      {
-        model: "claude-sonnet-4-6",
-        max_tokens: 1500,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2 } as any],
-        messages: [{ role: "user", content: prompt }],
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { headers: { "anthropic-beta": "web-search-2025-03-05" } } as any
-    );
-    const parsed = extractJson(res);
-    if (parsed) return parsed;
-  } catch (e) {
-    console.error("[neighborhood] web-search call failed:", e);
-    // fall through to fallback
-  }
-
-  // ── Fallback: Sonnet without web search (20s timeout) ──
-  try {
-    console.log("[neighborhood] generating without web search for:", location);
-    const client = new Anthropic({ timeout: 20_000 });
+    const client = new Anthropic({ timeout: 25_000 });
     const res = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 1500,
+      max_tokens: 1200,
       messages: [{ role: "user", content: prompt }],
     });
     return extractJson(res);
   } catch (e) {
-    console.error("[neighborhood] fallback Claude call failed:", e);
+    console.error("[neighborhood] Claude call failed:", e);
     return null;
   }
 }
