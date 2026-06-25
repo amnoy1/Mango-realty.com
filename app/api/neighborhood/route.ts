@@ -13,7 +13,8 @@ export async function GET(req: NextRequest) {
   try {
     const data = await getNeighborhoodData(city, neighborhood, street);
     return NextResponse.json(data);
-  } catch {
-    return NextResponse.json(null, { status: 500 });
+  } catch (e) {
+    console.error("[neighborhood route] unhandled error:", e);
+    return NextResponse.json({ caught: true, error: String(e) }, { status: 500 });
   }
 }

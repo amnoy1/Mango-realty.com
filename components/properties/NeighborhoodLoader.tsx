@@ -15,26 +15,22 @@ export default function NeighborhoodLoader({
 }) {
   const [data, setData]     = useState<NeighborhoodData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState<string | null>(null);
 
   useEffect(() => {
     if (!city) { setLoading(false); return; }
     const params = new URLSearchParams({ city, neighborhood, street });
     fetch(`/api/neighborhood?${params}`)
-      .then(r => {
-        console.log("[neighborhood] status:", r.status);
-        return r.json();
+      .then(async r => {
+        if (!r.ok) { setLoading(false); return; }
+        try {
+          const d = await r.json();
+          if (d && d.description) setData(d);
+        } catch {
+          /* non-JSON response — silently skip */
+        }
+        setLoading(false);
       })
-      .then(d => {
-        console.log("[neighborhood] data:", d);
-        if (d) setData(d);
-        else setError("API החזיר null");
-      })
-      .catch(e => {
-        console.error("[neighborhood] fetch error:", e);
-        setError(String(e));
-      })
-      .finally(() => setLoading(false));
+      .catch(() => setLoading(false));
   }, [city, neighborhood]);
 
   if (loading) {
@@ -47,14 +43,6 @@ export default function NeighborhoodLoader({
         <div className="space-y-1.5 text-[0.85rem] text-[var(--color-luxury-black)]/40 leading-relaxed">
           <p>מנתח שכונה בעזרת בינה מלאכותית...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="mt-12 pt-10 border-t border-black/8">
-        <p className="text-sm text-red-500">שגיאה בטעינת נתוני שכונה: {error}</p>
       </div>
     );
   }
