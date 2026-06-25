@@ -241,16 +241,11 @@ export async function getNeighborhoodData(
     };
   }
 
-  // ── 3. Fetch lightweight city-level context, then generate AI content ──
-  const [transportStops, demographics] = await Promise.all([
-    fetchTransportStops(city),
-    fetchDemographics(city),
-  ]);
-
+  // ── 3. Generate AI content (static cluster only — no external API calls) ──
   const clusterLevel = SOCIO_ECONOMIC_CLUSTERS[city] ?? null;
 
   const generated = await generateNeighborhoodData(
-    city, neighborhood, street, transportStops, demographics, clusterLevel
+    city, neighborhood, street, null, null, clusterLevel
   );
 
   if (!generated && !existing) return null;
