@@ -13,54 +13,6 @@ export interface NeighborhoodData {
   image_url: string | null;
 }
 
-// ─── data.gov.il — education institutions by type (Ministry of Education) ───────
-const GOV_SCHOOLS_RESOURCE = "5548fd63-5868-4053-ad81-98caddc5e232";
-
-interface EducationData {
-  kindergartens: string[];  // גני ילדים (גיל 0–6)
-  elementary: string[];     // בתי ספר יסודיים (כיתות א–ו)
-  secondary: string[];      // חטיבות ביניים + תיכונים (כיתות ז–יב)
-}
-
-async function fetchEducationData(city: string): Promise<EducationData> {
-  const empty: EducationData = { kindergartens: [], elementary: [], secondary: [] };
-  try {
-    const f = encodeURIComponent(JSON.stringify({ "שם ישוב": city }));
-    const fields = encodeURIComponent("שם מוסד,סוג מוסד");
-    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_SCHOOLS_RESOURCE}&filters=${f}&fields=${fields}&limit=150`;
-
-    const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
-    if (!res.ok) return empty;
-
-    const records: Record<string, string>[] = (await res.json()).result?.records ?? [];
-
-    const seenK = new Set<string>(), seenE = new Set<string>(), seenS = new Set<string>();
-    const kindergartens: string[] = [], elementary: string[] = [], secondary: string[] = [];
-
-    for (const r of records) {
-      const name = (r["שם מוסד"] || "").trim();
-      const type = (r["סוג מוסד"] || "").trim();
-      if (!name) continue;
-
-      if (type === "גן ילדים") {
-        if (!seenK.has(name)) { seenK.add(name); kindergartens.push(name); }
-      } else if (type.includes("יסודי")) {
-        if (!seenE.has(name)) { seenE.add(name); elementary.push(name); }
-      } else if (type.includes("חטיבת ביניים") || type.includes("תיכון") || type.includes("חטיבה עליונה") || type.includes("על יסודי")) {
-        if (!seenS.has(name)) { seenS.add(name); secondary.push(name); }
-      }
-    }
-
-    return {
-      kindergartens: kindergartens.slice(0, 6),
-      elementary:    elementary.slice(0, 6),
-      secondary:     secondary.slice(0, 5),
-    };
-  } catch {
-    return empty;
-  }
-}
-
 // ─── data.gov.il — public transport stops (Ministry of Transport) ─────────────
 const GOV_TRANSPORT_RESOURCE = "e873e6a2-66c1-494f-a677-f5e77348edb0";
 
@@ -128,81 +80,62 @@ const SOCIO_ECONOMIC_CLUSTERS: Record<string, number> = {
   "קרית שמונה": 4, "קרית ביאליק": 6, "קרית מוצקין": 5,
 };
 
-// ─── Claude Sonnet — neighborhood profile with specific facts ─────────────────
+// ─── Claude Sonnet — neighborhood-focused profile via web search ──────────────
 async function generateNeighborhoodData(
   city: string,
   neighborhood: string,
-  edData: EducationData,
   transportStops: number | null,
   demographics: Demographics | null,
   clusterLevel: number | null,
 ): Promise<Omit<NeighborhoodData, "city" | "neighborhood" | "image_url"> | null> {
-  const location = neighborhood ? `"${neighborhood}" ב${city}` : city;
+  const target = neighborhood ? `שכונת "${neighborhood}" ב${city}` : city;
 
-  const contextParts: string[] = [];
-
-  // ── Education — structured by type ──
-  const edLines: string[] = [];
-  if (edData.kindergartens.length > 0)
-    edLines.push(`גני ילדים (${edData.kindergartens.length}): ${edData.kindergartens.join(", ")}`);
-  if (edData.elementary.length > 0)
-    edLines.push(`בתי ספר יסודיים (${edData.elementary.length}): ${edData.elementary.join(", ")}`);
-  if (edData.secondary.length > 0)
-    edLines.push(`חטיבות ביניים ותיכונים (${edData.secondary.length}): ${edData.secondary.join(", ")}`);
-  if (edLines.length > 0)
-    contextParts.push(`מוסדות חינוך ב${city} (נתוני משרד החינוך):\n  ${edLines.join("\n  ")}`);
-
-  if (transportStops !== null)
-    contextParts.push(`תחנות תחבורה ציבורית ב${city}: ${transportStops} תחנות (נתוני מנהל התחבורה).`);
-  if (demographics?.population) {
-    const popFormatted = demographics.population.toLocaleString("he-IL");
-    contextParts.push(`אוכלוסיית ${city}: כ-${popFormatted} תושבים (נתוני הלמ"ס).`);
-  }
+  // City-level background (brief — not school lists)
+  const bg: string[] = [];
   if (clusterLevel !== null) {
-    const levelDesc = clusterLevel >= 8 ? "גבוה" : clusterLevel >= 6 ? "בינוני-גבוה" : clusterLevel >= 4 ? "בינוני" : "נמוך";
-    contextParts.push(`דירוג סוציו-אקונומי של ${city}: אשכול ${clusterLevel}/10 (${levelDesc}) לפי הלמ"ס.`);
+    const desc = clusterLevel >= 8 ? "גבוה" : clusterLevel >= 6 ? "בינוני-גבוה" : clusterLevel >= 4 ? "בינוני" : "נמוך";
+    bg.push(`אשכול סוציו-אקונומי של ${city}: ${clusterLevel}/10 (${desc})`);
   }
+  if (transportStops !== null)
+    bg.push(`${transportStops} תחנות תחבורה ציבורית ב${city}`);
+  if (demographics?.population)
+    bg.push(`אוכלוסיית ${city}: ~${demographics.population.toLocaleString("he-IL")} תושבים`);
 
-  const dataContext = contextParts.length > 0
-    ? `\nנתונים ממשלתיים מאומתים:\n${contextParts.map(p => `• ${p}`).join("\n")}`
-    : "";
+  const bgText = bg.length > 0 ? `\nרקע על ${city}: ${bg.join(" | ")}` : "";
 
-  const prompt = `אתה copywriter נדל"ן ישראלי בכיר עם 15 שנות ניסיון. כתוב פרופיל שכונה עבור ${location}.
-קהל היעד: משפחות וזוגות שבוחנים לגור כאן ורוצים תמונה אמינה ומלאה.
-${dataContext}
+  const prompt = `אתה copywriter נדל"ן ישראלי בכיר. כתוב פרופיל עבור ${target}.
+קהל היעד: משפחות וזוגות שמחשבים לגור דווקא בשכונה הזו.${bgText}
 
-הנחיות תוכן:
-- חינוך: השתמש בשמות המדויקים מהרשימה לעיל. ציין כמה גנים ובתי ספר ומה הגיל המתאים.
-- תחבורה: שמות כבישים ספציפיים, זמן נסיעה ריאלי לתל אביב/מרכז, קווי אוטובוס בשם אם ידוע.
-- מסחר: שמות מרכזים מסחריים אמיתיים, סופרמרקט/רשת, קופת חולים בשם.
-- פנאי: מתקנים ספציפיים — פארקים בשם, בריכה, ספרייה, מרכז קהילתי.
-- אופי: מי התושבים, אווירה, רמה סוציו-אקונומית (השתמש בנתון אם ניתן).
+השתמש ב-web search לאיסוף מידע ספציפי על ${target}:
+- בתי ספר וגני ילדים הסמוכים לשכונה (שמות מדויקים)
+- מרכזי מסחר, סופרמרקטים, קופות חולים בסביבה
+- פארקים, מתקנים, מרכזי קהילה בשכונה
+- אופי השכונה, סוג האוכלוסייה, מגמות פיתוח
 
-כללי דיוק — חובה לקיים:
-- אל תכתוב "מספר בתי ספר" — כתוב את שמותיהם.
-- אל תכתוב "קרוב לכביש ראשי" — ציין את מספר הכביש.
-- אל תמציא שמות של מקומות. אם אינך בטוח בשם — תאר בכלליות.
-- עברית תקינה ועשירה — משפטים קצרים, פעיל ולא סביל, ניסוח שגורם לקורא להרגיש שמישהו שמכיר את השכונה מדבר איתו.
+כללים:
+- כתוב רק על ${target} — לא על ${city} כולה
+- אל תמציא שמות. אם לא מצאת שם מדויק — תאר בכלליות
+- עברית חיה, קצרה, ישירה — כמו חבר שמכיר את השכונה
 
-החזר JSON בלבד ללא טקסט נוסף:
+החזר JSON בלבד:
 {
-  "description": "3-4 משפטים שמסכמים מה הקונה/שוכר מרוויח מהשכונה הזו. שלב את הנקודות הכי חזקות מכל התחומים: נגישות תחבורתית, חינוך, שירותים ואופי קהילתי. כתוב כאילו אתה מציג לחבר שמחפש דירה — ישיר, ספציפי, עם שמות אמיתיים. כל משפט צריך לבטא יתרון ברור לדייר. עברית חיה ופעילה.",
-  "transport": "2 משפטים: כבישים ספציפיים, זמן ריאלי לתל אביב/מרכז, תחבורה ציבורית — מה זה אומר למי שיוצא לעבודה בבוקר.",
-  "schools": "2-3 משפטים: שמות גנים ובתי הספר מהרשימה לפי גיל (גן / יסודי / תיכון), כמה מהם, האם יש מגוון חינוכי — מה זה נותן למשפחה עם ילדים.",
-  "lifestyle": "2 משפטים: מה יש לעשות בשכונה — פארקים, מרכז קהילתי, בריכה, ספרייה — שמות אמיתיים אם ידוע.",
-  "commerce": "2 משפטים: שמות רשתות/מרכזים מסחריים, קופת חולים בשם, מה ניתן לפתור ברגל מהבית.",
-  "character": "2 משפטים: מי גר כאן, רמה סוציו-אקונומית, דינמיקה — האם זו שכונה ותיקה/מתחדשת/צעירה."
+  "description": "3-4 משפטים: מה ייחודי בשכונה הזו, מה מרוויח מי שגר כאן — נגישות, חינוך, אופי. ישיר וספציפי.",
+  "transport": "2 משפטים: כבישים ספציפיים, זמן נסיעה לתל אביב/מרכז, קווי אוטובוס.",
+  "schools": "2 משפטים: בתי ספר וגנים סמוכים לשכונה — שמות, גילאים, מגוון.",
+  "lifestyle": "2 משפטים: פארקים, מרכז קהילה, בריכה, ספרייה — בשכונה או סמוך.",
+  "commerce": "2 משפטים: מרכזי קניות, רשתות מזון, קופת חולים — מה ניתן לפתור ברגל.",
+  "character": "2 משפטים: מי גר כאן, אווירה, וותיקות/התחדשות, רמה סוציו-אקונומית."
 }`;
 
-  // ── Try with web search (Sonnet) ──
+  // ── Try with web search (Sonnet, max 2 searches, 30s timeout) ──
   try {
-    const client = new Anthropic();
+    const client = new Anthropic({ timeout: 30_000 });
     const res = await client.messages.create(
       {
         model: "claude-sonnet-4-6",
-        max_tokens: 2000,
+        max_tokens: 1500,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 4 } as any],
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2 } as any],
         messages: [{ role: "user", content: prompt }],
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -215,13 +148,13 @@ ${dataContext}
     // fall through to fallback
   }
 
-  // ── Fallback: Sonnet without web search ──
+  // ── Fallback: Sonnet without web search (20s timeout) ──
   try {
     console.log("[neighborhood] generating without web search for:", location);
-    const client = new Anthropic();
+    const client = new Anthropic({ timeout: 20_000 });
     const res = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 2000,
+      max_tokens: 1500,
       messages: [{ role: "user", content: prompt }],
     });
     return extractJson(res);
@@ -311,9 +244,8 @@ export async function getNeighborhoodData(
     };
   }
 
-  // ── 3. Fetch all gov data in parallel, then generate AI content ──
-  const [edData, transportStops, demographics] = await Promise.all([
-    fetchEducationData(city),
+  // ── 3. Fetch lightweight city-level context, then generate AI content ──
+  const [transportStops, demographics] = await Promise.all([
     fetchTransportStops(city),
     fetchDemographics(city),
   ]);
@@ -321,7 +253,7 @@ export async function getNeighborhoodData(
   const clusterLevel = SOCIO_ECONOMIC_CLUSTERS[city] ?? null;
 
   const generated = await generateNeighborhoodData(
-    city, neighborhood, edData, transportStops, demographics, clusterLevel
+    city, neighborhood, transportStops, demographics, clusterLevel
   );
 
   if (!generated && !existing) return null;
