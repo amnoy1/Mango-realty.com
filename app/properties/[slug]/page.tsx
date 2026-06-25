@@ -80,9 +80,17 @@ export const maxDuration = 60; // allow up to 60s for AI neighborhood generation
 
 // Streams in after the rest of the page — doesn't block LCP
 async function NeighborhoodFetcher({ city, neighborhood }: { city: string; neighborhood: string }) {
-  const data = await getNeighborhoodData(city, neighborhood);
-  if (!data) return null;
-  return <NeighborhoodSection data={data} />;
+  try {
+    const data = await getNeighborhoodData(city, neighborhood);
+    if (!data) {
+      console.error("[NeighborhoodFetcher] getNeighborhoodData returned null for:", city, neighborhood);
+      return null;
+    }
+    return <NeighborhoodSection data={data} />;
+  } catch (e) {
+    console.error("[NeighborhoodFetcher] unhandled error:", e);
+    return null;
+  }
 }
 
 export default async function PropertyPage({

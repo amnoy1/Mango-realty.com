@@ -137,7 +137,6 @@ async function generateNeighborhoodData(
   demographics: Demographics | null,
   clusterLevel: number | null,
 ): Promise<Omit<NeighborhoodData, "city" | "neighborhood" | "image_url"> | null> {
-  const client = new Anthropic();
   const location = neighborhood ? `"${neighborhood}" ב${city}` : city;
 
   const contextParts: string[] = [];
@@ -197,6 +196,7 @@ ${dataContext}
 
   // ── Try with web search (Sonnet) ──
   try {
+    const client = new Anthropic();
     const res = await client.messages.create(
       {
         model: "claude-sonnet-4-6",
@@ -218,6 +218,7 @@ ${dataContext}
   // ── Fallback: Sonnet without web search ──
   try {
     console.log("[neighborhood] generating without web search for:", location);
+    const client = new Anthropic();
     const res = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 2000,
