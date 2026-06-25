@@ -1,11 +1,9 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import PropertyPageClient from "./PropertyPageClient";
-import NeighborhoodSection from "@/components/properties/NeighborhoodSection";
-import { getNeighborhoodData } from "@/lib/neighborhood";
+import NeighborhoodLoader from "@/components/properties/NeighborhoodLoader";
 import type { Property } from "@/components/ui/PropertyCard";
 
 // Legacy boolean features (old schema)
@@ -76,22 +74,6 @@ export async function generateStaticParams() {
 
 export const dynamicParams = true;
 export const dynamic = "force-dynamic";
-export const maxDuration = 60; // allow up to 60s for AI neighborhood generation
-
-// Streams in after the rest of the page — doesn't block LCP
-async function NeighborhoodFetcher({ city, neighborhood }: { city: string; neighborhood: string }) {
-  try {
-    const data = await getNeighborhoodData(city, neighborhood);
-    if (!data) {
-      console.error("[NeighborhoodFetcher] getNeighborhoodData returned null for:", city, neighborhood);
-      return null;
-    }
-    return <NeighborhoodSection data={data} />;
-  } catch (e) {
-    console.error("[NeighborhoodFetcher] unhandled error:", e);
-    return null;
-  }
-}
 
 export default async function PropertyPage({
   params,
@@ -222,24 +204,10 @@ export default async function PropertyPage({
         property={propertyForClient}
         related={related}
         neighborhoodSection={
-          <Suspense fallback={
-            <div className="mt-12 pt-10 border-t border-black/8">
-              <div className="flex items-center gap-2.5 mb-4">
-                <span className="block w-2 h-2 rounded-full bg-[var(--color-gold)] animate-ping" />
-                <span className="text-base font-bold text-[var(--color-luxury-black)]">מנתח שכונה</span>
-              </div>
-              <div className="space-y-1.5 text-[0.85rem] text-[var(--color-luxury-black)]/40 leading-relaxed">
-                <p>אוסף נתוני בתי ספר ומוסדות חינוך...</p>
-                <p>מאחזר נתוני תחבורה ציבורית ודמוגרפיה...</p>
-                <p>מנתח איכות חיים בשכונה בעזרת בינה מלאכותית...</p>
-              </div>
-            </div>
-          }>
-            <NeighborhoodFetcher
-              city={propertyForClient.city}
-              neighborhood={propertyForClient.neighborhood}
-            />
-          </Suspense>
+          <NeighborhoodLoader
+            city={propertyForClient.city}
+            neighborhood={propertyForClient.neighborhood}
+          />
         }
       />
       <Footer />
