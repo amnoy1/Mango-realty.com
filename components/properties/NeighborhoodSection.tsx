@@ -45,7 +45,7 @@ export default function NeighborhoodSection({ data }: { data: NeighborhoodData }
         <div className="divide-y divide-black/[0.06] mb-5">
           {CATEGORIES.map(({ key, icon: Icon, label }) => {
             const text = data[key];
-            if (!text) return null;
+            if (!text || typeof text !== "string") return null;
             const isOpen = openKey === key;
             return (
               <div key={key}>

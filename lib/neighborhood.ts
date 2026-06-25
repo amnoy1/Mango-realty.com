@@ -251,13 +251,15 @@ function extractJson(
       console.error("[neighborhood] JSON missing required fields:", JSON.stringify(d).slice(0, 200));
       return null;
     }
+    // Ensure all fields are strings — Claude sometimes returns objects for large cities
+    const str = (v: unknown) => typeof v === "string" ? v : null;
     return {
-      description: d.description ?? null,
-      transport:   d.transport   ?? null,
-      schools:     d.schools     ?? null,
-      lifestyle:   d.lifestyle   ?? null,
-      commerce:    d.commerce    ?? null,
-      character:   d.character   ?? null,
+      description: str(d.description),
+      transport:   str(d.transport),
+      schools:     str(d.schools),
+      lifestyle:   str(d.lifestyle),
+      commerce:    str(d.commerce),
+      character:   str(d.character),
     };
   } catch (e) {
     console.error("[neighborhood] JSON.parse failed:", e, "raw:", text.slice(start, end + 1).slice(0, 300));
