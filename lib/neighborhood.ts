@@ -13,31 +13,51 @@ export interface NeighborhoodData {
   image_url: string | null;
 }
 
-// ─── data.gov.il — real school names (Ministry of Education) ─────────────────
+// ─── data.gov.il — education institutions by type (Ministry of Education) ───────
 const GOV_SCHOOLS_RESOURCE = "5548fd63-5868-4053-ad81-98caddc5e232";
 
-async function fetchSchoolNames(city: string): Promise<string[]> {
+interface EducationData {
+  kindergartens: string[];  // גני ילדים (גיל 0–6)
+  elementary: string[];     // בתי ספר יסודיים (כיתות א–ו)
+  secondary: string[];      // חטיבות ביניים + תיכונים (כיתות ז–יב)
+}
+
+async function fetchEducationData(city: string): Promise<EducationData> {
+  const empty: EducationData = { kindergartens: [], elementary: [], secondary: [] };
   try {
     const f = encodeURIComponent(JSON.stringify({ "שם ישוב": city }));
-    const q = encodeURIComponent("בית ספר");
-    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_SCHOOLS_RESOURCE}&filters=${f}&q=${q}&fields=${encodeURIComponent("שם מוסד")}&limit=60`;
+    const fields = encodeURIComponent("שם מוסד,סוג מוסד");
+    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_SCHOOLS_RESOURCE}&filters=${f}&fields=${fields}&limit=150`;
 
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) return [];
+    if (!res.ok) return empty;
 
     const records: Record<string, string>[] = (await res.json()).result?.records ?? [];
-    const seen = new Set<string>();
-    const names: string[] = [];
+
+    const seenK = new Set<string>(), seenE = new Set<string>(), seenS = new Set<string>();
+    const kindergartens: string[] = [], elementary: string[] = [], secondary: string[] = [];
+
     for (const r of records) {
-      const name = r["שם מוסד"];
-      if (name && !seen.has(name)) {
-        seen.add(name);
-        names.push(name);
+      const name = (r["שם מוסד"] || "").trim();
+      const type = (r["סוג מוסד"] || "").trim();
+      if (!name) continue;
+
+      if (type === "גן ילדים") {
+        if (!seenK.has(name)) { seenK.add(name); kindergartens.push(name); }
+      } else if (type.includes("יסודי")) {
+        if (!seenE.has(name)) { seenE.add(name); elementary.push(name); }
+      } else if (type.includes("חטיבת ביניים") || type.includes("תיכון") || type.includes("חטיבה עליונה") || type.includes("על יסודי")) {
+        if (!seenS.has(name)) { seenS.add(name); secondary.push(name); }
       }
     }
-    return names.slice(0, 8);
+
+    return {
+      kindergartens: kindergartens.slice(0, 6),
+      elementary:    elementary.slice(0, 6),
+      secondary:     secondary.slice(0, 5),
+    };
   } catch {
-    return [];
+    return empty;
   }
 }
 
@@ -112,7 +132,7 @@ const SOCIO_ECONOMIC_CLUSTERS: Record<string, number> = {
 async function generateNeighborhoodData(
   city: string,
   neighborhood: string,
-  schoolNames: string[],
+  edData: EducationData,
   transportStops: number | null,
   demographics: Demographics | null,
   clusterLevel: number | null,
@@ -121,12 +141,20 @@ async function generateNeighborhoodData(
   const location = neighborhood ? `"${neighborhood}" ב${city}` : city;
 
   const contextParts: string[] = [];
-  if (schoolNames.length > 0) {
-    contextParts.push(`בתי ספר אמיתיים ב${city} (מנתוני משרד החינוך): ${schoolNames.join(", ")}.`);
-  }
-  if (transportStops !== null) {
-    contextParts.push(`מספר תחנות תחבורה ציבורית ב${city}: ${transportStops} תחנות (נתוני מנהל התחבורה).`);
-  }
+
+  // ── Education — structured by type ──
+  const edLines: string[] = [];
+  if (edData.kindergartens.length > 0)
+    edLines.push(`גני ילדים (${edData.kindergartens.length}): ${edData.kindergartens.join(", ")}`);
+  if (edData.elementary.length > 0)
+    edLines.push(`בתי ספר יסודיים (${edData.elementary.length}): ${edData.elementary.join(", ")}`);
+  if (edData.secondary.length > 0)
+    edLines.push(`חטיבות ביניים ותיכונים (${edData.secondary.length}): ${edData.secondary.join(", ")}`);
+  if (edLines.length > 0)
+    contextParts.push(`מוסדות חינוך ב${city} (נתוני משרד החינוך):\n  ${edLines.join("\n  ")}`);
+
+  if (transportStops !== null)
+    contextParts.push(`תחנות תחבורה ציבורית ב${city}: ${transportStops} תחנות (נתוני מנהל התחבורה).`);
   if (demographics?.population) {
     const popFormatted = demographics.population.toLocaleString("he-IL");
     contextParts.push(`אוכלוסיית ${city}: כ-${popFormatted} תושבים (נתוני הלמ"ס).`);
@@ -137,37 +165,34 @@ async function generateNeighborhoodData(
   }
 
   const dataContext = contextParts.length > 0
-    ? `\nנתונים ממשלתיים אמיתיים:\n${contextParts.map(p => `• ${p}`).join("\n")}`
+    ? `\nנתונים ממשלתיים מאומתים:\n${contextParts.map(p => `• ${p}`).join("\n")}`
     : "";
 
-  const prompt = `אתה copywriter נדל"ן מנוסה בישראל. כתוב פרופיל שכונה עבור ${location}. קהל היעד: משפחות וזוגות שמחפשים דירה לקנייה או שכירות ורוצים להבין מה הם מקבלים מהשכונה הזו.
+  const prompt = `אתה copywriter נדל"ן ישראלי בכיר עם 15 שנות ניסיון. כתוב פרופיל שכונה עבור ${location}.
+קהל היעד: משפחות וזוגות שבוחנים לגור כאן ורוצים תמונה אמינה ומלאה.
 ${dataContext}
 
-מה מעניין את הקונה/שוכר:
-- חינוך: כמה גני ילדים ובתי ספר יש, האם הם נחשבים טובים, האם יש אפשרויות חינוך מגוונות (חילוני/דתי/גימנסיה)
-- ניידות: איזה כבישים ראשיים יוצאים מהשכונה, כמה זמן לתל אביב/עיר מרכזית, תחבורה ציבורית אמיתית
-- מי השכנים: רמה סוציו-אקונומית (גבוהה/בינונית), דמוגרפיה (משפחות, ותיקים, צעירים), אווירה
-- שירותים יומיומיים: איפה קונים מזון, איפה יש קופת חולים, בנק, רופא שיניים — שמות אמיתיים
-- תרבות ופנאי: מה יש לילדים ולמבוגרים — חוגים, מרכזי תרבות, מועדוניות, ספריות, גני שעשועים
+הנחיות תוכן:
+- חינוך: השתמש בשמות המדויקים מהרשימה לעיל. ציין כמה גנים ובתי ספר ומה הגיל המתאים.
+- תחבורה: שמות כבישים ספציפיים, זמן נסיעה ריאלי לתל אביב/מרכז, קווי אוטובוס בשם אם ידוע.
+- מסחר: שמות מרכזים מסחריים אמיתיים, סופרמרקט/רשת, קופת חולים בשם.
+- פנאי: מתקנים ספציפיים — פארקים בשם, בריכה, ספרייה, מרכז קהילתי.
+- אופי: מי התושבים, אווירה, רמה סוציו-אקונומית (השתמש בנתון אם ניתן).
 
-כללי ברזל:
-- כתוב רק מידע שאתה יודע שהוא נכון. אל תמציא.
-- אל תכתוב "קרוב לכבישים ראשיים" — כתוב "כביש 5 ו-531 בצמוד לשכונה" אם זה נכון.
-- השתמש בנתונים הממשלתיים שניתנו לך — שלב אותם אורגנית בטקסט.
-- אל תציין עובדות טריוויאליות (גודל השכונה, גובה בניין). ציין מה זה נותן לתושב.
-- אל תכתוב "מרכז מסחרי פעיל" — כתוב "מרכז X הכולל קופת חולים מאוחדת, סופרמרקט ושירותי בנק" אם זה נכון.
-- עברית בלבד, ללא markdown, ללא כותרות.
+כללי דיוק — חובה לקיים:
+- אל תכתוב "מספר בתי ספר" — כתוב את שמותיהם.
+- אל תכתוב "קרוב לכביש ראשי" — ציין את מספר הכביש.
+- אל תמציא שמות של מקומות. אם אינך בטוח בשם — תאר בכלליות.
+- עברית תקינה ועשירה — משפטים קצרים, פעיל ולא סביל, ניסוח שגורם לקורא להרגיש שמישהו שמכיר את השכונה מדבר איתו.
 
-סגנון כתיבה: copywriting ממוקד לקוח — הדגש את היתרון לתושב, לא סיפורי רקע. כל משפט צריך לגרום לקורא לחשוב "זה טוב עבורי".
-
-החזר JSON בלבד (ללא טקסט לפני/אחרי):
+החזר JSON בלבד ללא טקסט נוסף:
 {
-  "description": "4-6 משפטים שיווקיים המסבירים למה כדאי לגור כאן — מנקודת מבט של איכות חיים, נגישות ושירותים. שמות ספציפיים בלבד.",
-  "transport": "2 משפטים: אילו כבישים ראשיים נגישים, כמה זמן לציר מרכזי, תחבורה ציבורית — מה זה אומר לתושב שיוצא לעבודה כל בוקר.",
-  "schools": "2 משפטים: שמות גנים ובתי ספר (מהרשימה שניתנה אם רלוונטי), מה מיוחד בהם, האם יש אפשרויות מגוונות — מה זה אומר למשפחה עם ילדים.",
-  "lifestyle": "2 משפטים: מרכזי תרבות, חוגים, מועדוניות נוער/קשישים, ספריות, גני שעשועים — מה יש לעשות בשכונה אחרי העבודה.",
-  "commerce": "2 משפטים: שמות מרכזים מסחריים, קופות חולים (מאוחדת/כללית/מכבי/לאומית), סופרמרקטים — מה ניתן לפתור בלי לצאת מהשכונה.",
-  "character": "2 משפטים: מי גר כאן (ותיקים/צעירים/משפחות), רמה סוציו-אקונומית, אווירה — עם מי חולקים את השכונה."
+  "description": "3-4 משפטים שיווקיים שמסכמים את אופי השכונה ומה עושה אותה מיוחדת — נגישות, אווירה, מה מייחד אותה מהעיר בכלל. שמות ספציפיים. עברית נקייה.",
+  "transport": "2 משפטים: כבישים ספציפיים, זמן ריאלי לתל אביב/מרכז, תחבורה ציבורית — מה זה אומר למי שיוצא לעבודה בבוקר.",
+  "schools": "2-3 משפטים: שמות גנים ובתי הספר מהרשימה לפי גיל (גן / יסודי / תיכון), כמה מהם, האם יש מגוון חינוכי — מה זה נותן למשפחה עם ילדים.",
+  "lifestyle": "2 משפטים: מה יש לעשות בשכונה — פארקים, מרכז קהילתי, בריכה, ספרייה — שמות אמיתיים אם ידוע.",
+  "commerce": "2 משפטים: שמות רשתות/מרכזים מסחריים, קופת חולים בשם, מה ניתן לפתור ברגל מהבית.",
+  "character": "2 משפטים: מי גר כאן, רמה סוציו-אקונומית, דינמיקה — האם זו שכונה ותיקה/מתחדשת/צעירה."
 }`;
 
   // ── Try with web search (Sonnet) ──
@@ -284,8 +309,8 @@ export async function getNeighborhoodData(
   }
 
   // ── 3. Fetch all gov data in parallel, then generate AI content ──
-  const [schoolNames, transportStops, demographics] = await Promise.all([
-    fetchSchoolNames(city),
+  const [edData, transportStops, demographics] = await Promise.all([
+    fetchEducationData(city),
     fetchTransportStops(city),
     fetchDemographics(city),
   ]);
@@ -293,7 +318,7 @@ export async function getNeighborhoodData(
   const clusterLevel = SOCIO_ECONOMIC_CLUSTERS[city] ?? null;
 
   const generated = await generateNeighborhoodData(
-    city, neighborhood, schoolNames, transportStops, demographics, clusterLevel
+    city, neighborhood, edData, transportStops, demographics, clusterLevel
   );
 
   if (!generated && !existing) return null;
