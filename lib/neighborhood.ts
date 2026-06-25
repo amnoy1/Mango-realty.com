@@ -1,5 +1,4 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { createAdminClient, createClient } from "./supabase/server";
 
 export interface NeighborhoodData {
   city: string;
@@ -28,10 +27,7 @@ async function fetchTransportStops(city: string): Promise<number | null> {
   try {
     const f = encodeURIComponent(JSON.stringify({ CityName: city }));
     const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_TRANSPORT_RESOURCE}&filters=${f}&limit=1`;
-    const result = await withTimeout(
-      fetch(url).then(r => r.ok ? r.json() : null),
-      3000,
-    );
+    const result = await withTimeout(fetch(url).then(r => r.ok ? r.json() : null), 3000);
     const total: number = result?.result?.total ?? 0;
     return total > 0 ? total : null;
   } catch {
@@ -45,10 +41,7 @@ const GOV_DEMOGRAPHICS_RESOURCE = "64edd0ee-3d5d-43ce-8562-c336c24dbc1f";
 async function fetchDemographics(city: string): Promise<number | null> {
   try {
     const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_DEMOGRAPHICS_RESOURCE}&q=${encodeURIComponent(city)}&limit=5`;
-    const result = await withTimeout(
-      fetch(url).then(r => r.ok ? r.json() : null),
-      3000,
-    );
+    const result = await withTimeout(fetch(url).then(r => r.ok ? r.json() : null), 3000);
     const records: Record<string, unknown>[] = result?.result?.records ?? [];
     if (records.length === 0) return null;
     const row = records[0];
@@ -81,16 +74,23 @@ const SOCIO_ECONOMIC_CLUSTERS: Record<string, number> = {
   "קרית שמונה": 4, "קרית ביאליק": 6, "קרית מוצקין": 5,
 };
 
-// ─── Claude — neighborhood profile ────────────────────────────────────────────
-async function generateNeighborhoodData(
+// ─── Main export ──────────────────────────────────────────────────────────────
+export async function getNeighborhoodData(
   city: string,
   neighborhood: string,
-  street: string,
-  transportStops: number | null,
-  population: number | null,
-  clusterLevel: number | null,
-): Promise<(Omit<NeighborhoodData, "city" | "neighborhood" | "image_url"> & { neighborhood_name?: string }) | null> {
+  street = "",
+): Promise<NeighborhoodData | null> {
+  if (!city) return null;
+
+  // Fetch city-level context in parallel (3s timeout each)
+  const [transportStops, population] = await Promise.all([
+    fetchTransportStops(city),
+    fetchDemographics(city),
+  ]);
+
+  const clusterLevel = SOCIO_ECONOMIC_CLUSTERS[city] ?? null;
   const needsResolution = !neighborhood && !!street;
+
   const target = neighborhood
     ? `שכונת "${neighborhood}" ב${city}`
     : street
@@ -162,115 +162,24 @@ async function generateNeighborhoodData(
     }
 
     const d = JSON.parse(text.slice(start, end + 1));
-    if (!d.description && !d.transport) {
-      console.error("[neighborhood] JSON missing required fields:", JSON.stringify(d).slice(0, 200));
-      return null;
-    }
+    if (!d.description && !d.transport) return null;
 
     const str = (v: unknown) => typeof v === "string" ? v : null;
-    return {
-      description:       str(d.description),
-      transport:         str(d.transport),
-      schools:           str(d.schools),
-      lifestyle:         str(d.lifestyle),
-      commerce:          str(d.commerce),
-      character:         str(d.character),
-      neighborhood_name: str(d.neighborhood_name) ?? undefined,
-    };
-  } catch (e) {
-    console.error("[neighborhood] Claude failed:", e);
-    return null;
-  }
-}
+    const resolvedNeighborhood = str(d.neighborhood_name) ?? neighborhood;
 
-// ─── Main export ──────────────────────────────────────────────────────────────
-export async function getNeighborhoodData(
-  city: string,
-  neighborhood: string,
-  street = "",
-): Promise<NeighborhoodData | null> {
-  if (!city) return null;
-
-  const SIX_MONTHS = 180 * 24 * 60 * 60 * 1000;
-  const now = Date.now();
-
-  // ── 1. Check Supabase cache (4s timeout — skip if hanging) ──
-  let existing: Record<string, unknown> | null = null;
-  try {
-    const supabase = await createClient();
-    const result = await withTimeout(
-      Promise.resolve(supabase.from("neighborhoods").select("*").eq("city", city).eq("neighborhood", neighborhood).single()),
-      4000,
-    );
-    existing = (result as { data?: Record<string, unknown> } | null)?.data ?? null;
-  } catch {
-    /* ignore */
-  }
-
-  const analysisAge = existing?.analysis_updated_at
-    ? now - new Date(existing.analysis_updated_at as string).getTime()
-    : Infinity;
-
-  // ── 2. Return from cache if fresh ──
-  if (existing && analysisAge < SIX_MONTHS) {
     return {
       city,
-      neighborhood,
-      description: existing.description as string | null,
-      transport:   existing.transport   as string | null,
-      schools:     existing.schools     as string | null,
-      lifestyle:   existing.lifestyle   as string | null,
-      commerce:    existing.commerce    as string | null,
-      character:   existing.character   as string | null,
-      image_url:   existing.image_url   as string | null,
+      neighborhood: resolvedNeighborhood,
+      description: str(d.description),
+      transport:   str(d.transport),
+      schools:     str(d.schools),
+      lifestyle:   str(d.lifestyle),
+      commerce:    str(d.commerce),
+      character:   str(d.character),
+      image_url:   null,
     };
+  } catch (e) {
+    console.error("[neighborhood] error:", e);
+    return null;
   }
-
-  // ── 3. Fetch city-level context in parallel (3s timeout each) ──
-  const [transportStops, population] = await Promise.all([
-    fetchTransportStops(city),
-    fetchDemographics(city),
-  ]);
-
-  const clusterLevel = SOCIO_ECONOMIC_CLUSTERS[city] ?? null;
-
-  // ── 4. Generate with Claude ──
-  const generated = await generateNeighborhoodData(
-    city, neighborhood, street, transportStops, population, clusterLevel,
-  );
-
-  if (!generated && !existing) return null;
-
-  const cacheNeighborhood = neighborhood || generated?.neighborhood_name || "";
-  const { neighborhood_name: _drop, ...generatedFields } = generated ?? {};
-  const updates: Record<string, unknown> = {
-    updated_at: new Date().toISOString(),
-    image_url:  (existing?.image_url as string | null) ?? null,
-    ...(generated ? { ...generatedFields, analysis_updated_at: new Date().toISOString() } : {}),
-  };
-
-  // ── 5. Persist to Supabase (fire-and-forget — don't block response) ──
-  (async () => {
-    try {
-      const admin = await createAdminClient();
-      if (existing) {
-        await admin.from("neighborhoods").update(updates).eq("city", city).eq("neighborhood", cacheNeighborhood);
-      } else {
-        await admin.from("neighborhoods").insert({ city, neighborhood: cacheNeighborhood, ...updates });
-      }
-    } catch { /* ignore */ }
-  })();
-
-  const m = { ...(existing ?? {}), ...updates };
-  return {
-    city,
-    neighborhood: cacheNeighborhood,
-    description: (m.description ?? null) as string | null,
-    transport:   (m.transport   ?? null) as string | null,
-    schools:     (m.schools     ?? null) as string | null,
-    lifestyle:   (m.lifestyle   ?? null) as string | null,
-    commerce:    (m.commerce    ?? null) as string | null,
-    character:   (m.character   ?? null) as string | null,
-    image_url:   (m.image_url   ?? null) as string | null,
-  };
 }
