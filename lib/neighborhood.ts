@@ -114,11 +114,11 @@ async function generateNeighborhoodData(
   const bgText = bg.length > 0 ? `\nרקע על ${city}: ${bg.join(" | ")}` : "";
 
   const resolveInstruction = needsResolution
-    ? `\nהנכס נמצא ב${target}. תחילה חפש באינטרנט לאיזו שכונה שייך הרחוב הזה ב${city}, ולאחר מכן כתוב את הפרופיל עבור אותה שכונה. כלול את שם השכונה שמצאת בשדה "neighborhood_name" ב-JSON.`
+    ? `\nהנכס נמצא ב${target}. בהתבסס על הידע שלך, קבע באיזו שכונה ב${city} נמצא הרחוב הזה, וכתוב פרופיל של אותה שכונה. כלול את שם השכונה בשדה "neighborhood_name" ב-JSON.`
     : "";
 
   const neighborhoodNameField = needsResolution
-    ? `\n  "neighborhood_name": "שם השכונה שמצאת — בעברית בלבד (לדוגמה: נווה אדיר, גבעת הורדים)",`
+    ? `\n  "neighborhood_name": "שם השכונה — בעברית (לדוגמה: נווה אדיר, גבעת הורדים)",`
     : "";
 
   const prompt = `אתה copywriter נדל"ן ישראלי בכיר עם ידע מעמיק על שכונות בישראל. כתוב פרופיל שכונה עבור ${target}.
