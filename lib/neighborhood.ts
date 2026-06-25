@@ -41,21 +41,107 @@ async function fetchSchoolNames(city: string): Promise<string[]> {
   }
 }
 
+// ─── data.gov.il — public transport stops (Ministry of Transport) ─────────────
+const GOV_TRANSPORT_RESOURCE = "e873e6a2-66c1-494f-a677-f5e77348edb0";
+
+async function fetchTransportStops(city: string): Promise<number | null> {
+  try {
+    const f = encodeURIComponent(JSON.stringify({ CityName: city }));
+    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_TRANSPORT_RESOURCE}&filters=${f}&limit=1`;
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) return null;
+
+    const total: number = (await res.json()).result?.total ?? 0;
+    return total > 0 ? total : null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── data.gov.il — demographics (CBS) ─────────────────────────────────────────
+const GOV_DEMOGRAPHICS_RESOURCE = "64edd0ee-3d5d-43ce-8562-c336c24dbc1f";
+
+interface Demographics {
+  population?: number;
+}
+
+async function fetchDemographics(city: string): Promise<Demographics | null> {
+  try {
+    const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=${GOV_DEMOGRAPHICS_RESOURCE}&q=${encodeURIComponent(city)}&limit=5`;
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) return null;
+
+    const records: Record<string, unknown>[] = (await res.json()).result?.records ?? [];
+    if (records.length === 0) return null;
+
+    const row = records[0];
+    const rawPop = row["סך הכל"] ?? row["אוכלוסייה"] ?? row["population"];
+    const population =
+      typeof rawPop === "number" ? rawPop
+      : typeof rawPop === "string" ? (parseFloat(rawPop.replace(/,/g, "")) || undefined)
+      : undefined;
+
+    return population ? { population } : null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Static socio-economic cluster lookup (CBS 2019, scale 1–10) ──────────────
+// API data covers only small localities. Major Israeli cities require static lookup.
+const SOCIO_ECONOMIC_CLUSTERS: Record<string, number> = {
+  "תל אביב": 8, "תל אביב יפו": 8,
+  "ירושלים": 5, "חיפה": 6,
+  "ראשון לציון": 6, "פתח תקווה": 6, "נתניה": 5,
+  "אשדוד": 5, "אשקלון": 4, "באר שבע": 4,
+  "בני ברק": 3, "חולון": 6, "בת ים": 5,
+  "רמת גן": 7, "גבעתיים": 8, "הרצליה": 8,
+  "רעננה": 9, "כפר סבא": 7, "הוד השרון": 8,
+  "מודיעין": 9, "קרית אונו": 7, "אור יהודה": 5,
+  "יהוד": 6, "לוד": 3, "רמלה": 3,
+  "נס ציונה": 7, "ראש העין": 6, "אלפי מנשה": 8,
+  "כפר תבור": 6, "כפר יונה": 7, "רמת השרון": 9,
+  "עכו": 4, "נהריה": 6, "כרמיאל": 6, "טבריה": 4,
+  "צפת": 4, "אילת": 6, "קרית גת": 4,
+  "קרית שמונה": 4, "קרית ביאליק": 6, "קרית מוצקין": 5,
+};
+
 // ─── Claude Sonnet — neighborhood profile with specific facts ─────────────────
 async function generateNeighborhoodData(
   city: string,
   neighborhood: string,
-  schoolNames: string[]
+  schoolNames: string[],
+  transportStops: number | null,
+  demographics: Demographics | null,
+  clusterLevel: number | null,
 ): Promise<Omit<NeighborhoodData, "city" | "neighborhood" | "image_url"> | null> {
   const client = new Anthropic();
   const location = neighborhood ? `"${neighborhood}" ב${city}` : city;
 
-  const schoolsContext = schoolNames.length > 0
-    ? `\nבתי ספר אמיתיים ב${city} (מנתוני משרד החינוך): ${schoolNames.join(", ")}.`
+  const contextParts: string[] = [];
+  if (schoolNames.length > 0) {
+    contextParts.push(`בתי ספר אמיתיים ב${city} (מנתוני משרד החינוך): ${schoolNames.join(", ")}.`);
+  }
+  if (transportStops !== null) {
+    contextParts.push(`מספר תחנות תחבורה ציבורית ב${city}: ${transportStops} תחנות (נתוני מנהל התחבורה).`);
+  }
+  if (demographics?.population) {
+    const popFormatted = demographics.population.toLocaleString("he-IL");
+    contextParts.push(`אוכלוסיית ${city}: כ-${popFormatted} תושבים (נתוני הלמ"ס).`);
+  }
+  if (clusterLevel !== null) {
+    const levelDesc = clusterLevel >= 8 ? "גבוה" : clusterLevel >= 6 ? "בינוני-גבוה" : clusterLevel >= 4 ? "בינוני" : "נמוך";
+    contextParts.push(`דירוג סוציו-אקונומי של ${city}: אשכול ${clusterLevel}/10 (${levelDesc}) לפי הלמ"ס.`);
+  }
+
+  const dataContext = contextParts.length > 0
+    ? `\nנתונים ממשלתיים אמיתיים:\n${contextParts.map(p => `• ${p}`).join("\n")}`
     : "";
 
   const prompt = `אתה copywriter נדל"ן מנוסה בישראל. כתוב פרופיל שכונה עבור ${location}. קהל היעד: משפחות וזוגות שמחפשים דירה לקנייה או שכירות ורוצים להבין מה הם מקבלים מהשכונה הזו.
-${schoolsContext}
+${dataContext}
 
 מה מעניין את הקונה/שוכר:
 - חינוך: כמה גני ילדים ובתי ספר יש, האם הם נחשבים טובים, האם יש אפשרויות חינוך מגוונות (חילוני/דתי/גימנסיה)
@@ -67,7 +153,7 @@ ${schoolsContext}
 כללי ברזל:
 - כתוב רק מידע שאתה יודע שהוא נכון. אל תמציא.
 - אל תכתוב "קרוב לכבישים ראשיים" — כתוב "כביש 5 ו-531 בצמוד לשכונה" אם זה נכון.
-- אל תכתוב "מספר בתי ספר" — כתוב את שמותיהם וכמה יש.
+- השתמש בנתונים הממשלתיים שניתנו לך — שלב אותם אורגנית בטקסט.
 - אל תציין עובדות טריוויאליות (גודל השכונה, גובה בניין). ציין מה זה נותן לתושב.
 - אל תכתוב "מרכז מסחרי פעיל" — כתוב "מרכז X הכולל קופת חולים מאוחדת, סופרמרקט ושירותי בנק" אם זה נכון.
 - עברית בלבד, ללא markdown, ללא כותרות.
@@ -183,9 +269,18 @@ export async function getNeighborhoodData(
     };
   }
 
-  // ── 3. Fetch real school names + generate AI content in parallel ──
-  const schoolNames = await fetchSchoolNames(city);
-  const generated = await generateNeighborhoodData(city, neighborhood, schoolNames);
+  // ── 3. Fetch all gov data in parallel, then generate AI content ──
+  const [schoolNames, transportStops, demographics] = await Promise.all([
+    fetchSchoolNames(city),
+    fetchTransportStops(city),
+    fetchDemographics(city),
+  ]);
+
+  const clusterLevel = SOCIO_ECONOMIC_CLUSTERS[city] ?? null;
+
+  const generated = await generateNeighborhoodData(
+    city, neighborhood, schoolNames, transportStops, demographics, clusterLevel
+  );
 
   if (!generated && !existing) return null;
 
