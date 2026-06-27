@@ -30,29 +30,27 @@ export default function AgentEditClient({ agent }: { agent: Agent }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 px-4 pb-12" dir="rtl">
-      <div className="max-w-xl mx-auto">
-        <div className="mb-8">
-          <a href="/admin/agents" className="text-xs text-gray-400 hover:text-[#F5A623] transition-colors mb-1 block">
-            ← חזרה לצוות
-          </a>
-          <h1 className="text-2xl font-black text-gray-900">
-            עריכת {agent.first_name} {agent.last_name}
-          </h1>
-        </div>
-        <AgentForm
-          initialData={{
-            id:         agent.id,
-            first_name: agent.first_name,
-            last_name:  agent.last_name,
-            phone:      agent.phone      ?? "",
-            email:      agent.email      ?? "",
-            photo_url:  agent.photo_url  ?? "",
-            bio:        agent.bio        ?? "",
-          }}
-          onSubmit={handleSubmit}
-        />
+    <div dir="rtl">
+      <div className="mb-8">
+        <a href="/admin/agents" className="text-xs text-gray-400 hover:text-[#F5A623] transition-colors mb-1 block">
+          ← חזרה לצוות
+        </a>
+        <h1 className="text-2xl font-bold text-gray-900">
+          עריכת {agent.first_name} {agent.last_name}
+        </h1>
       </div>
+      <AgentForm
+        initialData={{
+          id:         agent.id,
+          first_name: agent.first_name,
+          last_name:  agent.last_name,
+          phone:      agent.phone     ?? "",
+          email:      agent.email     ?? "",
+          photo_url:  agent.photo_url ?? "",
+          bio:        agent.bio       ?? "",
+        }}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }
