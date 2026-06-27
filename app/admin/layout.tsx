@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Admin — Mango Realty" };
 
@@ -9,11 +10,9 @@ export default async function AdminLayout({
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const isAuthenticated = user?.email === "amir@mango-realty.com";
 
-  // Middleware handles auth redirects — layout only adds the admin chrome for authenticated users
-  if (!isAuthenticated) {
-    return <>{children}</>;
+  if (user?.email !== "amir@mango-realty.com") {
+    redirect("/admin/login");
   }
 
   return (
