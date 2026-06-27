@@ -1,5 +1,6 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { getNeighborhoodData } from "@/lib/neighborhood";
 
 export async function DELETE(
   request: NextRequest,
@@ -41,6 +42,21 @@ export async function PATCH(
   const { error } = await supabase.from("properties").update(body).eq("id", id);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Fire neighborhood analysis after response when property becomes active
+  if (body.status === "active" && body.city) {
+    after(() => {
+      getNeighborhoodData(
+        body.city,
+        body.neighborhood ?? "",
+        body.street ?? "",
+        body.lat ?? null,
+        body.lng ?? null,
+      ).catch((e: unknown) =>
+        console.error("[admin/properties PATCH] neighborhood pre-gen failed:", e),
+      );
+    });
   }
 
   return NextResponse.json({ success: true });

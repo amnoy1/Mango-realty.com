@@ -1,5 +1,6 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { getNeighborhoodData } from "@/lib/neighborhood";
 
 export async function POST(request: NextRequest) {
   const supabaseUser = await createClient();
@@ -45,6 +46,21 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Fire neighborhood analysis after response is sent (non-blocking)
+  if (data.status === "active" && data.city) {
+    after(() => {
+      getNeighborhoodData(
+        data.city,
+        data.neighborhood ?? "",
+        data.street ?? "",
+        data.lat ?? null,
+        data.lng ?? null,
+      ).catch((e: unknown) =>
+        console.error("[admin/properties POST] neighborhood pre-gen failed:", e),
+      );
+    });
   }
 
   return NextResponse.json({ data });
