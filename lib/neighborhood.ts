@@ -147,7 +147,7 @@ async function generateProfile(
     };
     const res = await withTimeout(
       client.messages.create(createParams) as Promise<Anthropic.Message>,
-      40_000,
+      90_000,
     );
 
     if (!res) { console.error("[neighborhood] Claude timed out"); return null; }

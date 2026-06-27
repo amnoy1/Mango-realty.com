@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getNeighborhoodData } from "@/lib/neighborhood";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function GET(req: NextRequest) {
   const city         = req.nextUrl.searchParams.get("city")         || "";
