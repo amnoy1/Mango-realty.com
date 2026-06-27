@@ -121,6 +121,7 @@ export async function getNeighborhoodData(
   let generated: Record<string, string | null> | null = null;
   try {
     const client = new Anthropic();
+    console.log("[neighborhood] calling Claude for:", city, neighborhood);
     const res = await withTimeout(
       client.messages.create({
         model: "claude-haiku-4-5-20251001",
@@ -130,27 +131,41 @@ export async function getNeighborhoodData(
       20_000,
     );
 
-    if (res) {
+    if (!res) {
+      console.error("[neighborhood] Claude timed out (20s)");
+    } else {
       const textBlock = res.content.find((b) => b.type === "text");
       if (textBlock && textBlock.type === "text") {
         const text = textBlock.text;
+        console.log("[neighborhood] Claude raw:", text.slice(0, 200));
         const start = text.indexOf("{");
         const end   = text.lastIndexOf("}");
         if (start !== -1 && end > start) {
-          const d = JSON.parse(text.slice(start, end + 1));
-          const s = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
-          if (d.description || d.transport) {
-            generated = {
-              description:       s(d.description),
-              transport:         s(d.transport),
-              schools:           s(d.schools),
-              lifestyle:         s(d.lifestyle),
-              commerce:          s(d.commerce),
-              character:         s(d.character),
-              neighborhood_name: s(d.neighborhood_name),
-            };
+          try {
+            const d = JSON.parse(text.slice(start, end + 1));
+            const s = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+            if (d.description || d.transport) {
+              generated = {
+                description:       s(d.description),
+                transport:         s(d.transport),
+                schools:           s(d.schools),
+                lifestyle:         s(d.lifestyle),
+                commerce:          s(d.commerce),
+                character:         s(d.character),
+                neighborhood_name: s(d.neighborhood_name),
+              };
+              console.log("[neighborhood] generated OK, description:", generated.description?.slice(0, 60));
+            } else {
+              console.error("[neighborhood] Claude JSON had no description/transport:", JSON.stringify(d).slice(0, 200));
+            }
+          } catch (parseErr) {
+            console.error("[neighborhood] JSON parse failed:", parseErr, "raw:", text.slice(start, end + 1).slice(0, 200));
           }
+        } else {
+          console.error("[neighborhood] No JSON braces in Claude response:", text.slice(0, 200));
         }
+      } else {
+        console.error("[neighborhood] No text block in Claude response");
       }
     }
   } catch (e) {
@@ -165,10 +180,19 @@ export async function getNeighborhoodData(
   void _drop;
 
   // ── 5. Persist to Supabase (fire-and-forget) ─────────────────────────────────
+  // Only write columns that exist in the DB schema.
+  // Extra columns (transport, lifestyle, commerce, character) are added via ALTER TABLE migration.
+  const dbSafeFields = generated
+    ? {
+        description:         generated.description,
+        analysis_updated_at: new Date().toISOString(),
+      }
+    : {};
+
   const updates = {
-    ...(generated ? { ...fields, analysis_updated_at: new Date().toISOString() } : {}),
+    ...dbSafeFields,
     updated_at: new Date().toISOString(),
-    image_url: (existing?.image_url as string | null) ?? null,
+    image_url:  (existing?.image_url as string | null) ?? null,
   };
 
   (async () => {
@@ -188,7 +212,12 @@ export async function getNeighborhoodData(
     }
   })();
 
-  const merged: Record<string, unknown> = { ...(existing ?? {}), ...updates };
+  // Merge all in-memory data (including columns not yet in DB) for the response
+  const merged: Record<string, unknown> = {
+    ...(existing ?? {}),
+    ...updates,
+    ...(generated ?? {}),
+  };
   const s = (v: unknown) => (typeof v === "string" ? v : null);
   return {
     city,
