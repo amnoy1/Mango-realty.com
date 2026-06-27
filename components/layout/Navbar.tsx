@@ -3,10 +3,13 @@ import { useState, useEffect } from "react";
 import { Menu, X, Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const isHome = pathname === "/";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -36,9 +39,9 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm text-[var(--color-luxury-black)]/55">
-          <Link href="/properties" className="hover:text-[var(--color-gold)] transition-colors">נכסים</Link>
-          <Link href="/#neighborhoods" className="hover:text-[var(--color-gold)] transition-colors">שכונות</Link>
-          <Link href="/#agent" className="hover:text-[var(--color-gold)] transition-colors">סוכן AI</Link>
+          <Link href={isHome ? "#properties" : "/properties"} className="hover:text-[var(--color-gold)] transition-colors">נכסים</Link>
+          <Link href={isHome ? "#neighborhoods" : "/#neighborhoods"} className="hover:text-[var(--color-gold)] transition-colors">שכונות</Link>
+          <Link href={isHome ? "#agent" : "/#agent"} className="hover:text-[var(--color-gold)] transition-colors">סוכן AI</Link>
           <a
             href="tel:+97235000000"
             className="flex items-center gap-2 bg-[var(--color-luxury-black)] text-[var(--color-cream)] px-5 py-2 rounded-full font-bold hover:bg-[var(--color-charcoal)] transition-colors text-xs"
@@ -55,9 +58,9 @@ export default function Navbar() {
 
       {open && (
         <div className="md:hidden bg-[var(--color-cream)] border-t border-black/8 px-6 py-5 flex flex-col gap-5 text-sm text-[var(--color-luxury-black)]/70">
-          <Link href="/properties" onClick={() => setOpen(false)}>נכסים</Link>
-          <Link href="/#neighborhoods" onClick={() => setOpen(false)}>שכונות</Link>
-          <Link href="/#agent" onClick={() => setOpen(false)}>סוכן AI</Link>
+          <Link href={isHome ? "#properties" : "/properties"} onClick={() => setOpen(false)}>נכסים</Link>
+          <Link href={isHome ? "#neighborhoods" : "/#neighborhoods"} onClick={() => setOpen(false)}>שכונות</Link>
+          <Link href={isHome ? "#agent" : "/#agent"} onClick={() => setOpen(false)}>סוכן AI</Link>
           <a href="tel:+97235000000" className="flex items-center gap-2 font-bold text-[var(--color-luxury-black)]">
             <Phone size={15} /> 03-500-0000
           </a>
