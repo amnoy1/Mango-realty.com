@@ -13,25 +13,35 @@ export default function NeighborhoodLoader({
   neighborhood: string;
   street?: string;
 }) {
-  const [data, setData]     = useState<NeighborhoodData | null>(null);
+  const [data, setData]       = useState<NeighborhoodData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(false);
 
   useEffect(() => {
     if (!city) { setLoading(false); return; }
+
     const params = new URLSearchParams({ city, neighborhood, street });
+    let cancelled = false;
+
     fetch(`/api/neighborhood?${params}`)
-      .then(async r => {
-        if (!r.ok) { setLoading(false); return; }
+      .then(async (r) => {
+        if (cancelled) return;
+        if (!r.ok) { setError(true); setLoading(false); return; }
         try {
-          const d = await r.json();
-          if (d && d.description) setData(d);
+          const d: NeighborhoodData = await r.json();
+          if (!cancelled && d?.description) setData(d);
+          else if (!cancelled) setError(true);
         } catch {
-          /* non-JSON response — silently skip */
+          if (!cancelled) setError(true);
         }
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, [city, neighborhood]);
+      .catch(() => {
+        if (!cancelled) { setError(true); setLoading(false); }
+      });
+
+    return () => { cancelled = true; };
+  }, [city, neighborhood, street]);
 
   if (loading) {
     return (
@@ -40,9 +50,19 @@ export default function NeighborhoodLoader({
           <span className="block w-2 h-2 rounded-full bg-[var(--color-gold)] animate-ping" />
           <span className="text-base font-bold text-[var(--color-luxury-black)]">מנתח שכונה</span>
         </div>
-        <div className="space-y-1.5 text-[0.85rem] text-[var(--color-luxury-black)]/40 leading-relaxed">
-          <p>מנתח שכונה בעזרת בינה מלאכותית...</p>
-        </div>
+        <p className="text-[0.85rem] text-[var(--color-luxury-black)]/40 leading-relaxed">
+          מנתח שכונה בעזרת בינה מלאכותית...
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-12 pt-10 border-t border-black/8">
+        <p className="text-[0.85rem] text-[var(--color-luxury-black)]/40">
+          ניתוח השכונה אינו זמין כרגע.
+        </p>
       </div>
     );
   }
