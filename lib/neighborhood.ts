@@ -4,12 +4,11 @@ import { createAdminClient } from "./supabase/server";
 export interface NeighborhoodData {
   city: string;
   neighborhood: string;
-  description: string | null;
-  transport: string | null;
-  schools: string | null;
-  lifestyle: string | null;
-  commerce: string | null;
-  character: string | null;
+  description: string | null;      // סיכום — נגזר מהסעיפים
+  transport: string | null;        // תחבורה
+  socioeconomic: string | null;    // חתך סוציו-אקונומי
+  commerce: string | null;         // תעסוקה, מסחר ובידור
+  schools: string | null;          // חינוך
   image_url: string | null;
 }
 
@@ -117,23 +116,20 @@ async function generateProfile(
     ? `\nהנכס נמצא ב${target}. קבע באיזו שכונה מדובר וכתוב פרופיל שלה. רשום שמה ב-neighborhood_name.`
     : "";
 
-  const prompt = `אתה מומחה נדל"ן ישראלי. כתוב פרופיל ספציפי של ${target} עבור קונים פוטנציאליים.${contextData}${resolveNote}
+  const prompt = `אתה מומחה נדל"ן ישראלי. כתוב פרופיל עבור ${target}.${contextData}${resolveNote}
 
 השתמש בחיפוש כדי למצוא מידע מדויק ועדכני על:
-- שמות בתי ספר, גנים ותיכונים ספציפיים בשכונה
-- קווי אוטובוס ספציפיים (מספרי קווים), תחנות, זמן נסיעה לתל אביב
-- שמות מרכזי קניות, סופרמרקטים, קופות חולים
-- פארקים, מרכזי קהילה, מתקני ספורט
-- אופי האוכלוסייה והתפתחות השכונה
+- תחבורה: קווי אוטובוס (מספרים), תחנות רכבת, גישה לכבישים ראשיים, זמן לתל אביב
+- מסחר ובידור: שמות מרכזי קניות, סופרמרקטים, מסעדות, בנקים, קופות חולים
+- חינוך: שמות בתי ספר, גנים, תיכונים בשכונה
 
 אחרי החיפוש, החזר JSON בלבד (ללא markdown, ללא \`\`\`):
 {${nameField}
-  "description": "3-4 משפטים: מה ייחודי בשכונה, מה האווירה, מה ההבדל מהשכונות הסמוכות.",
-  "transport": "2 משפטים: קווי אוטובוס ספציפיים, כבישים, זמן לתל אביב.",
-  "schools": "2 משפטים: שמות בתי ספר וגנים אמיתיים, גילאים.",
-  "lifestyle": "2 משפטים: פארקים, מרכז קהילה, מתקני ספורט.",
-  "commerce": "2 משפטים: שמות קניונים, רשתות סופרמרקט, קופת חולים.",
-  "character": "2 משפטים: מי גר כאן, אווירה, רמה כלכלית."
+  "transport": "עד 2 משפטים: תחנות אוטובוס ורכבת קרובות (שמות וקווים ספציפיים), זמן נסיעה לתל אביב.",
+  "socioeconomic": "עד 2 משפטים: ציין את ניקוד האשכול הסוציו-אקונומי (CBS) ואיפיון קצר של אוכלוסיית השכונה.",
+  "commerce": "עד 2 משפטים: מרכזי קניות, רשתות סופרמרקט, מסעדות ובידור בקרבת מקום.",
+  "schools": "עד 2 משפטים: שמות בתי ספר יסודיים, גנים ותיכונים בשכונה.",
+  "description": "2-3 משפטים: סיכום קצר הנגזר מהנתונים לעיל — מה הופך את ${target} לאטרקטיבית לרוכשים."
 }`;
 
   try {
@@ -176,10 +172,9 @@ async function generateProfile(
     return {
       description:       s(d.description),
       transport:         s(d.transport),
-      schools:           s(d.schools),
-      lifestyle:         s(d.lifestyle),
+      socioeconomic:     s(d.socioeconomic),
       commerce:          s(d.commerce),
-      character:         s(d.character),
+      schools:           s(d.schools),
       neighborhood_name: s(d.neighborhood_name) ?? undefined,
     };
   } catch (e) {
@@ -223,13 +218,12 @@ export async function getNeighborhoodData(
     return {
       city,
       neighborhood: (existing.neighborhood as string) || neighborhood,
-      description: s(existing.description),
-      transport:   s(existing.transport),
-      schools:     s(existing.schools),
-      lifestyle:   s(existing.lifestyle),
-      commerce:    s(existing.commerce),
-      character:   s(existing.character),
-      image_url:   s(existing.image_url),
+      description:   s(existing.description),
+      transport:     s(existing.transport),
+      socioeconomic: s(existing.socioeconomic),
+      commerce:      s(existing.commerce),
+      schools:       s(existing.schools),
+      image_url:     s(existing.image_url),
     };
   }
 
@@ -277,12 +271,11 @@ export async function getNeighborhoodData(
   return {
     city,
     neighborhood: resolvedNeighborhood,
-    description: s(merged.description),
-    transport:   s(merged.transport),
-    schools:     s(merged.schools),
-    lifestyle:   s(merged.lifestyle),
-    commerce:    s(merged.commerce),
-    character:   s(merged.character),
-    image_url:   s(merged.image_url),
+    description:   s(merged.description),
+    transport:     s(merged.transport),
+    socioeconomic: s(merged.socioeconomic),
+    commerce:      s(merged.commerce),
+    schools:       s(merged.schools),
+    image_url:     s(merged.image_url),
   };
 }

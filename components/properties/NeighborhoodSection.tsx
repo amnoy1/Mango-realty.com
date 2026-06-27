@@ -1,26 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Bus, School, TreePine, ShoppingBag, Users, Info, Plus, Minus } from "lucide-react";
+import { MapPin, Bus, TrendingUp, ShoppingBag, GraduationCap, Info, Plus, Minus } from "lucide-react";
 import type { NeighborhoodData } from "@/lib/neighborhood";
 
 const CATEGORIES = [
-  { key: "transport" as const, icon: Bus,         label: "תחבורה"  },
-  { key: "schools"   as const, icon: School,      label: "חינוך"   },
-  { key: "lifestyle" as const, icon: TreePine,    label: "פנאי"    },
-  { key: "commerce"  as const, icon: ShoppingBag, label: "מסחר"    },
-  { key: "character" as const, icon: Users,       label: "קהילה"   },
+  { key: "transport"     as const, icon: Bus,           label: "תחבורה"                  },
+  { key: "socioeconomic" as const, icon: TrendingUp,    label: "חתך סוציו-אקונומי"       },
+  { key: "commerce"      as const, icon: ShoppingBag,   label: "תעסוקה, מסחר ובידור"    },
+  { key: "schools"       as const, icon: GraduationCap, label: "חינוך"                   },
 ] as const;
 
 export default function NeighborhoodSection({ data }: { data: NeighborhoodData }) {
   const [openKey, setOpenKey] = useState<string | null>(null);
 
-  const hasContent = data.description || CATEGORIES.some(c => data[c.key]);
-  if (!hasContent) return null;
-
-  const locationLabel = data.neighborhood
-    ? `${data.neighborhood} · ${data.city}`
-    : data.city;
+  const hasCategories = CATEGORIES.some(c => data[c.key]);
+  if (!data.description && !hasCategories) return null;
 
   return (
     <section className="mt-12 pt-10 border-t border-black/8">
@@ -30,22 +25,24 @@ export default function NeighborhoodSection({ data }: { data: NeighborhoodData }
         <h2 className="text-xl font-black text-[var(--color-luxury-black)]">
           {data.neighborhood ? `השכונה — ${data.neighborhood}` : `על ${data.city}`}
         </h2>
-        <span className="text-xs text-[var(--color-luxury-black)]/30 mr-auto">{locationLabel}</span>
+        <span className="text-xs text-[var(--color-luxury-black)]/30 mr-auto">
+          {data.neighborhood ? `${data.neighborhood} · ${data.city}` : data.city}
+        </span>
       </div>
 
-      {/* Description */}
+      {/* Summary — derived from the categories below */}
       {data.description && (
         <p className="text-[var(--color-luxury-black)]/65 leading-relaxed text-[0.95rem] mb-6 max-w-3xl">
           {data.description}
         </p>
       )}
 
-      {/* Accordion */}
-      {CATEGORIES.some(c => data[c.key]) && (
+      {/* Accordion — 4 categories */}
+      {hasCategories && (
         <div className="divide-y divide-black/[0.06] mb-5">
           {CATEGORIES.map(({ key, icon: Icon, label }) => {
             const text = data[key];
-            if (!text || typeof text !== "string") return null;
+            if (!text) return null;
             const isOpen = openKey === key;
             return (
               <div key={key}>
