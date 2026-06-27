@@ -8,10 +8,14 @@ export default function NeighborhoodLoader({
   city,
   neighborhood,
   street = "",
+  lat,
+  lng,
 }: {
   city: string;
   neighborhood: string;
   street?: string;
+  lat?: number | null;
+  lng?: number | null;
 }) {
   const [data, setData]       = useState<NeighborhoodData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +25,8 @@ export default function NeighborhoodLoader({
     if (!city) { setLoading(false); return; }
 
     const params = new URLSearchParams({ city, neighborhood, street });
+    if (lat != null) params.set("lat", String(lat));
+    if (lng != null) params.set("lng", String(lng));
     let cancelled = false;
 
     fetch(`/api/neighborhood?${params}`)

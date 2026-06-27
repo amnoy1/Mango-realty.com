@@ -208,6 +208,8 @@ export default async function PropertyPage({
             city={propertyForClient.city}
             neighborhood={propertyForClient.neighborhood}
             street={propertyForClient.street}
+            lat={propertyForClient.lat}
+            lng={propertyForClient.lng}
           />
         }
       />
