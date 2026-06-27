@@ -36,15 +36,21 @@ export default async function Neighborhoods() {
     .select("city, neighborhood, description, transport, socioeconomic, commerce, schools, image_url")
     .in("city", [...new Set(unique.map(u => u.city))]);
 
-  const cacheMap = new Map(
-    (cached ?? []).map(c => [`${c.city}||${c.neighborhood}`, c])
-  );
+  const cachedList = cached ?? [];
+
+  // Find best cache match for a (city, neighborhood) pair — robust to empty strings
+  const findCache = (city: string, neighborhood: string) =>
+    cachedList.find(c => c.city === city && (
+      c.neighborhood === neighborhood ||            // exact match
+      !c.neighborhood ||                           // cache stored with empty neighborhood
+      !neighborhood ||                             // property has no neighborhood
+      c.neighborhood === city                      // cache used city as fallback
+    ));
 
   // 3. Merge: property image as fallback when no image_url in cache
   const s = (v: unknown) => (typeof v === "string" ? v : null);
   const data: (NeighborhoodData & { id: string })[] = unique.slice(0, 6).map((u, i) => {
-    const hit = cacheMap.get(`${u.city}||${u.neighborhood}`)
-              ?? cacheMap.get(`${u.city}||${u.city}`);
+    const hit = findCache(u.city, u.neighborhood);
     return {
       id:            `${u.city}-${u.neighborhood}-${i}`,
       city:          u.city,
