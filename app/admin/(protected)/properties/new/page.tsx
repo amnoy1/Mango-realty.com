@@ -1,7 +1,16 @@
 import Link from "next/link";
 import NewPropertyClient from "./NewPropertyClient";
+import { createAdminClient } from "@/lib/supabase/server";
 
-export default function NewPropertyPage() {
+export const dynamic = "force-dynamic";
+
+export default async function NewPropertyPage() {
+  const supabase = await createAdminClient();
+  const { data: agents } = await supabase
+    .from("agents")
+    .select("id, first_name, last_name")
+    .order("first_name");
+
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
@@ -12,7 +21,7 @@ export default function NewPropertyPage() {
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">נכס חדש</h1>
       </div>
-      <NewPropertyClient />
+      <NewPropertyClient agents={agents ?? []} />
     </div>
   );
 }

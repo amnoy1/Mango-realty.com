@@ -11,6 +11,15 @@ import {
 } from "lucide-react";
 import PropertyCard, { type Property } from "@/components/ui/PropertyCard";
 
+interface Agent {
+  id: string;
+  name: string;
+  phone: string | null;
+  photo_url: string | null;
+  bio: string | null;
+  slug: string;
+}
+
 interface PropertyData {
   slug: string;
   title: string;
@@ -35,6 +44,7 @@ interface PropertyData {
   balcony_sqm: string | null;
   storage_sqm: string | null;
   garden_sqm:  string | null;
+  agent:       Agent | null;
 }
 
 function formatPrice(n: number) {
@@ -68,7 +78,14 @@ function MapModal({ title, src, onClose }: { title: string; src: string; onClose
   );
 }
 
-const AGENT_PHOTO = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&q=80";
+const AGENT_FALLBACK = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&q=80";
+
+function whatsappUrl(phone: string) {
+  // Convert Israeli number like 050-0000000 → 972500000000
+  const digits = phone.replace(/\D/g, "");
+  const intl = digits.startsWith("0") ? "972" + digits.slice(1) : digits;
+  return `https://wa.me/${intl}`;
+}
 
 export default function PropertyPageClient({
   property,
@@ -320,29 +337,56 @@ export default function PropertyPageClient({
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-5 border border-black/8 shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-luxury-black)]/30 mb-3">סוכן מטפל</p>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="relative w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-[var(--color-gold)]/30">
-                      <Image src={AGENT_PHOTO} alt="אמיר" fill className="object-cover" sizes="56px" />
-                    </div>
-                    <div>
-                      <div className="font-black text-[var(--color-luxury-black)]">אמיר</div>
-                      <div className="text-xs text-[var(--color-luxury-black)]/40">מנגו ריאלטי</div>
-                      <div className="flex gap-0.5 mt-1">
-                        {[1,2,3,4,5].map(s => (
-                          <svg key={s} width="10" height="10" viewBox="0 0 10 10" fill="#D4A853">
-                            <path d="M5 0l1.2 3.6H10L7.1 5.8l1.1 3.4L5 7.3 1.8 9.2l1.1-3.4L0 3.6h3.8z"/>
-                          </svg>
-                        ))}
+                {property.agent && (
+                  <div className="bg-white rounded-2xl p-5 border border-black/8 shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-luxury-black)]/30 mb-3">סוכן מטפל</p>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Link href={`/team/${property.agent.slug}`} className="relative w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-[var(--color-gold)]/30 hover:border-[var(--color-gold)] transition-colors">
+                        <Image
+                          src={property.agent.photo_url || AGENT_FALLBACK}
+                          alt={property.agent.name}
+                          fill
+                          className="object-cover"
+                          sizes="56px"
+                        />
+                      </Link>
+                      <div>
+                        <Link href={`/team/${property.agent.slug}`} className="font-black text-[var(--color-luxury-black)] hover:text-[var(--color-gold)] transition-colors block">
+                          {property.agent.name}
+                        </Link>
+                        <div className="text-xs text-[var(--color-luxury-black)]/40">מנגו ריאלטי</div>
+                        {property.agent.phone && (
+                          <a href={`tel:${property.agent.phone}`} className="text-xs text-[var(--color-luxury-black)]/50 hover:text-[var(--color-gold)] transition-colors mt-0.5 block">
+                            {property.agent.phone}
+                          </a>
+                        )}
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      {property.agent.phone && (
+                        <a
+                          href={whatsappUrl(property.agent.phone)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-bold text-sm transition text-white"
+                          style={{ background: "#25D366" }}
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                            <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.556 4.118 1.528 5.847L.057 23.882l6.2-1.625A11.93 11.93 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.937 0-3.743-.523-5.29-1.432l-.379-.225-3.931 1.03 1.05-3.82-.247-.392A9.96 9.96 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+                          </svg>
+                          תיאום סיור בוואטסאפ
+                        </a>
+                      )}
+                      {property.agent.phone && (
+                        <a href={`tel:${property.agent.phone}`}
+                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-bold text-sm border border-black/12 hover:border-[var(--color-luxury-black)] transition text-[var(--color-luxury-black)]">
+                          <Phone size={13} /> {property.agent.phone}
+                        </a>
+                      )}
+                    </div>
                   </div>
-                  <button className="w-full py-2.5 rounded-xl font-bold text-sm border-2 hover:bg-[var(--color-gold)]/8 transition text-[var(--color-gold)]"
-                    style={{ borderColor: "#D4A853" }}>
-                    💬 שוחח עם מנגו AI
-                  </button>
-                </div>
+                )}
               </div>
             </div>
           </div>

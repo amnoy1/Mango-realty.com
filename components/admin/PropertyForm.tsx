@@ -26,6 +26,8 @@ interface PropertyFeatures {
   year_built: string;
 }
 
+interface Agent { id: string; first_name: string; last_name: string; }
+
 interface PropertyFormData {
   title:            string;
   slug:             string;
@@ -46,6 +48,7 @@ interface PropertyFormData {
   images:           UploadedImage[];
   meta_title:       string;
   meta_description: string;
+  agent_id:         string;
 }
 
 const PROPERTY_TYPES: { value: string; label: string }[] = [
@@ -104,6 +107,7 @@ function generateSlug(title: string): string {
 interface Props {
   initialData?: Partial<PropertyFormData> & { id?: string };
   onSubmit: (data: PropertyFormData) => Promise<{ error?: string }>;
+  agents?: Agent[];
 }
 
 const emptyForm: PropertyFormData = {
@@ -116,10 +120,10 @@ const emptyForm: PropertyFormData = {
     parking: "ללא", balcony_sqm: "", storage_sqm: "", garden_sqm: "",
     condition: "", year_built: "",
   },
-  images: [], meta_title: "", meta_description: "",
+  images: [], meta_title: "", meta_description: "", agent_id: "",
 };
 
-export default function PropertyForm({ initialData, onSubmit }: Props) {
+export default function PropertyForm({ initialData, onSubmit, agents = [] }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState<PropertyFormData>({
@@ -267,6 +271,18 @@ export default function PropertyForm({ initialData, onSubmit }: Props) {
             </select>
           </div>
         </div>
+
+        {agents.length > 0 && (
+          <div>
+            <label className={labelClass}>סוכן מטפל</label>
+            <select className={inputClass} value={form.agent_id} onChange={(e) => set("agent_id", e.target.value)}>
+              <option value="">— לא שויך —</option>
+              {agents.map((a) => (
+                <option key={a.id} value={a.id}>{a.first_name} {a.last_name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* ── Location ── */}

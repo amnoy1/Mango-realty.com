@@ -85,7 +85,7 @@ export default async function PropertyPage({
 
   const { data: property } = await supabase
     .from("properties")
-    .select("*")
+    .select("*, agents(id, first_name, last_name, phone, photo_url, bio, slug)")
     .eq("slug", slug)
     .single();
 
@@ -132,6 +132,21 @@ export default async function PropertyPage({
     image: p.images?.[0] || FALLBACK_IMAGE,
   }));
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const agentRaw = (property as any).agents as {
+    id: string; first_name: string; last_name: string;
+    phone: string | null; photo_url: string | null; bio: string | null; slug: string;
+  } | null;
+
+  const agent = agentRaw ? {
+    id:         agentRaw.id,
+    name:       `${agentRaw.first_name} ${agentRaw.last_name}`,
+    phone:      agentRaw.phone      ?? null,
+    photo_url:  agentRaw.photo_url  ?? null,
+    bio:        agentRaw.bio        ?? null,
+    slug:       agentRaw.slug,
+  } : null;
+
   const propertyForClient = {
     slug: property.slug,
     title: property.title,
@@ -156,6 +171,7 @@ export default async function PropertyPage({
     balcony_sqm,
     storage_sqm,
     garden_sqm,
+    agent,
   };
 
   // ── JSON-LD structured data ──────────────────────────────────────────────────

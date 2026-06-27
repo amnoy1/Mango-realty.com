@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import EditPropertyClient from "./EditPropertyClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function EditPropertyPage({
   params,
 }: {
@@ -11,11 +13,10 @@ export default async function EditPropertyPage({
   const { id } = await params;
   const supabase = await createAdminClient();
 
-  const { data: property, error } = await supabase
-    .from("properties")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const [{ data: property, error }, { data: agents }] = await Promise.all([
+    supabase.from("properties").select("*").eq("id", id).single(),
+    supabase.from("agents").select("id, first_name, last_name").order("first_name"),
+  ]);
 
   if (error || !property) notFound();
 
@@ -42,8 +43,9 @@ export default async function EditPropertyPage({
       url,
       name: `image-${i}`,
     })),
-    meta_title: property.meta_title || "",
+    meta_title:       property.meta_title || "",
     meta_description: property.meta_description || "",
+    agent_id:         property.agent_id || "",
   };
 
   return (
@@ -59,7 +61,7 @@ export default async function EditPropertyPage({
           <p className="text-sm text-gray-500 mt-0.5 font-mono">{property.slug}</p>
         </div>
       </div>
-      <EditPropertyClient id={id} initialData={initialData} />
+      <EditPropertyClient id={id} initialData={initialData} agents={agents ?? []} />
     </div>
   );
 }

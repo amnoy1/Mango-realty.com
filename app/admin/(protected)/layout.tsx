@@ -27,6 +27,9 @@ export default async function AdminLayout({
           <a href="/admin/properties" className="text-sm text-gray-600 hover:text-[#F5A623] transition-colors">
             נכסים
           </a>
+          <a href="/admin/agents" className="text-sm text-gray-600 hover:text-[#F5A623] transition-colors">
+            צוות
+          </a>
           <a href="/" target="_blank" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
             צפה באתר ↗
           </a>
