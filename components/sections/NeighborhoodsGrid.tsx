@@ -63,13 +63,17 @@ export default function NeighborhoodsGrid({ neighborhoods }: { neighborhoods: NH
               {/* Content */}
               <div className="p-5">
                 <h3 className="text-xl font-black text-[var(--color-luxury-black)] mb-2">{n.neighborhood}</h3>
-                {n.description && (
+                {n.description ? (
                   <p className="text-[var(--color-luxury-black)]/45 text-sm leading-relaxed line-clamp-2">
                     {n.description}
                   </p>
+                ) : (
+                  <p className="text-[var(--color-luxury-black)]/25 text-sm italic">
+                    ניתוח שכונה יתעדכן בקרוב
+                  </p>
                 )}
                 <div className="mt-4 text-xs text-[var(--color-gold)] font-semibold">
-                  לפירוט המלא ←
+                  {n.description ? "לפירוט המלא ←" : "צפה בנכסים ←"}
                 </div>
               </div>
             </motion.button>
