@@ -33,12 +33,13 @@ export async function POST(request: NextRequest) {
     .from("agents")
     .insert({
       slug,
-      first_name: body.first_name,
-      last_name:  body.last_name,
-      phone:      body.phone      || null,
-      email:      body.email      || null,
-      photo_url:  body.photo_url  || null,
-      bio:        body.bio        || null,
+      first_name:     body.first_name,
+      last_name:      body.last_name,
+      phone:          body.phone          || null,
+      email:          body.email          || null,
+      photo_url:      body.photo_url      || null,
+      bio:            body.bio            || null,
+      license_number: body.license_number || null,
     })
     .select()
     .single();

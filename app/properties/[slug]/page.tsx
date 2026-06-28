@@ -85,7 +85,7 @@ export default async function PropertyPage({
 
   const { data: property } = await supabase
     .from("properties")
-    .select("*, agents(id, first_name, last_name, phone, photo_url, bio, slug)")
+    .select("*, agents(id, first_name, last_name, phone, photo_url, bio, slug, license_number)")
     .eq("slug", slug)
     .single();
 
@@ -136,15 +136,17 @@ export default async function PropertyPage({
   const agentRaw = (property as any).agents as {
     id: string; first_name: string; last_name: string;
     phone: string | null; photo_url: string | null; bio: string | null; slug: string;
+    license_number: string | null;
   } | null;
 
   const agent = agentRaw ? {
-    id:         agentRaw.id,
-    name:       `${agentRaw.first_name} ${agentRaw.last_name}`,
-    phone:      agentRaw.phone      ?? null,
-    photo_url:  agentRaw.photo_url  ?? null,
-    bio:        agentRaw.bio        ?? null,
-    slug:       agentRaw.slug,
+    id:             agentRaw.id,
+    name:           `${agentRaw.first_name} ${agentRaw.last_name}`,
+    phone:          agentRaw.phone          ?? null,
+    photo_url:      agentRaw.photo_url      ?? null,
+    bio:            agentRaw.bio            ?? null,
+    slug:           agentRaw.slug,
+    license_number: agentRaw.license_number ?? null,
   } : null;
 
   const propertyForClient = {

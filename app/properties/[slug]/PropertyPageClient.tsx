@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   Bed, Bath, Square, Layers, MapPin, Phone,
   Heart, Share2, ChevronRight, ChevronLeft, Check,
-  ArrowLeft, ExternalLink, Navigation, X,
+  ArrowLeft, ExternalLink, Navigation, X, MessageCircle,
   Car, Wind, Package, Fence, TreePine, Shield, MoveUp, Wrench, Tag,
 } from "lucide-react";
 import PropertyCard, { type Property } from "@/components/ui/PropertyCard";
@@ -18,6 +18,7 @@ interface Agent {
   photo_url: string | null;
   bio: string | null;
   slug: string;
+  license_number: string | null;
 }
 
 interface PropertyData {
@@ -99,6 +100,18 @@ export default function PropertyPageClient({
   const [activeImg, setActiveImg] = useState(0);
   const [saved, setSaved] = useState(false);
   const [modal, setModal] = useState<"map" | null>(null);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: "", phone: "", message: "" });
+  const [contactSent, setContactSent] = useState(false);
+
+  function handleContact(e: React.FormEvent) {
+    e.preventDefault();
+    const phone = property.agent?.phone;
+    if (!phone) return;
+    const msg = `שלום, ראיתי את הנכס "${property.title}" ואשמח לשמוע פרטים נוספים.\n\nשמי: ${contactForm.name}\nטלפון: ${contactForm.phone}${contactForm.message ? `\n\n${contactForm.message}` : ""}`;
+    window.open(`${whatsappUrl(phone)}?text=${encodeURIComponent(msg)}`, "_blank");
+    setContactSent(true);
+  }
 
   const prev = () => setActiveImg((i) => (i - 1 + property.images.length) % property.images.length);
   const next = () => setActiveImg((i) => (i + 1) % property.images.length);
@@ -117,6 +130,84 @@ export default function PropertyPageClient({
     <>
       {modal === "map" && (
         <MapModal title={`מפה — ${address}`} src={mapEmbedSrc} onClose={() => setModal(null)} />
+      )}
+
+      {/* Contact form modal */}
+      {contactOpen && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
+          onClick={() => setContactOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-black/8">
+              <h3 className="font-black text-lg text-[var(--color-luxury-black)]">השאר פרטים</h3>
+              <button onClick={() => setContactOpen(false)}
+                className="w-8 h-8 rounded-full bg-black/6 hover:bg-black/12 flex items-center justify-center transition">
+                <X size={15} />
+              </button>
+            </div>
+
+            <div className="px-6 py-5">
+              {contactSent ? (
+                <div className="text-center py-6">
+                  <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
+                    <Check size={26} className="text-green-500" />
+                  </div>
+                  <p className="font-black text-[var(--color-luxury-black)] mb-1">נפתח WhatsApp</p>
+                  <p className="text-sm text-[var(--color-luxury-black)]/50">הפרטים שלך נשלחו לסוכן</p>
+                  <button onClick={() => setContactOpen(false)}
+                    className="mt-5 px-6 py-2.5 rounded-xl text-sm font-bold border border-black/12 hover:border-black/25 transition">
+                    סגור
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleContact} className="space-y-3">
+                  <div>
+                    <p className="text-xs text-[var(--color-luxury-black)]/45 mb-4">
+                      הנכס: <span className="font-bold text-[var(--color-luxury-black)]/70">{property.title}</span>
+                    </p>
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    placeholder="שם מלא *"
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full border border-black/12 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/30 focus:border-[var(--color-gold)] transition"
+                  />
+                  <input
+                    type="tel"
+                    required
+                    placeholder="טלפון *"
+                    dir="ltr"
+                    value={contactForm.phone}
+                    onChange={(e) => setContactForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full border border-black/12 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/30 focus:border-[var(--color-gold)] transition"
+                  />
+                  <textarea
+                    placeholder="הודעה (אופציונלי)"
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm(f => ({ ...f, message: e.target.value }))}
+                    rows={3}
+                    className="w-full border border-black/12 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]/30 focus:border-[var(--color-gold)] transition resize-none"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full py-3 rounded-xl font-black text-sm text-white hover:brightness-110 transition"
+                    style={{ background: "#1C1C1E" }}
+                  >
+                    שלח פרטים בוואטסאפ
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       <main className="bg-[var(--color-cream)] min-h-screen pt-16">
@@ -314,79 +405,92 @@ export default function PropertyPageClient({
               </div>
             </div>
 
-            {/* Sidebar */}
+            {/* Sidebar — unified card */}
             <div>
-              <div className="sticky top-24 space-y-4">
-                <div className="bg-white rounded-2xl p-6 border border-black/8 shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
-                  <div className="text-2xl font-black text-[var(--color-luxury-black)] mb-0.5">
-                    {formatPrice(property.price)}
-                  </div>
-                  <div className="text-xs text-[var(--color-luxury-black)]/35 mb-5">
-                    {property.area > 0 && `${Math.round(property.price / property.area).toLocaleString("he-IL")} ₪/מ"ר`}
-                    {property.price_type === "rent" && " · לחודש"}
-                  </div>
-                  <div className="space-y-2.5">
-                    <button className="w-full py-3 rounded-xl font-black text-sm hover:brightness-110 transition"
-                      style={{ background: "#D4A853", color: "#1C1C1E" }}>
-                      קבע סיור
-                    </button>
-                    <a href="tel:+97235000000"
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-bold text-sm border border-black/12 hover:border-[var(--color-luxury-black)] transition text-[var(--color-luxury-black)]">
-                      <Phone size={13} /> 03-500-0000
-                    </a>
-                  </div>
-                </div>
+              <div className="sticky top-24">
+                <div className="bg-white rounded-2xl border border-black/8 shadow-[0_4px_24px_rgba(0,0,0,0.07)] overflow-hidden">
 
-                {property.agent && (
-                  <div className="bg-white rounded-2xl p-5 border border-black/8 shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-luxury-black)]/30 mb-3">סוכן מטפל</p>
-                    <div className="flex items-center gap-3 mb-4">
-                      <Link href={`/team/${property.agent.slug}`} className="relative w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-[var(--color-gold)]/30 hover:border-[var(--color-gold)] transition-colors">
-                        <Image
-                          src={property.agent.photo_url || AGENT_FALLBACK}
-                          alt={property.agent.name}
-                          fill
-                          className="object-cover"
-                          sizes="56px"
-                        />
-                      </Link>
-                      <div>
-                        <Link href={`/team/${property.agent.slug}`} className="font-black text-[var(--color-luxury-black)] hover:text-[var(--color-gold)] transition-colors block">
-                          {property.agent.name}
-                        </Link>
-                        <div className="text-xs text-[var(--color-luxury-black)]/40">מנגו ריאלטי</div>
-                        {property.agent.phone && (
-                          <a href={`tel:${property.agent.phone}`} className="text-xs text-[var(--color-luxury-black)]/50 hover:text-[var(--color-gold)] transition-colors mt-0.5 block">
-                            {property.agent.phone}
-                          </a>
-                        )}
-                      </div>
+                  {/* Price */}
+                  <div className="px-6 pt-6 pb-5 border-b border-black/6">
+                    <div className="text-2xl font-black text-[var(--color-luxury-black)] mb-0.5">
+                      {formatPrice(property.price)}
                     </div>
-                    <div className="space-y-2">
-                      {property.agent.phone && (
+                    <div className="text-xs text-[var(--color-luxury-black)]/35">
+                      {property.area > 0 && `${Math.round(property.price / property.area).toLocaleString("he-IL")} ₪/מ"ר`}
+                      {property.price_type === "rent" && " · לחודש"}
+                    </div>
+                  </div>
+
+                  {/* CTA buttons */}
+                  <div className="px-5 py-5 space-y-2.5 border-b border-black/6">
+                    {/* Phone — black */}
+                    {property.agent?.phone ? (
+                      <a href={`tel:${property.agent.phone}`}
+                        className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-black text-sm text-white hover:brightness-125 transition"
+                        style={{ background: "#1C1C1E" }}>
+                        <Phone size={14} /> {property.agent.phone}
+                      </a>
+                    ) : (
+                      <a href="tel:+97235000000"
+                        className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-black text-sm text-white hover:brightness-125 transition"
+                        style={{ background: "#1C1C1E" }}>
+                        <Phone size={14} /> 03-500-0000
+                      </a>
+                    )}
+
+                    {/* WhatsApp + contact form */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {property.agent?.phone && (
                         <a
                           href={whatsappUrl(property.agent.phone)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-bold text-sm transition text-white"
-                          style={{ background: "#25D366" }}
+                          className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm border border-black/12 hover:border-[#25D366] hover:text-[#25D366] transition text-[var(--color-luxury-black)]"
                         >
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
                             <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.556 4.118 1.528 5.847L.057 23.882l6.2-1.625A11.93 11.93 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.937 0-3.743-.523-5.29-1.432l-.379-.225-3.931 1.03 1.05-3.82-.247-.392A9.96 9.96 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
                           </svg>
-                          תיאום סיור בוואטסאפ
+                          וואטסאפ
                         </a>
                       )}
-                      {property.agent.phone && (
-                        <a href={`tel:${property.agent.phone}`}
-                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-bold text-sm border border-black/12 hover:border-[var(--color-luxury-black)] transition text-[var(--color-luxury-black)]">
-                          <Phone size={13} /> {property.agent.phone}
-                        </a>
-                      )}
+                      <button
+                        onClick={() => { setContactSent(false); setContactOpen(true); }}
+                        className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm border border-black/12 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition text-[var(--color-luxury-black)] ${!property.agent?.phone ? "col-span-2" : ""}`}
+                      >
+                        <MessageCircle size={14} /> השאר פרטים
+                      </button>
                     </div>
                   </div>
-                )}
+
+                  {/* Agent */}
+                  {property.agent && (
+                    <div className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <Link href={`/team/${property.agent.slug}`} className="relative w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-[var(--color-gold)]/30 hover:border-[var(--color-gold)] transition-colors">
+                          <Image
+                            src={property.agent.photo_url || AGENT_FALLBACK}
+                            alt={property.agent.name}
+                            fill
+                            className="object-cover"
+                            sizes="56px"
+                          />
+                        </Link>
+                        <div>
+                          <Link href={`/team/${property.agent.slug}`} className="font-black text-[var(--color-luxury-black)] hover:text-[var(--color-gold)] transition-colors block leading-tight">
+                            {property.agent.name}
+                          </Link>
+                          <div className="text-xs text-[var(--color-luxury-black)]/40 mt-0.5">מנגו ריאלטי</div>
+                          {property.agent.license_number && (
+                            <div className="text-xs text-[var(--color-luxury-black)]/35 mt-0.5">
+                              רישיון {property.agent.license_number}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

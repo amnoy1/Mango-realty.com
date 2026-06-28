@@ -6,12 +6,13 @@ import Image from "next/image";
 import { Upload, X } from "lucide-react";
 
 interface AgentFormData {
-  first_name: string;
-  last_name:  string;
-  phone:      string;
-  email:      string;
-  photo_url:  string;
-  bio:        string;
+  first_name:     string;
+  last_name:      string;
+  phone:          string;
+  email:          string;
+  photo_url:      string;
+  bio:            string;
+  license_number: string;
 }
 
 interface Props {
@@ -20,7 +21,7 @@ interface Props {
 }
 
 const empty: AgentFormData = {
-  first_name: "", last_name: "", phone: "", email: "", photo_url: "", bio: "",
+  first_name: "", last_name: "", phone: "", email: "", photo_url: "", bio: "", license_number: "",
 };
 
 export default function AgentForm({ initialData, onSubmit }: Props) {
@@ -154,6 +155,12 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
             <input type="email" className={inputClass} value={form.email} dir="ltr"
               onChange={(e) => set("email", e.target.value)} placeholder="agent@mango-realty.com" />
           </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>מספר רישיון תיווך</label>
+          <input type="text" className={inputClass} value={form.license_number} dir="ltr"
+            onChange={(e) => set("license_number", e.target.value)} placeholder="12345" />
         </div>
 
         <div>
