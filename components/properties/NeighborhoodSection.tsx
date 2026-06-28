@@ -12,7 +12,7 @@ const CATEGORIES = [
 ] as const;
 
 export default function NeighborhoodSection({ data }: { data: NeighborhoodData }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [openKey, setOpenKey]   = useState<string | null>(null);
 
   const hasCategories = CATEGORIES.some(c => data[c.key]);
