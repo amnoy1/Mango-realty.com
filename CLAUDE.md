@@ -31,51 +31,68 @@ Hebrew-first, RTL, Next.js 15 App Router, Tailwind v4, Supabase, Vercel.
 ```
 Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 
-## מה בנוי (סטטוס 2026-06-24)
+## מה בנוי (סטטוס 2026-06-28)
 
 ### Public Site
-- Homepage: Navbar, Hero, Stats, FeaturedProperties, AIAgentSection, Neighborhoods, HowItWorks, Footer
+- **Navbar** — גלובלי ב-`app/layout.tsx` דרך `ConditionalNavbar` (מוסתר על /admin)
+  - לינקים חכמים: בדף הבית → גוללים לסקשן, מעמוד אחר → מנווטים לדף
+  - "הצוות" → `/team`
+- **Homepage**: Hero, Stats, FeaturedProperties, AIAgentSection, Neighborhoods, HowItWorks, Footer
+- `/properties` — רשימת כל הנכסים
 - `/properties/[slug]` — דף נכס מלא:
   - Gallery slider + thumbnails
   - Google Maps embed + Street View popup
   - Stats bar (חדרים, אמבטיות, מ"ר, קומה)
-  - תיאור הנכס
-  - **יתרונות הנכס** — chips עם אייקונים: מעלית, ממ"ד, מיזוג, חניה xN, מרפסת Nמ"ר, מחסן, גינה, מצב
-  - **סקשין שכונה** — accordion (לחץ + לפתוח): תחבורה, חינוך, פנאי, מסחר, קהילה — AI Sonnet + web search, cache 6 חודשים בסופרבייס
-  - Agent card + CTA
+  - יתרונות הנכס — chips עם אייקונים
+  - **כרטיס סוכן מטפל** — תמונה, שם, טלפון, כפתור WhatsApp ירוק → `wa.me/972...`
+  - סקשין שכונה — accordion AI (תחבורה, חתך סוציו-אקונומי, מסחר, חינוך) + cache 6 חודשים
   - Related properties
-- `/properties` — דף רשימת נכסים (קיים)
-- `FeaturedProperties` — server component, נכסים אמיתיים מ-Supabase
+- `/team` — עמוד צוות: גריד כל הסוכנים
+- `/team/[slug]` — עמוד סוכן: ביו + נכסים בטיפול + כפתורי WhatsApp/טלפון/מייל
 
 ### Admin Panel (`/admin`) — ✅ מוכן לשימוש
+- **כתובת אחת**: `/admin/login` → `/admin` — דשבורד מאוחד
 - Google OAuth — רק `amir@mango-realty.com` נכנס
-- `/admin/properties` — רשימת נכסים + עריכה + מחיקה
-- `/admin/properties/new` + `[id]/edit` — טופס מלא
+- כפתור **יציאה** ב-header
+- **Tabs בדשבורד**:
+  - **נכסים** — טבלה עם עריכה / צפייה / מחיקה + "נכס חדש"
+  - **צוות** — טבלה עם עריכה / צפייה / מחיקה + "סוכן חדש"
+- `/admin/properties/new` + `[id]/edit` — טופס נכס מלא
+- `/admin/agents/new` + `[id]/edit` — טופס סוכן
 - `components/admin/PropertyForm.tsx`:
-  - **15 סוגי נכס**: דירה, דירת גג, דירת גן, פנטהאוז, מיני פנטהאוז, דופלקס, קוטג', קוטג' טורי, דו-משפחתי, בית פרטי/וילה, יחידת דיור, סטודיו/לופט, בניין, מגרש, מסחרי, אחר
-  - **פרטים טכניים**: חדרים, אמבטיות, שטח, קומה, סה"כ קומות, שנת בנייה, מצב הנכס (5 אפשרויות), מרפסת/מחסן/גינה (מ"ר), חניה (ללא/1/2/3)
-  - **מאפיינים**: מעלית, משופץ, מיזוג, ממ"ד
-  - **SEO** — כפתור "✨ מלא אוטומטית" מייצר meta_title + meta_description מנתוני הטופס
-- `components/admin/ImageUploader.tsx` — drag & drop, עד 20 תמונות
+  - **15 סוגי נכס**, פרטים טכניים, מאפיינים, תיאור
+  - **שדה "סוכן מטפל"** — dropdown מטבלת הסוכנים
+  - SEO auto-fill, slug auto-generate
+- `components/admin/ImageUploader.tsx` — drag & drop עד 20 תמונות
+- `components/admin/AgentForm.tsx` — שם/משפחה/טלפון/מייל/תמונה/אודות
+
+### שכונות AI — ✅ עובד
+- ניתוח אוטומטי ב-4 קטגוריות: תחבורה, חתך סוציו-אקונומי, מסחר+בידור, חינוך + סיכום
+- data.gov.il (תחנות אוטובוס בקרבת הנכס) + Claude Sonnet web_search
+- Cache 6 חודשים ב-Supabase `neighborhoods` table
+- **Auto-trigger**: כשמעלים נכס פעיל באדמין → ניתוח רץ ברקע (next/server `after()`)
+- מדור "שכונות מבוקשות" בדף הבית — נכסים אמיתיים מ-Supabase + modal עם ניתוח
 
 ### DB — שינויים ידניים שבוצעו
-- `DROP CONSTRAINT properties_property_type_check` — מאפשר כל סוג נכס חופשי
-- טבלת `neighborhoods` נוצרה לcaching שכונות AI
+- `DROP CONSTRAINT properties_property_type_check`
+- טבלת `neighborhoods` + עמודות: transport, socioeconomic, commerce, schools
+- טבלת `agents` — **צריך להריץ** `supabase/migrations/agents_table.sql`
+- עמודה `agent_id` ב-`properties` — **צריך להריץ** אותו SQL
 
 ### SEO / GEO — ✅ מוכן
-- `generateMetadata` לכל נכס: og:image (תמונה אמיתית), twitter card, canonical URL
-- **GEO meta tags**: `geo.region=IL`, `geo.placename`, `geo.position`, `ICBM` (lat/lng)
-- **JSON-LD** `RealEstateListing`: מחיר, כתובת, geocoordinates, חדרים, שטח, תמונות
-- **Sitemap**: `app/sitemap.ts` — auto-generates מכל נכסים פעילים
-- `NEXT_PUBLIC_SITE_URL` env var — מעבר לדומיין = שינוי env אחד בלבד
+- `generateMetadata` לכל נכס: og:image, twitter card, canonical URL
+- GEO meta tags: `geo.region=IL`, `geo.placename`, `geo.position`, `ICBM`
+- JSON-LD `RealEstateListing`: מחיר, כתובת, geocoordinates, חדרים, שטח, תמונות
+- Sitemap: `app/sitemap.ts` — auto-generates מכל נכסים פעילים
 
 ### API Routes
-- `POST /api/admin/properties` — יצירת נכס
-- `PATCH/DELETE /api/admin/properties/[id]` — עדכון/מחיקה
+- `POST /api/admin/properties` — יצירת נכס + auto-trigger neighborhood
+- `PATCH/DELETE /api/admin/properties/[id]` — עדכון/מחיקה + auto-trigger neighborhood
 - `POST /api/admin/upload-images` — העלאה ל-Supabase Storage
-
-### SiteManager (`scripts/site-manager/`) — ⏭️ דחוי
-- קוד קיים, npm install בוצע — נדחה להמשך
+- `GET/POST /api/admin/agents` — רשימה / יצירת סוכן
+- `PATCH/DELETE /api/admin/agents/[id]` — עדכון/מחיקה סוכן
+- `POST /api/admin/logout` — יציאה מהמערכת
+- `GET /api/neighborhood` — ניתוח שכונה (maxDuration=120)
 
 ## DB Schema (עיקרי)
 ```sql
@@ -83,42 +100,35 @@ properties: id, slug, title, price, price_type, property_type, status,
             rooms, bathrooms, area_sqm, floor, total_floors,
             city, neighborhood, street, lat, lng,
             features (JSONB), images (text[]),
+            agent_id (FK → agents.id),
             meta_title, meta_description, embedding (vector(1536)),
             published_at, created_at, updated_at
+
+agents: id, slug, first_name, last_name, phone, email, photo_url, bio,
+        created_at, updated_at
+
+neighborhoods: id, city, neighborhood, description, transport, socioeconomic,
+               commerce, schools, image_url, analysis_updated_at, updated_at
 ```
-RLS: public read על `status = 'active'`, service_role לכל השאר.
+RLS: public read על `status = 'active'` (properties) ו-agents, service_role לכל השאר.
 
 ## ✅ פעולות ידניות שבוצעו
-1. ✅ Google OAuth ב-Supabase → Providers → Google → Client ID + Secret
-2. ✅ Authorized redirect URI: `https://sgrphwunigmsdtbmilgd.supabase.co/auth/v1/callback`
-3. ✅ Supabase URL Config → Site URL: `https://mango-realty-com.vercel.app`
-4. ✅ Redirect URLs הוספו: `/auth/callback` + `/auth/handle`
-5. ✅ `handle_new_user` trigger — הורץ עם EXCEPTION handler (לא יבלוק login)
-6. ✅ `user_profiles` טבלה נוצרה + RLS policy
-7. ✅ ERR_TOO_MANY_REDIRECTS נפתר
+1. ✅ Google OAuth ב-Supabase + redirect URIs
+2. ✅ `handle_new_user` trigger עם EXCEPTION handler
+3. ✅ `neighborhoods` table + עמודות נוספות (ALTER TABLE)
+4. ⚠️ **טרם בוצע**: `supabase/migrations/agents_table.sql` — הרצה ב-Supabase SQL Editor
 
-## ✅ Google OAuth — עובד! (נפתר 2026-06-22)
-**הפתרון:** `auth: { flowType: "implicit" }` בשני הדפים (login + handle)
+## ✅ Google OAuth — עובד!
 - Login: `app/admin/login/page.tsx` — `flowType: "implicit"` + `redirectTo: /auth/handle`
-- Handle: `app/auth/handle/page.tsx` — `getSession()` מזהה hash אוטומטית, שומר session ב-cookies
+- Handle: `app/auth/handle/page.tsx` — `getSession()`, redirect ל-`/admin`
 
-## ⏭️ הצעד הבא — סוכן הקונים
-**הפוקוס הבא: Buyers Agent** — סוכן AI לקונים/שוכרים באתר
+## ⏭️ הצעד הבא — סוכן הקונים (Buyers Agent)
+קונה מתאר בשפה טבעית → Claude מחפש נכסים (pgvector), שואל שאלות, מציג תוצאות.
+- Chat widget באתר + WhatsApp bot (Twilio)
+- `embedding` column ב-properties קיים — צריך: embeddings לכל נכס, endpoint לחיפוש, UI
 
-רעיון: קונה מתאר מה הוא מחפש בשפה טבעית → הסוכן מחפש נכסים מתאימים (pgvector similarity search), שואל שאלות הבהרה, ומציג תוצאות.
-
-### אפשרויות מימוש:
-1. **Chat widget באתר** — floating button → chat panel → Claude API stream
-2. **WhatsApp bot** — Claude + Twilio (כבר יש env vars)
-3. **שניהם** — chat באתר + WhatsApp
-
-### מה נדרש:
-- `embedding` column ב-properties כבר קיים (vector(1536))
-- צריך: לחשב embeddings לכל נכס, endpoint לחיפוש semantic, UI לצ'אט
-
-## Domain Migration — כשעוברים לדומיין
-Vercel → Settings → Environment Variables:
+## Domain Migration
 ```
 NEXT_PUBLIC_SITE_URL = https://mango-realty.com
 ```
-→ Redeploy. הכל מתעדכן אוטומטית (canonical, og, sitemap, JSON-LD).
+→ Redeploy. הכל מתעדכן אוטומטית.
