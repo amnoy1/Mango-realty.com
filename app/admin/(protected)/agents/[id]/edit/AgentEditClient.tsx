@@ -11,12 +11,13 @@ interface Agent {
   email: string | null;
   photo_url: string | null;
   bio: string | null;
+  license_number: string | null;
 }
 
 export default function AgentEditClient({ agent }: { agent: Agent }) {
   const router = useRouter();
 
-  async function handleSubmit(data: { first_name: string; last_name: string; phone: string; email: string; photo_url: string; bio: string }) {
+  async function handleSubmit(data: { first_name: string; last_name: string; phone: string; email: string; photo_url: string; bio: string; license_number: string }) {
     const res = await fetch(`/api/admin/agents/${agent.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -41,13 +42,14 @@ export default function AgentEditClient({ agent }: { agent: Agent }) {
       </div>
       <AgentForm
         initialData={{
-          id:         agent.id,
-          first_name: agent.first_name,
-          last_name:  agent.last_name,
-          phone:      agent.phone     ?? "",
-          email:      agent.email     ?? "",
-          photo_url:  agent.photo_url ?? "",
-          bio:        agent.bio       ?? "",
+          id:             agent.id,
+          first_name:     agent.first_name,
+          last_name:      agent.last_name,
+          phone:          agent.phone          ?? "",
+          email:          agent.email          ?? "",
+          photo_url:      agent.photo_url      ?? "",
+          bio:            agent.bio            ?? "",
+          license_number: agent.license_number ?? "",
         }}
         onSubmit={handleSubmit}
       />

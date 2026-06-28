@@ -51,7 +51,8 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
       const { uploads } = await res.json();
       if (!uploads?.[0]) throw new Error("Upload failed");
       const { signedUrl, publicUrl } = uploads[0];
-      await fetch(signedUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+      const putRes = await fetch(signedUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+      if (!putRes.ok) throw new Error(`העלאה נכשלה (${putRes.status})`);
       set("photo_url", publicUrl);
     } catch (e) {
       setError(`שגיאת העלאה: ${e instanceof Error ? e.message : "unknown"}`);
