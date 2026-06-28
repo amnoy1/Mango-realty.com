@@ -42,7 +42,7 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
   async function handlePhotoUpload(file: File) {
     setUploading(true);
     try {
-      const slug = `agent-${form.first_name || "photo"}-${Date.now()}`;
+      const slug = `agents/${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const res = await fetch("/api/admin/upload-images", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
