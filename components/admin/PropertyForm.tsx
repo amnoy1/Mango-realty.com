@@ -186,7 +186,7 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
       if (result.error) {
         setError(result.error);
       } else {
-        router.push("/admin/properties");
+        router.push("/admin");
         router.refresh();
       }
     });
@@ -272,17 +272,22 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
           </div>
         </div>
 
-        {agents.length > 0 && (
-          <div>
-            <label className={labelClass}>סוכן מטפל</label>
+        <div>
+          <label className={labelClass}>סוכן מטפל</label>
+          {agents.length > 0 ? (
             <select className={inputClass} value={form.agent_id} onChange={(e) => set("agent_id", e.target.value)}>
               <option value="">— לא שויך —</option>
               {agents.map((a) => (
                 <option key={a.id} value={a.id}>{a.first_name} {a.last_name}</option>
               ))}
             </select>
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center gap-2 border border-dashed border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-400">
+              אין סוכנים במערכת —{" "}
+              <a href="/admin/agents/new" className="text-[#F5A623] hover:underline">הוסף סוכן</a>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Location ── */}

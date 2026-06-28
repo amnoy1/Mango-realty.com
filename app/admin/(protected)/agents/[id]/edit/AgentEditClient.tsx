@@ -24,7 +24,7 @@ export default function AgentEditClient({ agent }: { agent: Agent }) {
     });
     const json = await res.json();
     if (json.error) return { error: json.error };
-    router.push("/admin/agents");
+    router.push("/admin");
     router.refresh();
     return {};
   }
@@ -32,7 +32,7 @@ export default function AgentEditClient({ agent }: { agent: Agent }) {
   return (
     <div dir="rtl">
       <div className="mb-8">
-        <a href="/admin/agents" className="text-xs text-gray-400 hover:text-[#F5A623] transition-colors mb-1 block">
+        <a href="/admin" className="text-xs text-gray-400 hover:text-[#F5A623] transition-colors mb-1 block">
           ← חזרה לצוות
         </a>
         <h1 className="text-2xl font-bold text-gray-900">

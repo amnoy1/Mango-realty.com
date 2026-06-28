@@ -34,7 +34,7 @@ export default function AuthHandlePage() {
       // Implicit flow: Supabase detects #access_token= from hash automatically
       const { data: { session }, error } = await supabase.auth.getSession();
       if (session) {
-        router.replace("/admin/properties");
+        router.replace("/admin");
       } else {
         const msg = error?.message || "no_session";
         router.replace(`/admin/login?error=${encodeURIComponent(msg)}`);

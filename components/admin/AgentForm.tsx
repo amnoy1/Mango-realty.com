@@ -67,7 +67,7 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
       if (result.error) {
         setError(result.error);
       } else {
-        router.push("/admin/agents");
+        router.push("/admin");
         router.refresh();
       }
     });
