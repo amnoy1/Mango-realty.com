@@ -88,7 +88,7 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
           <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 shrink-0 bg-gray-100">
             {form.photo_url ? (
               <>
-                <Image src={form.photo_url} alt="תמונת סוכן" fill className="object-cover" sizes="80px" />
+                <Image src={form.photo_url} alt="תמונת סוכן" fill className="object-cover object-top" sizes="80px" />
                 <button
                   type="button"
                   onClick={() => set("photo_url", "")}

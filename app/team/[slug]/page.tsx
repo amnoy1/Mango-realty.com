@@ -75,7 +75,7 @@ export default async function AgentPage({ params }: { params: Promise<{ slug: st
                   src={agent.photo_url || FALLBACK_AGENT}
                   alt={`${agent.first_name} ${agent.last_name}`}
                   fill
-                  className="object-cover"
+                  className="object-cover object-top"
                   sizes="208px"
                   priority
                 />

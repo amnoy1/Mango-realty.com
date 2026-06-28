@@ -472,7 +472,7 @@ export default function PropertyPageClient({
                             src={property.agent.photo_url || AGENT_FALLBACK}
                             alt={property.agent.name}
                             fill
-                            className="object-cover"
+                            className="object-cover object-top"
                             sizes="56px"
                           />
                         </Link>
