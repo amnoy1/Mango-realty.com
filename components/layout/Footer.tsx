@@ -1,10 +1,24 @@
 import { Phone, Mail, MapPin } from "lucide-react";
 import Image from "next/image";
+import { createClient } from "@/lib/supabase/server";
 
-const NAV = ["נכסים למכירה", "נכסים להשכרה", "שכונות", "סוכן AI", "אודות"];
-const CITIES = ["תל אביב", "רמת גן", "גבעתיים", "רמת השרון", "הרצליה"];
+const NAV = [
+  { label: "נכסים למכירה", href: "/properties" },
+  { label: "שכונות", href: "/neighborhoods" },
+  { label: "הצוות", href: "/team" },
+  { label: "אודות", href: "#" },
+];
 
-export default function Footer() {
+export default async function Footer() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("properties")
+    .select("city")
+    .eq("status", "active")
+    .order("city");
+
+  const cities = [...new Set((data || []).map((p) => p.city).filter(Boolean))];
+
   return (
     <footer className="bg-[var(--color-surface)] border-t border-black/8">
       <div className="max-w-7xl mx-auto px-4 py-16">
@@ -17,13 +31,20 @@ export default function Footer() {
             </p>
             <div className="space-y-2.5 text-sm text-[var(--color-luxury-black)]/40">
               <div className="flex items-center gap-2.5">
-                <Phone size={13} className="text-[var(--color-gold)]" /> 03-500-0000
+                <Phone size={13} className="text-[var(--color-gold)]" />
+                <a href="tel:0525403338" className="hover:text-[var(--color-gold)] transition-colors">
+                  052-5403338
+                </a>
               </div>
               <div className="flex items-center gap-2.5">
-                <Mail size={13} className="text-[var(--color-gold)]" /> info@mango-realty.com
+                <Mail size={13} className="text-[var(--color-gold)]" />
+                <a href="mailto:amir@mango-realty.com" className="hover:text-[var(--color-gold)] transition-colors">
+                  amir@mango-realty.com
+                </a>
               </div>
               <div className="flex items-center gap-2.5">
-                <MapPin size={13} className="text-[var(--color-gold)]" /> תל אביב, ישראל
+                <MapPin size={13} className="text-[var(--color-gold)]" />
+                רפפורט 3 כפר סבא, קומה 14
               </div>
             </div>
           </div>
@@ -32,8 +53,8 @@ export default function Footer() {
             <h4 className="font-black text-[var(--color-luxury-black)] text-sm mb-4">ניווט מהיר</h4>
             <ul className="space-y-2.5 text-sm text-[var(--color-luxury-black)]/40">
               {NAV.map((l) => (
-                <li key={l}>
-                  <a href="#" className="hover:text-[var(--color-gold)] transition-colors">{l}</a>
+                <li key={l.label}>
+                  <a href={l.href} className="hover:text-[var(--color-gold)] transition-colors">{l.label}</a>
                 </li>
               ))}
             </ul>
@@ -42,9 +63,9 @@ export default function Footer() {
           <div>
             <h4 className="font-black text-[var(--color-luxury-black)] text-sm mb-4">ערים</h4>
             <ul className="space-y-2.5 text-sm text-[var(--color-luxury-black)]/40">
-              {CITIES.map((c) => (
-                <li key={c}>
-                  <a href="#" className="hover:text-[var(--color-gold)] transition-colors">{c}</a>
+              {cities.map((city) => (
+                <li key={city}>
+                  <a href="/properties" className="hover:text-[var(--color-gold)] transition-colors">{city}</a>
                 </li>
               ))}
             </ul>
