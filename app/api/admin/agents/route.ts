@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       photo_url:      body.photo_url      || null,
       bio:            body.bio            || null,
       license_number: body.license_number || null,
+      city:           body.city           || null,
     })
     .select()
     .single();

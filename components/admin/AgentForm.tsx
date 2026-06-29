@@ -13,6 +13,7 @@ interface AgentFormData {
   photo_url:      string;
   bio:            string;
   license_number: string;
+  city:           string;
 }
 
 interface Props {
@@ -21,7 +22,7 @@ interface Props {
 }
 
 const empty: AgentFormData = {
-  first_name: "", last_name: "", phone: "", email: "", photo_url: "", bio: "", license_number: "",
+  first_name: "", last_name: "", phone: "", email: "", photo_url: "", bio: "", license_number: "", city: "",
 };
 
 export default function AgentForm({ initialData, onSubmit }: Props) {
@@ -158,10 +159,17 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
           </div>
         </div>
 
-        <div>
-          <label className={labelClass}>מספר רישיון תיווך</label>
-          <input type="text" className={inputClass} value={form.license_number} dir="ltr"
-            onChange={(e) => set("license_number", e.target.value)} placeholder="12345" />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>מספר רישיון תיווך</label>
+            <input type="text" className={inputClass} value={form.license_number} dir="ltr"
+              onChange={(e) => set("license_number", e.target.value)} placeholder="12345" />
+          </div>
+          <div>
+            <label className={labelClass}>עיר התמחות ראשית</label>
+            <input type="text" className={inputClass} value={form.city}
+              onChange={(e) => set("city", e.target.value)} placeholder="כפר סבא" />
+          </div>
         </div>
 
         <div>

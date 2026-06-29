@@ -25,16 +25,17 @@ export async function generateMetadata(
   const supabase = await createClient();
   const { data: a } = await supabase
     .from("agents")
-    .select("first_name, last_name, bio, photo_url")
+    .select("first_name, last_name, bio, photo_url, city")
     .eq("slug", slug)
     .single();
   if (!a) return {};
 
-  const name      = `${a.first_name} ${a.last_name}`;
-  const title     = `${name} | סוכן נדל"ן | Mango Realty`;
-  const description = a.bio || `${name} — סוכן נדל"ן במנגו ריאלטי. נכסים למכירה ולהשכרה באזורי הביקוש בישראל.`;
-  const image     = a.photo_url || FALLBACK_AGENT;
-  const canonical = `${SITE_URL}/team/${slug}`;
+  const name        = `${a.first_name} ${a.last_name}`;
+  const cityLabel   = a.city ? ` | ${a.city}` : "";
+  const title       = `${name}${cityLabel} | סוכן נדל"ן | Mango Realty`;
+  const description = a.bio || `${name} — סוכן נדל"ן במנגו ריאלטי${a.city ? ` המתמחה ב${a.city}` : ""}. נכסים למכירה ולהשכרה באזורי הביקוש בישראל.`;
+  const image       = a.photo_url || FALLBACK_AGENT;
+  const canonical   = `${SITE_URL}/team/${slug}`;
 
   return {
     title,
@@ -54,6 +55,12 @@ export async function generateMetadata(
       description,
       images: [image],
     },
+    ...(a.city ? {
+      other: {
+        "geo.region":    "IL",
+        "geo.placename": a.city,
+      },
+    } : {}),
   };
 }
 
@@ -105,6 +112,9 @@ export default async function AgentPage({ params }: { params: Promise<{ slug: st
     "url": `${SITE_URL}/team/${agent.slug}`,
     "telephone": agent.phone || undefined,
     "email": agent.email || undefined,
+    ...(agent.city ? {
+      "areaServed": { "@type": "City", "name": agent.city, "addressCountry": "IL" },
+    } : {}),
     "worksFor": {
       "@type": "RealEstateAgent",
       "name": "Mango Realty",
@@ -145,7 +155,7 @@ export default async function AgentPage({ params }: { params: Promise<{ slug: st
               {/* Info */}
               <div className="flex-1">
                 <span className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-[3px] mb-2 block">
-                  מנגו ריאלטי
+                  מנגו ריאלטי{agent.city ? ` · ${agent.city}` : ""}
                 </span>
                 <h1 className="text-4xl font-black text-white mb-3">
                   {agent.first_name} {agent.last_name}
