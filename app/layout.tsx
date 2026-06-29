@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     default: "Mango Realty | נדל\"ן יוקרה באזורי הביקוש",
     template: "%s | Mango Realty",
   },
-  description: "מנגו ריאלטי — משרד תיווך נדל\"ן מוביל באזורי הביקוש בישראל. דירות, בתים, נדל\"ן מסחרי וקרקעות. סוכן AI אישי לכל קונה.",
+  description: "מנגו נדל\"ן — משרד תיווך נדל\"ן מוביל באזורי הביקוש בישראל. דירות, בתים, נדל\"ן מסחרי וקרקעות. סוכן AI אישי לכל קונה.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://mango-realty-com.vercel.app"),
   openGraph: {
     siteName: "Mango Realty",

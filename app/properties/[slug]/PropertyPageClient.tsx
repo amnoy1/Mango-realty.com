@@ -480,7 +480,7 @@ export default function PropertyPageClient({
                           <Link href={`/team/${property.agent.slug}`} className="font-black text-[var(--color-luxury-black)] hover:text-[var(--color-gold)] transition-colors block leading-tight">
                             {property.agent.name}
                           </Link>
-                          <div className="text-xs text-[var(--color-luxury-black)]/40 mt-0.5">מנגו ריאלטי</div>
+                          <div className="text-xs text-[var(--color-luxury-black)]/40 mt-0.5">מנגו נדל&quot;ן</div>
                           {property.agent.license_number && (
                             <div className="text-xs text-[var(--color-luxury-black)]/35 mt-0.5">
                               רישיון {property.agent.license_number}

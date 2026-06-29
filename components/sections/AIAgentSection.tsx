@@ -24,7 +24,7 @@ export default function AIAgentSection() {
               <span className="text-[var(--color-gold)]">תמיד פה בשבילך</span>
             </h2>
             <p className="text-[var(--color-cream)]/50 text-lg leading-relaxed mb-8 max-w-md">
-              הסוכן החכם של מנגו ריאלטי מכיר כל נכס, כל שכונה, ומוכן לעזור לך למצוא את הבית המושלם — בלי המתנה, בלי לחץ.
+              הסוכן החכם של מנגו נדל"ן מכיר כל נכס, כל שכונה, ומוכן לעזור לך למצוא את הבית המושלם — בלי המתנה, בלי לחץ.
             </p>
 
             <ul className="space-y-3.5 mb-10">

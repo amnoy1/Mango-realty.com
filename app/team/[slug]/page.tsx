@@ -33,7 +33,7 @@ export async function generateMetadata(
   const name        = `${a.first_name} ${a.last_name}`;
   const cityLabel   = a.city ? ` | ${a.city}` : "";
   const title       = `${name}${cityLabel} | סוכן נדל"ן | Mango Realty`;
-  const description = a.bio || `${name} — סוכן נדל"ן במנגו ריאלטי${a.city ? ` המתמחה ב${a.city}` : ""}. נכסים למכירה ולהשכרה באזורי הביקוש בישראל.`;
+  const description = a.bio || `${name} — סוכן נדל"ן במנגו נדל"ן${a.city ? ` המתמחה ב${a.city}` : ""}. נכסים למכירה ולהשכרה באזורי הביקוש בישראל.`;
   const image       = a.photo_url || FALLBACK_AGENT;
   const canonical   = `${SITE_URL}/team/${slug}`;
 
@@ -155,7 +155,7 @@ export default async function AgentPage({ params }: { params: Promise<{ slug: st
               {/* Info */}
               <div className="flex-1">
                 <span className="text-[var(--color-gold)] text-xs font-bold uppercase tracking-[3px] mb-2 block">
-                  מנגו ריאלטי{agent.city ? ` · ${agent.city}` : ""}
+                  מנגו נדל&quot;ן{agent.city ? ` · ${agent.city}` : ""}
                 </span>
                 <h1 className="text-4xl font-black text-white mb-3">
                   {agent.first_name} {agent.last_name}

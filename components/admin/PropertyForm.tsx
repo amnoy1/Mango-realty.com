@@ -166,7 +166,7 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
       form.rooms    && `${form.rooms} חדרים`,
       form.area_sqm && `${form.area_sqm} מ"ר`,
       priceStr,
-      "מנגו ריאלטי — נדל\"ן יוקרתי.",
+      "מנגו נדל\"ן — יוקרתי.",
     ].filter(Boolean).join(" · ");
 
     set("meta_title",       rawTitle.slice(0, 60));

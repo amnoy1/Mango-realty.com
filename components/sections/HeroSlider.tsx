@@ -58,7 +58,7 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
         </h1>
 
         <p className="mb-7 text-white/60" style={{ fontSize: "clamp(0.85rem, 1.2vw, 1rem)" }}>
-          מנגו ריאלטי — נדל&quot;ן יוקרה עם ליווי AI אישי 24/7
+          מנגו נדל&quot;ן — יוקרה עם ליווי AI אישי 24/7
         </p>
 
         {/* Search bar */}

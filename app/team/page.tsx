@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 
 export const metadata = {
   title: "הצוות | Mango Realty",
-  description: "הכירו את צוות הסוכנים המקצועי של מנגו ריאלטי — מומחי נדל\"ן באזורי הביקוש",
+  description: "הכירו את צוות הסוכנים המקצועי של מנגו נדל\"ן — מומחי נדל\"ן באזורי הביקוש",
 };
 
 export const dynamic = "force-dynamic";
@@ -71,7 +71,7 @@ export default async function TeamPage() {
                     {agent.first_name} {agent.last_name}
                   </h2>
                   <p className="text-xs text-[var(--color-gold)] font-semibold uppercase tracking-wider mb-3">
-                    מנגו ריאלטי
+                    מנגו נדל"ן
                   </p>
                   {agent.bio && (
                     <p className="text-sm text-[var(--color-luxury-black)]/50 leading-relaxed line-clamp-2">
