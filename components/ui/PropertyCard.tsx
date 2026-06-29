@@ -27,7 +27,7 @@ export default function PropertyCard({ property }: { property: Property }) {
   return (
     <Link href={href} className="group bg-white rounded-2xl overflow-hidden border border-black/6 shadow-[0_2px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.13)] transition-all duration-300 hover:-translate-y-1 block">
       {/* Image */}
-      <div className="relative h-52 overflow-hidden">
+      <div className="relative h-60 overflow-hidden">
         <Image
           src={property.image}
           alt={property.title}
@@ -50,7 +50,7 @@ export default function PropertyCard({ property }: { property: Property }) {
       </div>
 
       {/* Body */}
-      <div className="p-5">
+      <div className="p-6">
         <div className="flex items-start justify-between gap-3 mb-2">
           <h3 className="font-black text-[var(--color-luxury-black)] text-base leading-snug">{property.title}</h3>
           <span className="text-[var(--color-gold)] font-black text-base whitespace-nowrap shrink-0"
