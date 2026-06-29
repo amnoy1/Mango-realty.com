@@ -4,9 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/layout/Footer";
 import PropertyCard, { type Property } from "@/components/ui/PropertyCard";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mango-realty-com.vercel.app";
 const FALLBACK_AGENT = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&q=80";
 const FALLBACK_PROP  = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80";
 
@@ -14,6 +16,45 @@ function whatsappUrl(phone: string) {
   const digits = phone.replace(/\D/g, "");
   const intl = digits.startsWith("0") ? "972" + digits.slice(1) : digits;
   return `https://wa.me/${intl}`;
+}
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> }
+): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createClient();
+  const { data: a } = await supabase
+    .from("agents")
+    .select("first_name, last_name, bio, photo_url")
+    .eq("slug", slug)
+    .single();
+  if (!a) return {};
+
+  const name      = `${a.first_name} ${a.last_name}`;
+  const title     = `${name} | סוכן נדל"ן | Mango Realty`;
+  const description = a.bio || `${name} — סוכן נדל"ן במנגו ריאלטי. נכסים למכירה ולהשכרה באזורי הביקוש בישראל.`;
+  const image     = a.photo_url || FALLBACK_AGENT;
+  const canonical = `${SITE_URL}/team/${slug}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      images: [{ url: image, width: 600, height: 600, alt: name }],
+      locale: "he_IL",
+      type: "profile",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+      images: [image],
+    },
+  };
 }
 
 export async function generateStaticParams() {
@@ -55,8 +96,28 @@ export default async function AgentPage({ params }: { params: Promise<{ slug: st
     image:        p.images?.[0] || FALLBACK_PROP,
   }));
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": `${agent.first_name} ${agent.last_name}`,
+    "description": agent.bio || undefined,
+    "image": agent.photo_url || undefined,
+    "url": `${SITE_URL}/team/${agent.slug}`,
+    "telephone": agent.phone || undefined,
+    "email": agent.email || undefined,
+    "worksFor": {
+      "@type": "RealEstateAgent",
+      "name": "Mango Realty",
+      "url": SITE_URL,
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <main className="min-h-screen bg-[var(--color-cream)]" dir="rtl">
         {/* Hero */}
         <div className="bg-[var(--color-luxury-black)] pt-28 pb-0 px-4">

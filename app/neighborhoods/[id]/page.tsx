@@ -7,6 +7,7 @@ import NeighborhoodSection from "@/components/properties/NeighborhoodSection";
 import type { Metadata } from "next";
 import type { NeighborhoodData } from "@/lib/neighborhood";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mango-realty-com.vercel.app";
 const FALLBACK = "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&q=80";
 
 export async function generateMetadata(
@@ -16,13 +17,38 @@ export async function generateMetadata(
   const supabase = await createClient();
   const { data } = await supabase
     .from("neighborhoods")
-    .select("city, neighborhood")
+    .select("city, neighborhood, image_url")
     .eq("id", id)
     .single();
   if (!data) return {};
+
+  const title       = `${data.neighborhood} · ${data.city} | Mango Realty`;
+  const description = `מידע על שכונת ${data.neighborhood} ב${data.city} — תחבורה, חינוך, מסחר וניתוח שוק`;
+  const image       = data.image_url || FALLBACK;
+  const canonical   = `${SITE_URL}/neighborhoods/${id}`;
+
   return {
-    title: `${data.neighborhood} · ${data.city} | Mango Realty`,
-    description: `מידע על שכונת ${data.neighborhood} ב${data.city} — תחבורה, חינוך, מסחר וניתוח שוק`,
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      images: [{ url: image, width: 1200, height: 630, alt: `${data.neighborhood}, ${data.city}` }],
+      locale: "he_IL",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
+    other: {
+      "geo.region":    "IL",
+      "geo.placename": `${data.neighborhood}, ${data.city}`,
+    },
   };
 }
 
@@ -58,7 +84,27 @@ export default async function NeighborhoodPage(
     image_url:     n.image_url,
   };
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Place",
+    "name": `${n.neighborhood}, ${n.city}`,
+    "description": n.description || undefined,
+    "image": n.image_url || undefined,
+    "url": `${SITE_URL}/neighborhoods/${id}`,
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": n.city,
+      "addressRegion":   n.neighborhood,
+      "addressCountry":  "IL",
+    },
+  };
+
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
     <main className="min-h-screen bg-[var(--color-cream)]" dir="rtl">
 
       {/* Hero image */}
@@ -127,5 +173,6 @@ export default async function NeighborhoodPage(
         )}
       </div>
     </main>
+  </>
   );
 }
