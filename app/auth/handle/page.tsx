@@ -1,48 +1,40 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function AuthHandlePage() {
-  const router = useRouter();
-
   useEffect(() => {
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: { flowType: "implicit" },
-        cookies: {
-          get: (name: string) => {
-            const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-            return match ? decodeURIComponent(match[1]) : undefined;
-          },
-          set: (name: string, value: string, options: { maxAge?: number }) => {
-            let c = `${name}=${encodeURIComponent(value)}; path=/; SameSite=Lax`;
-            if (options?.maxAge) c += `; max-age=${options.maxAge}`;
-            document.cookie = c;
-          },
-          remove: (name: string) => {
-            document.cookie = `${name}=; path=/; max-age=0`;
-          },
-        },
-      }
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
     async function handleAuth() {
-      // Implicit flow: Supabase detects #access_token= from hash automatically
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (session) {
-        window.location.replace("/admin");
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+
+      if (code) {
+        // PKCE flow
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (data.session) {
+          window.location.replace("/admin");
+        } else {
+          window.location.replace(`/admin/login?error=${encodeURIComponent(error?.message ?? "exchange_failed")}`);
+        }
       } else {
-        const msg = error?.message || "no_session";
-        window.location.replace(`/admin/login?error=${encodeURIComponent(msg)}`);
+        // Implicit flow fallback
+        const { data, error } = await supabase.auth.getSession();
+        if (data.session) {
+          window.location.replace("/admin");
+        } else {
+          window.location.replace(`/admin/login?error=${encodeURIComponent(error?.message ?? "no_session")}`);
+        }
       }
     }
 
     handleAuth();
-  }, [router]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center" dir="rtl">
