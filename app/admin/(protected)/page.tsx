@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const supabase = await createAdminClient();
 
-  const [{ data: properties }, { data: agents }] = await Promise.all([
+  const [{ data: properties }, { data: agents }, { data: neighborhoods }] = await Promise.all([
     supabase
       .from("properties")
       .select("id, slug, title, price, city, status, images, features")
@@ -15,7 +15,17 @@ export default async function AdminPage() {
       .from("agents")
       .select("id, slug, first_name, last_name, phone, email, photo_url")
       .order("first_name"),
+    supabase
+      .from("neighborhoods")
+      .select("id, city, neighborhood, description, image_url")
+      .order("city"),
   ]);
 
-  return <AdminDashboard properties={properties ?? []} agents={agents ?? []} />;
+  return (
+    <AdminDashboard
+      properties={properties ?? []}
+      agents={agents ?? []}
+      neighborhoods={neighborhoods ?? []}
+    />
+  );
 }
