@@ -40,7 +40,7 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-8 text-sm text-[var(--color-luxury-black)]/55">
           <Link href={isHome ? "#properties" : "/properties"} className="hover:text-[var(--color-gold)] transition-colors">נכסים</Link>
-          <Link href={isHome ? "#neighborhoods" : "/#neighborhoods"} className="hover:text-[var(--color-gold)] transition-colors">שכונות</Link>
+          <Link href="/neighborhoods" className="hover:text-[var(--color-gold)] transition-colors">שכונות</Link>
           <Link href="/team" className="hover:text-[var(--color-gold)] transition-colors">הצוות</Link>
           <Link href={isHome ? "#agent" : "/#agent"} className="hover:text-[var(--color-gold)] transition-colors">סוכן AI</Link>
           <a
@@ -60,7 +60,7 @@ export default function Navbar() {
       {open && (
         <div className="md:hidden bg-[var(--color-cream)] border-t border-black/8 px-6 py-5 flex flex-col gap-5 text-sm text-[var(--color-luxury-black)]/70">
           <Link href={isHome ? "#properties" : "/properties"} onClick={() => setOpen(false)}>נכסים</Link>
-          <Link href={isHome ? "#neighborhoods" : "/#neighborhoods"} onClick={() => setOpen(false)}>שכונות</Link>
+          <Link href="/neighborhoods" onClick={() => setOpen(false)}>שכונות</Link>
           <Link href="/team" onClick={() => setOpen(false)}>הצוות</Link>
           <Link href={isHome ? "#agent" : "/#agent"} onClick={() => setOpen(false)}>סוכן AI</Link>
           <a href="tel:+97235000000" className="flex items-center gap-2 font-bold text-[var(--color-luxury-black)]">

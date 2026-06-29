@@ -33,7 +33,7 @@ export default async function Neighborhoods() {
   // 2. Fetch cached analyses for these neighborhoods
   const { data: cached } = await supabase
     .from("neighborhoods")
-    .select("city, neighborhood, description, transport, socioeconomic, commerce, schools, image_url")
+    .select("id, city, neighborhood, description, transport, socioeconomic, commerce, schools, image_url")
     .in("city", [...new Set(unique.map(u => u.city))]);
 
   const cachedList = cached ?? [];
@@ -49,10 +49,11 @@ export default async function Neighborhoods() {
 
   // 3. Merge: property image as fallback when no image_url in cache
   const s = (v: unknown) => (typeof v === "string" ? v : null);
-  const data: (NeighborhoodData & { id: string })[] = unique.slice(0, 6).map((u, i) => {
+  const data: (NeighborhoodData & { id: string; db_id: string | null })[] = unique.slice(0, 4).map((u, i) => {
     const hit = findCache(u.city, u.neighborhood);
     return {
       id:            `${u.city}-${u.neighborhood}-${i}`,
+      db_id:         (hit as { id?: string } | undefined)?.id ?? null,
       city:          u.city,
       neighborhood:  u.neighborhood,
       description:   s(hit?.description),
