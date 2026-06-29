@@ -9,7 +9,7 @@ export default async function AdminPage() {
   const [{ data: properties }, { data: agents }] = await Promise.all([
     supabase
       .from("properties")
-      .select("id, slug, title, price, city, status, images")
+      .select("id, slug, title, price, city, status, images, features")
       .order("created_at", { ascending: false }),
     supabase
       .from("agents")

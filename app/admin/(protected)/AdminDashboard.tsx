@@ -5,12 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Plus, Pencil, Trash2, ExternalLink,
-  Home, Users, ChevronLeft,
+  Home, Users, ChevronLeft, Star,
 } from "lucide-react";
 
 interface Property {
   id: string; slug: string; title: string;
   price: number; city: string; status: string; images: string[];
+  features: Record<string, unknown> | null;
 }
 interface Agent {
   id: string; slug: string; first_name: string; last_name: string;
@@ -37,6 +38,15 @@ export default function AdminDashboard({
   properties, agents,
 }: { properties: Property[]; agents: Agent[] }) {
   const [tab, setTab] = useState<Tab>("properties");
+
+  async function toggleHero(id: string, current: boolean) {
+    await fetch(`/api/admin/properties/${id}/hero`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hero: !current }),
+    });
+    window.location.reload();
+  }
 
   async function deleteProperty(id: string, title: string) {
     if (!confirm(`למחוק את "${title}"?`)) return;
@@ -104,6 +114,7 @@ export default function AdminDashboard({
                   <th className="text-right font-medium px-4 py-3">מחיר</th>
                   <th className="text-right font-medium px-4 py-3">עיר</th>
                   <th className="text-right font-medium px-4 py-3">סטטוס</th>
+                  <th className="text-center font-medium px-4 py-3">הירו</th>
                   <th className="text-right font-medium px-4 py-3">פעולות</th>
                 </tr>
               </thead>
@@ -133,6 +144,16 @@ export default function AdminDashboard({
                         <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${st.color}`}>
                           {st.label}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => toggleHero(p.id, !!p.features?.hero)}
+                          title={p.features?.hero ? "הסר מהירו" : "הצג בהירו"}
+                          className="p-1.5 rounded-lg transition-colors"
+                          style={{ color: p.features?.hero ? "#F5A623" : "#d1d5db" }}
+                        >
+                          <Star size={15} fill={p.features?.hero ? "#F5A623" : "none"} />
+                        </button>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
