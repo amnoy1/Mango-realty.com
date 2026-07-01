@@ -120,8 +120,9 @@ export default function PropertyPageClient({
   const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=17&ie=UTF8&iwloc=&output=embed`;
 
   const openStreetView = () => {
+    // Open Maps with Street View layer active — user can drag the pegman to the nearest covered street
     const url = property.lat && property.lng
-      ? `https://www.google.com/maps/@${property.lat},${property.lng},3a,75y,90t/data=!3m1!1e1`
+      ? `https://www.google.com/maps?q=${property.lat},${property.lng}&layer=c&cbll=${property.lat},${property.lng}`
       : `https://www.google.com/maps?q=${encodeURIComponent(address)}&layer=c`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
