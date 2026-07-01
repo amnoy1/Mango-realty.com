@@ -31,7 +31,7 @@ Hebrew-first, RTL, Next.js 15 App Router, Tailwind v4, Supabase, Vercel.
 ```
 Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 
-## מה בנוי (סטטוס 2026-06-29)
+## מה בנוי (סטטוס 2026-07-01)
 
 ### Public Site
 - **Navbar** — גלובלי ב-`app/layout.tsx` דרך `ConditionalNavbar` (מוסתר על /admin)
@@ -41,7 +41,9 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 - `/properties` — רשימת כל הנכסים
 - `/properties/[slug]` — דף נכס מלא:
   - Gallery slider + thumbnails
-  - Google Maps embed + Street View popup
+  - Google Maps embed (iframe, ללא key) + **Street View modal** (Embed API v1, דורש `NEXT_PUBLIC_GOOGLE_MAPS_KEY`)
+    - אם יש key → modal מוטמע; אם אין → tab חדש עם `layer=c`
+    - Key מועבר מ-server component (`page.tsx`) כ-prop ל-`PropertyPageClient`
   - Stats bar (חדרים, אמבטיות, מ"ר, קומה)
   - יתרונות הנכס — chips עם אייקונים
   - **כרטיס סוכן מטפל** — תמונה, שם, טלפון, כפתור WhatsApp ירוק → `wa.me/972...`
@@ -66,7 +68,8 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
   - **שדה "סוכן מטפל"** — dropdown מטבלת הסוכנים
   - SEO auto-fill, slug auto-generate
 - `components/admin/ImageUploader.tsx` — drag & drop עד 20 תמונות
-- `components/admin/AgentForm.tsx` — שם/משפחה/טלפון/מייל/תמונה/אודות
+- `components/admin/AgentForm.tsx` — שם/משפחה/טלפון/מייל/תמונה/אודות + **photo_position slider** (0-100 → `top` / `50% X%`)
+- **Featured properties** — כפתור ★ באדמין → `features.hero=true` → מוצג בעמוד הבית (עד 3)
 
 ### שכונות AI — ✅ עובד
 - ניתוח אוטומטי ב-4 קטגוריות: תחבורה, חתך סוציו-אקונומי, מסחר+בידור, חינוך + סיכום
@@ -78,8 +81,9 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 ### DB — שינויים ידניים שבוצעו
 - `DROP CONSTRAINT properties_property_type_check`
 - טבלת `neighborhoods` + עמודות: transport, socioeconomic, commerce, schools
-- טבלת `agents` — **צריך להריץ** `supabase/migrations/agents_table.sql`
-- עמודה `agent_id` ב-`properties` — **צריך להריץ** אותו SQL
+- טבלת `agents` — `license_number TEXT` + `city TEXT` (ALTER TABLE בוצע)
+- עמודה `agent_id` ב-`properties` (FK → agents.id)
+- ⚠️ **עדיין צריך להריץ**: `ALTER TABLE agents ADD COLUMN IF NOT EXISTS photo_position TEXT DEFAULT 'top'`
 
 ### SEO / GEO — ✅ מלא
 - `generateMetadata` לכל נכס: og:image, twitter card, canonical URL
