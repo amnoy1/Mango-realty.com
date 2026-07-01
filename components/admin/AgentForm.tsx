@@ -14,6 +14,7 @@ interface AgentFormData {
   bio:            string;
   license_number: string;
   city:           string;
+  photo_position: string;
 }
 
 interface Props {
@@ -22,8 +23,16 @@ interface Props {
 }
 
 const empty: AgentFormData = {
-  first_name: "", last_name: "", phone: "", email: "", photo_url: "", bio: "", license_number: "", city: "",
+  first_name: "", last_name: "", phone: "", email: "", photo_url: "", bio: "", license_number: "", city: "", photo_position: "top",
 };
+
+function posToSlider(pos: string): number {
+  const match = pos?.match(/(\d+)%\s*$/);
+  return match ? parseInt(match[1]) : 0;
+}
+function sliderToPos(val: number): string {
+  return val === 0 ? "top" : `50% ${val}%`;
+}
 
 export default function AgentForm({ initialData, onSubmit }: Props) {
   const router    = useRouter();
@@ -89,7 +98,14 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
           <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 shrink-0 bg-gray-100">
             {form.photo_url ? (
               <>
-                <Image src={form.photo_url} alt="תמונת סוכן" fill className="object-cover object-top" sizes="80px" />
+                <Image
+                  src={form.photo_url}
+                  alt="תמונת סוכן"
+                  fill
+                  className="object-cover"
+                  style={{ objectPosition: form.photo_position || "top" }}
+                  sizes="80px"
+                />
                 <button
                   type="button"
                   onClick={() => set("photo_url", "")}
@@ -104,7 +120,7 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
               </div>
             )}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             <input
               ref={fileRef}
               type="file"
@@ -125,6 +141,23 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
               {uploading ? "מעלה..." : "העלה תמונה"}
             </button>
             <p className="text-xs text-gray-400">JPG / PNG / WebP עד 5 MB</p>
+            {form.photo_url && (
+              <div className="pt-1">
+                <label className="block text-xs text-gray-500 mb-1">
+                  מיקום חיתוך התמונה — <span className="font-semibold text-[#F5A623]">{posToSlider(form.photo_position)}%</span>
+                  <span className="text-gray-400 mr-1">(0 = ראש, 100 = רגליים)</span>
+                </label>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={posToSlider(form.photo_position)}
+                  onChange={(e) => set("photo_position", sliderToPos(parseInt(e.target.value)))}
+                  className="w-full accent-[#F5A623]"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

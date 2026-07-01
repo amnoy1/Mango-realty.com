@@ -12,6 +12,8 @@ interface Agent {
   photo_url: string | null;
   bio: string | null;
   license_number: string | null;
+  city: string | null;
+  photo_position: string | null;
 }
 
 export default function AgentEditClient({ agent }: { agent: Agent }) {
@@ -50,6 +52,8 @@ export default function AgentEditClient({ agent }: { agent: Agent }) {
           photo_url:      agent.photo_url      ?? "",
           bio:            agent.bio            ?? "",
           license_number: agent.license_number ?? "",
+          city:           agent.city           ?? "",
+          photo_position: agent.photo_position ?? "top",
         }}
         onSubmit={handleSubmit}
       />

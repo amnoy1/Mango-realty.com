@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       bio:            body.bio            || null,
       license_number: body.license_number || null,
       city:           body.city           || null,
+      photo_position: body.photo_position || "top",
     })
     .select()
     .single();
