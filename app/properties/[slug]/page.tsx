@@ -221,6 +221,7 @@ export default async function PropertyPage({
       <PropertyPageClient
         property={propertyForClient}
         related={related}
+        googleMapsKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || ""}
         neighborhoodSection={
           <NeighborhoodLoader
             city={propertyForClient.city}

@@ -92,14 +92,16 @@ export default function PropertyPageClient({
   property,
   related,
   neighborhoodSection,
+  googleMapsKey,
 }: {
   property: PropertyData;
   related: Property[];
   neighborhoodSection?: ReactNode;
+  googleMapsKey?: string;
 }) {
   const [activeImg, setActiveImg] = useState(0);
   const [saved, setSaved] = useState(false);
-  const [modal, setModal] = useState<"map" | null>(null);
+  const [modal, setModal] = useState<"map" | "streetview" | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", phone: "", message: "" });
   const [contactSent, setContactSent] = useState(false);
@@ -119,14 +121,19 @@ export default function PropertyPageClient({
   const address = [property.street, property.city, "Israel"].filter(Boolean).join(", ");
   const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=17&ie=UTF8&iwloc=&output=embed`;
 
-  // Street View — open in new tab, no API key needed
-  // Always use address (not coords) so Google snaps to road-level, not building centroid
-  const streetViewUrl = `https://www.google.com/maps?q=${encodeURIComponent(address)}&layer=c`;
+  // Street View — embedded modal with API key, fallback to new tab
+  const streetViewEmbedSrc = googleMapsKey
+    ? `https://www.google.com/maps/embed/v1/streetview?key=${googleMapsKey}&location=${encodeURIComponent(address)}&radius=200&fov=80`
+    : null;
+  const streetViewFallbackUrl = `https://www.google.com/maps?q=${encodeURIComponent(address)}&layer=c`;
 
   return (
     <>
       {modal === "map" && (
         <MapModal title={`מפה — ${address}`} src={mapEmbedSrc} onClose={() => setModal(null)} />
+      )}
+      {modal === "streetview" && streetViewEmbedSrc && (
+        <MapModal title={`Street View — ${address}`} src={streetViewEmbedSrc} onClose={() => setModal(null)} />
       )}
       {/* Contact form modal */}
       {contactOpen && (
@@ -263,7 +270,7 @@ export default function PropertyPageClient({
                   className="flex items-center gap-1.5 bg-white/15 hover:bg-white/28 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-lg transition border border-white/20">
                   <MapPin size={12} /> מפה
                 </button>
-                <button onClick={() => window.open(streetViewUrl, "_blank", "noopener,noreferrer")}
+                <button onClick={() => streetViewEmbedSrc ? setModal("streetview") : window.open(streetViewFallbackUrl, "_blank", "noopener,noreferrer")}
                   className="flex items-center gap-1.5 bg-white/15 hover:bg-white/28 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-lg transition border border-white/20">
                   <Navigation size={12} /> Street View
                 </button>
@@ -393,7 +400,7 @@ export default function PropertyPageClient({
                     className="flex items-center gap-2 border border-black/12 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--color-luxury-black)]/65 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-all">
                     <MapPin size={14} /> Google Maps
                   </button>
-                  <button onClick={() => window.open(streetViewUrl, "_blank", "noopener,noreferrer")}
+                  <button onClick={() => streetViewEmbedSrc ? setModal("streetview") : window.open(streetViewFallbackUrl, "_blank", "noopener,noreferrer")}
                     className="flex items-center gap-2 border border-black/12 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--color-luxury-black)]/65 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-all">
                     <Navigation size={14} /> Street View
                   </button>
