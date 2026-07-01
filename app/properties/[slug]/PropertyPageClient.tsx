@@ -120,9 +120,8 @@ export default function PropertyPageClient({
   const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=17&ie=UTF8&iwloc=&output=embed`;
 
   // Street View — open in new tab, no API key needed
-  const streetViewUrl = property.lat && property.lng
-    ? `https://www.google.com/maps/@${property.lat},${property.lng},3a,75y,90t/data=!3m1!1e1`
-    : `https://www.google.com/maps?q=${encodeURIComponent(address)}&layer=c`;
+  // Always use address (not coords) so Google snaps to road-level, not building centroid
+  const streetViewUrl = `https://www.google.com/maps?q=${encodeURIComponent(address)}&layer=c`;
 
   return (
     <>
