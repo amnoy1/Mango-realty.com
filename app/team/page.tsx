@@ -12,6 +12,11 @@ export const dynamic = "force-dynamic";
 
 const FALLBACK = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80";
 
+// Per-agent photo crop overrides (object-position), keyed by "first_name last_name"
+const PHOTO_POSITION: Record<string, string> = {
+  "דור כהן": "50% 60%",
+};
+
 export default async function TeamPage() {
   const supabase = await createClient();
   const { data: agents } = await supabase
@@ -59,7 +64,8 @@ export default async function TeamPage() {
                     src={agent.photo_url || FALLBACK}
                     alt={`${agent.first_name} ${agent.last_name}`}
                     fill
-                    className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    style={{ objectPosition: PHOTO_POSITION[`${agent.first_name} ${agent.last_name}`] ?? "top" }}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
