@@ -123,7 +123,7 @@ export default function PropertyPageClient({
     const url = property.lat && property.lng
       ? `https://www.google.com/maps/@${property.lat},${property.lng},3a,75y,90t/data=!3m1!1e1`
       : `https://www.google.com/maps?q=${encodeURIComponent(address)}&layer=c`;
-    window.open(url, "streetview", "width=1100,height=720,left=100,top=80");
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
