@@ -99,7 +99,7 @@ export default function PropertyPageClient({
 }) {
   const [activeImg, setActiveImg] = useState(0);
   const [saved, setSaved] = useState(false);
-  const [modal, setModal] = useState<"map" | null>(null);
+  const [modal, setModal] = useState<"map" | "streetview" | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", phone: "", message: "" });
   const [contactSent, setContactSent] = useState(false);
@@ -119,17 +119,18 @@ export default function PropertyPageClient({
   const address = [property.street, property.city, "Israel"].filter(Boolean).join(", ");
   const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=17&ie=UTF8&iwloc=&output=embed`;
 
-  const openStreetView = () => {
-    const url = property.lat && property.lng
-      ? `https://www.google.com/maps/place/${encodeURIComponent(address)}/@${property.lat},${property.lng},3a,75y,90t/data=!3m1!1e1`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}&map_action=pano`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+  const streetViewSrc = property.lat && property.lng && apiKey
+    ? `https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&location=${property.lat},${property.lng}&radius=200&fov=80`
+    : null;
 
   return (
     <>
       {modal === "map" && (
         <MapModal title={`מפה — ${address}`} src={mapEmbedSrc} onClose={() => setModal(null)} />
+      )}
+      {modal === "streetview" && streetViewSrc && (
+        <MapModal title={`Street View — ${address}`} src={streetViewSrc} onClose={() => setModal(null)} />
       )}
 
       {/* Contact form modal */}
@@ -267,7 +268,7 @@ export default function PropertyPageClient({
                   className="flex items-center gap-1.5 bg-white/15 hover:bg-white/28 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-lg transition border border-white/20">
                   <MapPin size={12} /> מפה
                 </button>
-                <button onClick={openStreetView}
+                <button onClick={() => streetViewSrc ? setModal("streetview") : setModal("map")}
                   className="flex items-center gap-1.5 bg-white/15 hover:bg-white/28 backdrop-blur-sm text-white text-xs font-bold px-3 py-2 rounded-lg transition border border-white/20">
                   <Navigation size={12} /> Street View
                 </button>
@@ -397,7 +398,7 @@ export default function PropertyPageClient({
                     className="flex items-center gap-2 border border-black/12 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--color-luxury-black)]/65 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-all">
                     <MapPin size={14} /> Google Maps
                   </button>
-                  <button onClick={openStreetView}
+                  <button onClick={() => streetViewSrc ? setModal("streetview") : setModal("map")}
                     className="flex items-center gap-2 border border-black/12 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--color-luxury-black)]/65 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-all">
                     <Navigation size={14} /> Street View
                   </button>
