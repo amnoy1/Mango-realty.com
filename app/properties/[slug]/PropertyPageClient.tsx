@@ -120,8 +120,8 @@ export default function PropertyPageClient({
   const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=17&ie=UTF8&iwloc=&output=embed`;
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
-  const streetViewSrc = property.lat && property.lng && apiKey
-    ? `https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&location=${property.lat},${property.lng}&radius=200&fov=80`
+  const streetViewSrc = apiKey
+    ? `https://www.google.com/maps/embed/v1/streetview?key=${apiKey}&location=${encodeURIComponent(address)}&radius=200&fov=80`
     : null;
 
   return (
