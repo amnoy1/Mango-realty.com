@@ -120,9 +120,8 @@ export default function PropertyPageClient({
   const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=17&ie=UTF8&iwloc=&output=embed`;
 
   const openStreetView = () => {
-    const url = property.lat && property.lng
-      ? `https://www.google.com/maps/@${property.lat},${property.lng},17z`
-      : `https://www.google.com/maps/search/${encodeURIComponent(address)}`;
+    // map_action=pano opens Google Maps directly in Street View mode for the address
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}&map_action=pano`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
