@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import Anthropic from "@anthropic-ai/sdk";
 
+export const maxDuration = 60;
+
 const client = new Anthropic();
 
 const PERSONA_CONTEXT: Record<string, string> = {
@@ -87,8 +89,10 @@ ${personaContext}
     });
 
     const text = response.content[0].type === "text" ? response.content[0].text : "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON in response");
+    // Strip markdown code fences if present
+    const cleaned = text.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "").trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error(`No JSON in response: ${text.slice(0, 200)}`);
 
     const result = JSON.parse(jsonMatch[0]);
     return NextResponse.json(result);
