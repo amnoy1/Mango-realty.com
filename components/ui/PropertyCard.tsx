@@ -27,12 +27,12 @@ export default function PropertyCard({ property }: { property: Property }) {
   return (
     <Link href={href} className="group bg-white rounded-2xl overflow-hidden border border-black/6 shadow-[0_2px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.13)] transition-all duration-300 hover:-translate-y-1 block">
       {/* Image */}
-      <div className="relative h-60 overflow-hidden">
+      <div className="relative h-60 overflow-hidden bg-[var(--color-cream)]">
         <Image
           src={property.image}
           alt={property.title}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          className="object-contain transition-transform duration-500"
           sizes="(max-width: 768px) 100vw, 33vw"
         />
         {property.badge && (
