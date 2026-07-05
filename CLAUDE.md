@@ -70,6 +70,11 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 - `components/admin/ImageUploader.tsx` — drag & drop עד 20 תמונות
 - `components/admin/AgentForm.tsx` — שם/משפחה/טלפון/מייל/תמונה/אודות + **photo_position slider** (0-100 → `top` / `50% X%`)
 - **Featured properties** — כפתור ★ באדמין → `features.hero=true` → מוצג בעמוד הבית (עד 3)
+- **AI Description Enhancer** — כפתור "✨ שיפור AI" בטופס נכס → panel inline:
+  - בוחר קהל: משקיעים / משפחות צעירות / זוגות מבוגרים / כלל הקהל
+  - קורא ל-`POST /api/admin/enhance-description` (maxDuration=60)
+  - Claude מחזיר description מחודש (150–250 מילים, SEO/GEO) + meta_description
+  - אשר → מעדכן שני השדות בטופס; בטל → סוגר ללא שינוי
 
 ### שכונות AI — ✅ עובד
 - ניתוח אוטומטי ב-4 קטגוריות: תחבורה, חתך סוציו-אקונומי, מסחר+בידור, חינוך + סיכום
@@ -103,6 +108,7 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 - `PATCH/DELETE /api/admin/agents/[id]` — עדכון/מחיקה סוכן
 - `POST /api/admin/logout` — יציאה מהמערכת
 - `GET /api/neighborhood` — ניתוח שכונה (maxDuration=120)
+- `POST /api/admin/enhance-description` — שיפור תיאור נכס ע"י Claude (maxDuration=60)
 
 ## DB Schema (עיקרי)
 ```sql
