@@ -217,12 +217,12 @@ export default function PropertyPageClient({
 
         {/* Gallery */}
         <div className="max-w-7xl mx-auto px-4 pt-8">
-          <div className="relative w-full bg-[var(--color-cream)] rounded-2xl overflow-hidden" style={{ height: "clamp(300px, 48vw, 580px)" }}>
+          <div className="relative w-full bg-black rounded-2xl overflow-hidden" style={{ height: "clamp(300px, 48vw, 580px)" }}>
             <Image
               src={property.images[activeImg]}
               alt={property.title}
               fill
-              className="object-contain transition-opacity duration-300"
+              className="object-cover transition-opacity duration-300"
               sizes="100vw"
               priority
             />
