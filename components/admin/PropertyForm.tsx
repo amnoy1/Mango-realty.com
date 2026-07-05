@@ -135,6 +135,54 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
   const [slugManual, setSlugManual] = useState(!!initialData?.slug);
   const [error, setError] = useState<string | null>(null);
 
+  // AI description enhancer
+  const [aiPanel, setAiPanel] = useState(false);
+  const [buyerType, setBuyerType] = useState("כלל הקהל");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<{ description: string; metaDescription: string } | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  async function enhanceDescription() {
+    setAiLoading(true);
+    setAiResult(null);
+    setAiError(null);
+    try {
+      const res = await fetch("/api/admin/enhance-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: form.description,
+          title: form.title,
+          price: form.price,
+          price_type: form.price_type,
+          property_type: form.property_type,
+          city: form.city,
+          neighborhood: form.neighborhood,
+          rooms: form.rooms,
+          area_sqm: form.area_sqm,
+          floor: form.floor,
+          features: form.features,
+          buyerType,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "שגיאה");
+      setAiResult(data);
+    } catch (e) {
+      setAiError(e instanceof Error ? e.message : "שגיאה בלתי צפויה");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  function applyAiResult() {
+    if (!aiResult) return;
+    set("description", aiResult.description);
+    set("meta_description", aiResult.metaDescription);
+    setAiPanel(false);
+    setAiResult(null);
+  }
+
   function set<K extends keyof PropertyFormData>(key: K, value: PropertyFormData[K]) {
     setForm((prev) => {
       const next = { ...prev, [key]: value };
@@ -397,13 +445,94 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
 
       {/* ── Description ── */}
       <div className={sectionClass}>
-        <h2 className="font-semibold text-gray-800 text-base">תיאור</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="font-semibold text-gray-800 text-base">תיאור</h2>
+          <button
+            type="button"
+            onClick={() => { setAiPanel(v => !v); setAiResult(null); setAiError(null); }}
+            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 transition"
+          >
+            ✨ שיפור AI
+          </button>
+        </div>
         <textarea
           className={`${inputClass} min-h-[120px] resize-y`}
           value={form.description}
           onChange={(e) => set("description", e.target.value)}
           placeholder="תיאור שיווקי של הנכס..."
         />
+
+        {/* AI Enhancement Panel */}
+        {aiPanel && (
+          <div className="mt-3 border border-amber-200 rounded-xl bg-amber-50/60 p-4 space-y-3">
+            <p className="text-xs font-bold text-amber-800">בחר קהל יעד:</p>
+            <div className="flex flex-wrap gap-2">
+              {["כלל הקהל", "משקיעים", "משפחות צעירות", "זוגות מבוגרים"].map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setBuyerType(type)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border font-semibold transition ${
+                    buyerType === type
+                      ? "bg-amber-500 border-amber-500 text-white"
+                      : "bg-white border-gray-200 text-gray-600 hover:border-amber-300"
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={enhanceDescription}
+              disabled={aiLoading}
+              className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white transition disabled:opacity-60"
+            >
+              {aiLoading ? (
+                <>
+                  <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                  </svg>
+                  מנסח...
+                </>
+              ) : "שפר תיאור ←"}
+            </button>
+
+            {aiError && (
+              <p className="text-xs text-red-600 font-medium">{aiError}</p>
+            )}
+
+            {aiResult && (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-amber-800">הצעת AI:</p>
+                <div className="bg-white border border-amber-200 rounded-lg p-3 text-sm text-gray-700 leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap">
+                  {aiResult.description}
+                </div>
+                <p className="text-xs text-gray-500">
+                  <span className="font-semibold">Meta:</span> {aiResult.metaDescription}
+                </p>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={applyAiResult}
+                    className="text-xs font-bold px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition"
+                  >
+                    ✓ אשר שינויים
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAiResult(null); setAiPanel(false); }}
+                    className="text-xs font-bold px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-gray-300 transition"
+                  >
+                    ✗ בטל
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Amenities ── */}
