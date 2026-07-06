@@ -194,8 +194,10 @@ export async function getNeighborhoodData(
   if (!city) return null;
 
   const SIX_MONTHS = 180 * 24 * 60 * 60 * 1000;
+  // Magic date used as "suppressed" marker when admin soft-deletes a neighborhood
+  const SUPPRESSED = "9999-12-31T00:00:00.000Z";
 
-  // 1. Supabase cache
+  // 1. Supabase cache — use limit(1) to avoid .maybeSingle() failing on duplicate rows
   let existing: Record<string, unknown> | null = null;
   try {
     const admin = await createAdminClient();
@@ -205,9 +207,14 @@ export async function getNeighborhoodData(
       .select("*")
       .eq("city", city)
       .eq("neighborhood", neighborhood || city)
+      .order("analysis_updated_at", { ascending: false, nullsFirst: false })
+      .limit(1)
       .maybeSingle();
     existing = data ?? null;
   } catch { /* cache miss */ }
+
+  // If admin suppressed this neighborhood — return null without regenerating
+  if (existing?.analysis_updated_at === SUPPRESSED) return null;
 
   const age = existing?.analysis_updated_at
     ? Date.now() - new Date(existing.analysis_updated_at as string).getTime()

@@ -34,9 +34,10 @@ export default function NeighborhoodLoader({
         if (cancelled) return;
         if (!r.ok) { setError(true); setLoading(false); return; }
         try {
-          const d: NeighborhoodData = await r.json();
+          const d: NeighborhoodData | null = await r.json();
           if (!cancelled && d?.description) setData(d);
-          else if (!cancelled) setError(true);
+          else if (!cancelled && d !== null) setError(true);
+          // d === null → suppressed neighborhood, hide section silently
         } catch {
           if (!cancelled) setError(true);
         }

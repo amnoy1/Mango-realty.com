@@ -17,7 +17,7 @@ export default async function AdminPage() {
       .order("first_name"),
     supabase
       .from("neighborhoods")
-      .select("id, city, neighborhood, description, transport, socioeconomic, commerce, schools, image_url")
+      .select("id, city, neighborhood, description, transport, socioeconomic, commerce, schools, image_url, analysis_updated_at")
       .order("city"),
   ]);
 
