@@ -121,9 +121,13 @@ export default function PropertyPageClient({
   const address = [property.street, property.city, "Israel"].filter(Boolean).join(", ");
   const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=17&ie=UTF8&iwloc=&output=embed`;
 
-  // Street View — embedded modal with API key, fallback to new tab
+  // Street View — use lat/lng when available (no geocoding needed, snaps to nearest road panorama)
+  // Fall back to address text only when no coordinates
+  const streetViewLocation = (property.lat && property.lng)
+    ? `${property.lat},${property.lng}`
+    : encodeURIComponent(address);
   const streetViewEmbedSrc = googleMapsKey
-    ? `https://www.google.com/maps/embed/v1/streetview?key=${googleMapsKey}&location=${encodeURIComponent(address)}&radius=200&fov=80`
+    ? `https://www.google.com/maps/embed/v1/streetview?key=${googleMapsKey}&location=${streetViewLocation}&radius=200&fov=80`
     : null;
   const streetViewFallbackUrl = `https://www.google.com/maps?q=${encodeURIComponent(address)}&layer=c`;
 
