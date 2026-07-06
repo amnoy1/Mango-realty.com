@@ -1,10 +1,12 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import PropertyPageClient from "./PropertyPageClient";
 import NeighborhoodLoader from "@/components/properties/NeighborhoodLoader";
 import type { Property } from "@/components/ui/PropertyCard";
+import { geocodeIsraeliAddress } from "@/lib/geocode";
 
 // Legacy boolean features (old schema)
 const BOOL_FEATURE_LABELS: Record<string, string> = {
@@ -132,6 +134,21 @@ export default async function PropertyPage({
     image: p.images?.[0] || FALLBACK_IMAGE,
   }));
 
+  // Resolve coordinates — geocode on first visit if missing, save to DB in background
+  let resolvedLat: number | null = property.lat ?? null;
+  let resolvedLng: number | null = property.lng ?? null;
+  if (!resolvedLat && !resolvedLng && (property.street || property.city)) {
+    const coords = await geocodeIsraeliAddress(property.street || "", property.city || "");
+    if (coords) {
+      resolvedLat = coords.lat;
+      resolvedLng = coords.lng;
+      after(async () => {
+        const admin = await createAdminClient();
+        await admin.from("properties").update({ lat: coords.lat, lng: coords.lng }).eq("id", property.id);
+      });
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const agentRaw = (property as any).agents as {
     id: string; first_name: string; last_name: string;
@@ -162,8 +179,8 @@ export default async function PropertyPage({
     city: property.city || "",
     neighborhood: property.neighborhood || "",
     street: property.street || "",
-    lat: property.lat || null,
-    lng: property.lng || null,
+    lat: resolvedLat,
+    lng: resolvedLng,
     description: property.description || "",
     features: featuresArr,
     images,
