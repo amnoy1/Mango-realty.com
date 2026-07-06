@@ -1,6 +1,7 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse, after } from "next/server";
 import { getNeighborhoodData } from "@/lib/neighborhood";
+import { geocodeIsraeliAddress } from "@/lib/geocode";
 
 export async function DELETE(
   request: NextRequest,
@@ -38,6 +39,12 @@ export async function PATCH(
   const { id } = await params;
   const body = await request.json();
   const supabase = await createAdminClient();
+
+  // Auto-geocode if address is present but no lat/lng provided
+  if (!body.lat && !body.lng && (body.street || body.city)) {
+    const coords = await geocodeIsraeliAddress(body.street || "", body.city || "");
+    if (coords) { body.lat = coords.lat; body.lng = coords.lng; }
+  }
 
   const { error } = await supabase.from("properties").update(body).eq("id", id);
   if (error) {

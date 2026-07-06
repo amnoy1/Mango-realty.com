@@ -1,6 +1,7 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse, after } from "next/server";
 import { getNeighborhoodData } from "@/lib/neighborhood";
+import { geocodeIsraeliAddress } from "@/lib/geocode";
 
 export async function POST(request: NextRequest) {
   const supabaseUser = await createClient();
@@ -12,6 +13,14 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const supabase = await createAdminClient();
+
+  // Auto-geocode if no lat/lng provided but address exists
+  let lat: number | null = body.lat || null;
+  let lng: number | null = body.lng || null;
+  if (!lat && !lng && (body.street || body.city)) {
+    const coords = await geocodeIsraeliAddress(body.street || "", body.city || "");
+    if (coords) { lat = coords.lat; lng = coords.lng; }
+  }
 
   const row = {
     slug:             body.slug             || null,
@@ -31,8 +40,8 @@ export async function POST(request: NextRequest) {
     street:           body.street           || null,
     features:         body.features         || {},
     images:           body.images           || [],
-    lat:              body.lat              || null,
-    lng:              body.lng              || null,
+    lat,
+    lng,
     meta_title:       body.meta_title       || null,
     meta_description: body.meta_description || null,
     published_at:     body.status === "active" ? new Date().toISOString() : null,
