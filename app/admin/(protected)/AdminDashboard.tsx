@@ -409,6 +409,7 @@ export default function AdminDashboard({
                           title={n.analysis_updated_at === SUPPRESSED ? "שחזר שכונה" : "הסתר שכונה"}
                         >
                           <Trash2 size={14} />
+                        </button>
                       </div>
                     </td>
                   </tr>
