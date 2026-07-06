@@ -31,19 +31,21 @@ Hebrew-first, RTL, Next.js 15 App Router, Tailwind v4, Supabase, Vercel.
 ```
 Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 
-## מה בנוי (סטטוס 2026-07-01)
+## מה בנוי (סטטוס 2026-07-06)
 
 ### Public Site
 - **Navbar** — גלובלי ב-`app/layout.tsx` דרך `ConditionalNavbar` (מוסתר על /admin)
-  - לינקים חכמים: בדף הבית → גוללים לסקשן, מעמוד אחר → מנווטים לדף
+  - "נכסים" → תמיד `/properties` (לא anchor בעמוד הבית)
   - "הצוות" → `/team`
 - **Homepage**: Hero, Stats, FeaturedProperties, AIAgentSection, Neighborhoods, HowItWorks, Footer
-- `/properties` — רשימת כל הנכסים
+- `/properties` — רשימת כל הנכסים (סגנון cream כמו /neighborhoods, ללא strip שחור)
 - `/properties/[slug]` — דף נכס מלא:
   - Gallery slider + thumbnails
-  - Google Maps embed (iframe, ללא key) + **Street View modal** (Embed API v1, דורש `NEXT_PUBLIC_GOOGLE_MAPS_KEY`)
-    - אם יש key → modal מוטמע; אם אין → tab חדש עם `layer=c`
-    - Key מועבר מ-server component (`page.tsx`) כ-prop ל-`PropertyPageClient`
+  - Google Maps embed (iframe, ללא key) + **Street View modal** ✅ עובד
+    - ⚠️ Embed API `streetview` מקבל **רק lat/lng** — לא כתובת טקסט!
+    - `page.tsx` מגאוקד ב-Nominatim (OSM) אם אין lat/lng; שומר ל-DB ב-`after()`
+    - `PropertyPageClient`: embed רק אם יש lat/lng; אחרת → tab חדש עם `layer=c`
+    - `lib/geocode.ts` — `geocodeIsraeliAddress(street, city)` → `{lat,lng}|null`
   - Stats bar (חדרים, אמבטיות, מ"ר, קומה)
   - יתרונות הנכס — chips עם אייקונים
   - **כרטיס סוכן מטפל** — תמונה, שם, טלפון, כפתור WhatsApp ירוק → `wa.me/972...`
@@ -61,6 +63,7 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 - **Tabs בדשבורד**:
   - **נכסים** — טבלה עם עריכה / צפייה / מחיקה + "נכס חדש"
   - **צוות** — טבלה עם עריכה / צפייה / מחיקה + "סוכן חדש"
+  - **שכונות** — טבלה עם עריכה (5 שדות: description/transport/socioeconomic/commerce/schools) + מחיקה (hard delete)
 - `/admin/properties/new` + `[id]/edit` — טופס נכס מלא
 - `/admin/agents/new` + `[id]/edit` — טופס סוכן
 - `components/admin/PropertyForm.tsx`:
@@ -82,6 +85,7 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 - Cache 6 חודשים ב-Supabase `neighborhoods` table
 - **Auto-trigger**: כשמעלים נכס פעיל באדמין → ניתוח רץ ברקע (next/server `after()`)
 - מדור "שכונות מבוקשות" בדף הבית — נכסים אמיתיים מ-Supabase + modal עם ניתוח
+- **Bug fix**: `lib/neighborhood.ts` — `.limit(1).order()` במקום `.maybeSingle()` למניעת כישלון שקט כשיש שורות כפולות
 
 ### DB — שינויים ידניים שבוצעו
 - `DROP CONSTRAINT properties_property_type_check`
@@ -101,11 +105,12 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 - Sitemap: `app/sitemap.ts` — כולל נכסים, סוכנים, שכונות, `/team`, `/neighborhoods`
 
 ### API Routes
-- `POST /api/admin/properties` — יצירת נכס + auto-trigger neighborhood
-- `PATCH/DELETE /api/admin/properties/[id]` — עדכון/מחיקה + auto-trigger neighborhood
+- `POST /api/admin/properties` — יצירת נכס + auto-geocoding + auto-trigger neighborhood
+- `PATCH/DELETE /api/admin/properties/[id]` — עדכון/מחיקה + auto-geocoding + auto-trigger neighborhood
 - `POST /api/admin/upload-images` — העלאה ל-Supabase Storage
 - `GET/POST /api/admin/agents` — רשימה / יצירת סוכן
 - `PATCH/DELETE /api/admin/agents/[id]` — עדכון/מחיקה סוכן
+- `PATCH/DELETE /api/admin/neighborhoods/[id]` — עדכון/מחיקת שכונה (hard delete)
 - `POST /api/admin/logout` — יציאה מהמערכת
 - `GET /api/neighborhood` — ניתוח שכונה (maxDuration=120)
 - `POST /api/admin/enhance-description` — שיפור תיאור נכס ע"י Claude (maxDuration=60)
