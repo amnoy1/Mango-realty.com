@@ -17,8 +17,6 @@ interface Agent {
   id: string; slug: string; first_name: string; last_name: string;
   phone: string | null; email: string | null; photo_url: string | null;
 }
-const SUPPRESSED = "9999-12-31T00:00:00.000Z";
-
 interface Neighborhood {
   id: string; city: string; neighborhood: string;
   description: string | null; transport: string | null;
@@ -81,16 +79,8 @@ export default function AdminDashboard({
   }
 
   async function deleteNeighborhood(id: string, name: string) {
-    if (!confirm(`להסתיר את שכונת "${name}" מעמודי הנכסים?\nהשכונה תוסר מהאתר ולא תיווצר מחדש אוטומטית.\nניתן לשחזר דרך כפתור העריכה.`)) return;
-    await fetch(`/api/admin/neighborhoods/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        description: null, transport: null, socioeconomic: null,
-        commerce: null, schools: null,
-        analysis_updated_at: SUPPRESSED,
-      }),
-    });
+    if (!confirm(`למחוק לצמיתות את שכונת "${name}"?\nהיא תוסר מהאתר ומהדאטהבייס.`)) return;
+    await fetch(`/api/admin/neighborhoods/${id}`, { method: "DELETE" });
     window.location.reload();
   }
 
@@ -377,25 +367,21 @@ export default function AdminDashboard({
                     <td className="px-4 py-3 font-semibold text-gray-900">{n.city}</td>
                     <td className="px-4 py-3 text-gray-700">{n.neighborhood || "—"}</td>
                     <td className="px-4 py-3 text-gray-400 text-xs max-w-xs">
-                      {n.analysis_updated_at === SUPPRESSED
-                        ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-400 font-semibold text-xs">מושתק</span>
-                        : n.description
-                          ? <span className="line-clamp-2">{n.description}</span>
-                          : <span className="italic">ממתין לניתוח AI</span>
+                      {n.description
+                        ? <span className="line-clamp-2">{n.description}</span>
+                        : <span className="italic">ממתין לניתוח AI</span>
                       }
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        {n.analysis_updated_at !== SUPPRESSED && (
-                          <button
-                            onClick={() => triggerImageUpload(n)}
-                            disabled={uploading === n.id}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:border-[#F5A623] hover:text-[#F5A623] transition-colors disabled:opacity-50"
-                          >
-                            <Upload size={12} />
-                            {uploading === n.id ? "מעלה..." : n.image_url ? "החלף" : "תמונה"}
-                          </button>
-                        )}
+                        <button
+                          onClick={() => triggerImageUpload(n)}
+                          disabled={uploading === n.id}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:border-[#F5A623] hover:text-[#F5A623] transition-colors disabled:opacity-50"
+                        >
+                          <Upload size={12} />
+                          {uploading === n.id ? "מעלה..." : n.image_url ? "החלף" : "תמונה"}
+                        </button>
                         <button
                           onClick={() => openEdit(n)}
                           className="p-1.5 rounded-lg text-gray-400 hover:text-[#F5A623] hover:bg-amber-50 transition-colors"
@@ -406,7 +392,7 @@ export default function AdminDashboard({
                         <button
                           onClick={() => deleteNeighborhood(n.id, n.neighborhood || n.city)}
                           className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                          title={n.analysis_updated_at === SUPPRESSED ? "שחזר שכונה" : "הסתר שכונה"}
+                          title="מחיקה לצמיתות"
                         >
                           <Trash2 size={14} />
                         </button>
