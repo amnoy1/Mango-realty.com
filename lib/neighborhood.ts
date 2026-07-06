@@ -240,7 +240,9 @@ export async function getNeighborhoodData(
 
   if (!generated && !existing) return null;
 
-  const resolvedNeighborhood = (generated?.neighborhood_name as string | undefined) ?? neighborhood ?? city;
+  // Always use the same key as the lookup — never use Claude's resolved name as DB key
+  // (mismatch caused cache miss + duplicate rows on every visit)
+  const resolvedNeighborhood = neighborhood || city;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { neighborhood_name: _drop, ...fields } = generated ?? {};
 
