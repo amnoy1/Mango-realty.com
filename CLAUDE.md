@@ -31,7 +31,7 @@ Hebrew-first, RTL, Next.js 15 App Router, Tailwind v4, Supabase, Vercel.
 ```
 Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 
-## מה בנוי (סטטוס 2026-07-06)
+## מה בנוי (סטטוס 2026-07-07)
 
 ### Public Site
 - **Navbar** — גלובלי ב-`app/layout.tsx` דרך `ConditionalNavbar` (מוסתר על /admin)
@@ -43,9 +43,14 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
   - Gallery slider + thumbnails
   - Google Maps embed (iframe, ללא key) + **Street View modal** ✅ עובד
     - ⚠️ Embed API `streetview` מקבל **רק lat/lng** — לא כתובת טקסט!
-    - `page.tsx` מגאוקד ב-Nominatim (OSM) אם אין lat/lng; שומר ל-DB ב-`after()`
-    - `PropertyPageClient`: embed רק אם יש lat/lng; אחרת → tab חדש עם `layer=c`
     - `lib/geocode.ts` — `geocodeIsraeliAddress(street, city)` → `{lat,lng}|null`
+      - **Primary**: Google Geocoding API (`region=il&language=he`) — כיסוי עברית מלא כולל רחובות נדירים
+      - **Fallback**: Nominatim (OSM) — בחינם, ללא key
+      - ⚠️ Google Cloud Console: חובה להפעיל **Maps Embed API** + **Geocoding API**
+    - `page.tsx` מגאוקד ב-first visit אם אין lat/lng; שומר ל-DB ב-`after()`
+    - Admin POST/PATCH מגאוקד synchronously לפני שמירה ל-DB
+    - `PropertyPageClient`: embed רק אם יש lat/lng; אחרת → tab חדש עם `layer=c`
+    - `radius=500` ב-embed URL (מרחב חיפוש רחב יותר לפנורמה)
   - Stats bar (חדרים, אמבטיות, מ"ר, קומה)
   - יתרונות הנכס — chips עם אייקונים
   - **כרטיס סוכן מטפל** — תמונה, שם, טלפון, כפתור WhatsApp ירוק → `wa.me/972...`
