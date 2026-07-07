@@ -217,8 +217,11 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
       "מנגו נדל\"ן — יוקרתי.",
     ].filter(Boolean).join(" · ");
 
-    set("meta_title",       rawTitle.slice(0, 60));
-    set("meta_description", descParts.slice(0, 160));
+    set("meta_title", rawTitle.slice(0, 60));
+    // Only fill meta_description if empty — don't overwrite AI-generated content
+    if (!form.meta_description) {
+      set("meta_description", descParts.slice(0, 160));
+    }
   }
 
   function handleSlugChange(value: string) {
@@ -585,7 +588,19 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
           <p className="text-xs text-gray-400 mt-1">{form.meta_title.length}/60</p>
         </div>
         <div>
-          <label className={labelClass}>Meta Description</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className={labelClass} style={{ marginBottom: 0 }}>Meta Description</label>
+            {form.meta_description && (
+              <button
+                type="button"
+                onClick={() => set("meta_description", "")}
+                className="text-xs text-gray-400 hover:text-red-400 transition"
+                title="נקה כדי לאפשר מילוי אוטומטי"
+              >
+                נקה ↺
+              </button>
+            )}
+          </div>
           <textarea
             className={`${inputClass} h-20 resize-none`}
             value={form.meta_description} dir="auto"
