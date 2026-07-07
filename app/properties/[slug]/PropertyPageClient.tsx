@@ -124,7 +124,7 @@ export default function PropertyPageClient({
   // Street View — Embed API streetview mode ONLY accepts lat/lng (not address text).
   // If no coordinates, fall back to opening in a new tab.
   const streetViewEmbedSrc = (googleMapsKey && property.lat && property.lng)
-    ? `https://www.google.com/maps/embed/v1/streetview?key=${googleMapsKey}&location=${property.lat},${property.lng}&radius=200&fov=80`
+    ? `https://www.google.com/maps/embed/v1/streetview?key=${googleMapsKey}&location=${property.lat},${property.lng}&radius=500&fov=80`
     : null;
   const streetViewFallbackUrl = `https://www.google.com/maps?q=${encodeURIComponent(address)}&layer=c`;
 
