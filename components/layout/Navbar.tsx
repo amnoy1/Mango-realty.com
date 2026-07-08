@@ -31,8 +31,8 @@ export default function Navbar() {
           <Image
             src="/logo.png"
             alt="Mango Real Estate"
-            width={48}
-            height={48}
+            width={56}
+            height={56}
             className="rounded-xl"
             priority
           />
