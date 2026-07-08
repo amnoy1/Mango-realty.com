@@ -43,6 +43,7 @@ export default function Navbar() {
           <Link href="/neighborhoods" className="hover:text-[var(--color-gold)] transition-colors">שכונות</Link>
           <Link href="/team" className="hover:text-[var(--color-gold)] transition-colors">הצוות</Link>
           <Link href={isHome ? "#agent" : "/#agent"} className="hover:text-[var(--color-gold)] transition-colors">סוכן AI</Link>
+          <Link href="/sell" className="hover:text-[var(--color-gold)] transition-colors">חושב למכור?</Link>
           <a
             href="tel:+97235000000"
             className="flex items-center gap-2 bg-[var(--color-luxury-black)] text-[var(--color-cream)] px-5 py-2 rounded-full font-bold hover:bg-[var(--color-charcoal)] transition-colors text-xs"
@@ -63,6 +64,7 @@ export default function Navbar() {
           <Link href="/neighborhoods" onClick={() => setOpen(false)}>שכונות</Link>
           <Link href="/team" onClick={() => setOpen(false)}>הצוות</Link>
           <Link href={isHome ? "#agent" : "/#agent"} onClick={() => setOpen(false)}>סוכן AI</Link>
+          <Link href="/sell" onClick={() => setOpen(false)} className="font-bold" style={{ color: "var(--color-gold)" }}>חושב למכור?</Link>
           <a href="tel:+97235000000" className="flex items-center gap-2 font-bold text-[var(--color-luxury-black)]">
             <Phone size={15} /> 03-500-0000
           </a>

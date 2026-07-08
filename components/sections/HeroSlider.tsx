@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MapPin, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const CITIES = ["תל אביב", "רמת גן", "גבעתיים", "רמת השרון"];
 
@@ -14,6 +15,7 @@ interface Slide {
 export default function HeroSlider({ slides }: { slides: Slide[] }) {
   const [city, setCity]       = useState("");
   const [current, setCurrent] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -60,6 +62,33 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
         <p className="mb-7 text-white/60" style={{ fontSize: "clamp(0.85rem, 1.2vw, 1rem)" }}>
           מנגו נדל&quot;ן — יוקרה עם ליווי AI אישי 24/7
         </p>
+
+        {/* Buyer / Seller toggle */}
+        <div className="flex gap-2 mb-4">
+          <button
+            className="px-5 py-2 rounded-full text-sm font-bold transition-all"
+            style={{
+              background: "#D4A853",
+              color: "#1C1C1E",
+              fontFamily: "var(--font-heebo)",
+            }}
+          >
+            קונה
+          </button>
+          <button
+            onClick={() => router.push("/sell")}
+            className="px-5 py-2 rounded-full text-sm font-bold transition-all hover:bg-white/20"
+            style={{
+              background: "rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.85)",
+              border: "1px solid rgba(255,255,255,0.25)",
+              fontFamily: "var(--font-heebo)",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            חושב למכור?
+          </button>
+        </div>
 
         {/* Search bar */}
         <div
