@@ -43,11 +43,12 @@ const FALLBACK = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w
 const AGENT_FALLBACK = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&q=60";
 
 export default function AdminDashboard({
-  properties, agents, neighborhoods,
+  properties, agents, neighborhoods, isFullAdmin,
 }: {
   properties: Property[];
   agents: Agent[];
   neighborhoods: Neighborhood[];
+  isFullAdmin: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("properties");
   const [uploading, setUploading] = useState<string | null>(null);
@@ -168,7 +169,7 @@ export default function AdminDashboard({
       {/* Tabs + action button */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
-          {TABS.map(({ key, label, icon: Icon }) => (
+          {TABS.filter(t => isFullAdmin || t.key !== "agents").map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setTab(key)}
@@ -189,13 +190,22 @@ export default function AdminDashboard({
           ))}
         </div>
 
-        {tab !== "neighborhoods" && (
+        {tab === "properties" && (
           <Link
-            href={tab === "properties" ? "/admin/properties/new" : "/admin/agents/new"}
+            href="/admin/properties/new"
             className="flex items-center gap-2 bg-[#F5A623] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#D4881A] transition-colors"
           >
             <Plus size={16} />
-            {tab === "properties" ? "נכס חדש" : "סוכן חדש"}
+            נכס חדש
+          </Link>
+        )}
+        {tab === "agents" && isFullAdmin && (
+          <Link
+            href="/admin/agents/new"
+            className="flex items-center gap-2 bg-[#F5A623] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#D4881A] transition-colors"
+          >
+            <Plus size={16} />
+            סוכן חדש
           </Link>
         )}
       </div>

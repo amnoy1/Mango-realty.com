@@ -1,11 +1,11 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin-auth";
+import { isFullAdmin } from "@/lib/admin-auth";
 
 async function auth() {
   const supabaseUser = await createClient();
   const { data: { user } } = await supabaseUser.auth.getUser();
-  return isAdmin(user?.email) ? user : null;
+  return isFullAdmin(user?.email) ? user : null;
 }
 
 export async function PATCH(

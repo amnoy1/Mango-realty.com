@@ -1,10 +1,14 @@
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { isFullAdmin } from "@/lib/admin-auth";
 import AdminDashboard from "./AdminDashboard";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const supabase = await createAdminClient();
+  const userClient = await createClient();
+  const { data: { user } } = await userClient.auth.getUser();
+  const fullAdmin = isFullAdmin(user?.email);
 
   const [{ data: properties }, { data: agents }, { data: neighborhoods }] = await Promise.all([
     supabase
@@ -26,6 +30,7 @@ export default async function AdminPage() {
       properties={properties ?? []}
       agents={agents ?? []}
       neighborhoods={neighborhoods ?? []}
+      isFullAdmin={fullAdmin}
     />
   );
 }
