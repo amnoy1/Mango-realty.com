@@ -63,45 +63,53 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
           מנגו נדל&quot;ן — יוקרה עם ליווי AI אישי 24/7
         </p>
 
-        {/* Buyer / Seller toggle */}
-        <div className="flex gap-2 mb-4">
-          <button
-            className="px-5 py-2 rounded-full text-sm font-bold transition-all"
-            style={{
-              background: "#D4A853",
-              color: "#1C1C1E",
-              fontFamily: "var(--font-heebo)",
-            }}
-          >
-            קונה
-          </button>
-          <button
-            onClick={() => router.push("/sell")}
-            className="px-5 py-2 rounded-full text-sm font-bold transition-all hover:bg-white/20"
-            style={{
-              background: "rgba(255,255,255,0.12)",
-              color: "rgba(255,255,255,0.85)",
-              border: "1px solid rgba(255,255,255,0.25)",
-              fontFamily: "var(--font-heebo)",
-              backdropFilter: "blur(8px)",
-            }}
-          >
-            חושב למכור?
-          </button>
-        </div>
+        {/* Tabs + Search bar */}
+        <div style={{ width: "clamp(260px, 30vw, 420px)" }}>
 
-        {/* Search bar */}
-        <div
-          className="flex items-center gap-2 rounded-[18px] p-2"
-          style={{
-            width: "clamp(260px, 30vw, 420px)",
-            background: "rgba(255,250,244,0.13)",
-            backdropFilter: "blur(28px)",
-            WebkitBackdropFilter: "blur(28px)",
-            border: "1px solid rgba(255,255,255,0.22)",
-            boxShadow: "0 16px 48px rgba(0,0,0,0.2)",
-          }}
-        >
+          {/* Tab row */}
+          <div className="flex gap-1">
+            {/* קונים — active, gold, not clickable */}
+            <div
+              className="px-5 py-2 text-sm font-black"
+              style={{
+                background: "#D4A853",
+                color: "#1C1C1E",
+                borderRadius: "12px 12px 0 0",
+                fontFamily: "var(--font-heebo)",
+              }}
+            >
+              קונים
+            </div>
+            {/* מוכרים נכס? — inactive, glass, clickable */}
+            <button
+              onClick={() => router.push("/sell")}
+              className="px-5 py-2 text-sm font-bold transition-all hover:brightness-110"
+              style={{
+                background: "rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.75)",
+                border: "1px solid rgba(255,255,255,0.22)",
+                borderBottom: "none",
+                borderRadius: "12px 12px 0 0",
+                fontFamily: "var(--font-heebo)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              מוכרים נכס?
+            </button>
+          </div>
+
+          {/* Search bar — top-right flat (connects to קונים tab in RTL) */}
+          <div
+            className="flex items-center gap-2 p-2"
+            style={{
+              borderRadius: "18px 0 18px 18px",
+              background: "rgba(255,250,244,0.13)",
+              backdropFilter: "blur(28px)",
+              WebkitBackdropFilter: "blur(28px)",
+              border: "1px solid rgba(255,255,255,0.22)",
+              boxShadow: "0 16px 48px rgba(0,0,0,0.2)",
+            }}
+          >
           <div
             className="flex-1 flex items-center gap-2 rounded-[12px] px-3 py-2"
             style={{ background: "rgba(255,255,255,0.11)", border: "1px solid rgba(255,255,255,0.14)" }}
@@ -123,6 +131,7 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
             חפש
           </button>
         </div>
+        </div>{/* end tabs+searchbar wrapper */}
 
         {/* Quick city links */}
         <div className="mt-3.5 flex flex-wrap gap-x-3 gap-y-1 items-center text-[11px] text-white/35">
