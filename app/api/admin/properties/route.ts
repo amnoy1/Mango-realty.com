@@ -2,12 +2,13 @@ import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse, after } from "next/server";
 import { getNeighborhoodData } from "@/lib/neighborhood";
 import { geocodeIsraeliAddress } from "@/lib/geocode";
+import { isAdmin } from "@/lib/admin-auth";
 
 export async function POST(request: NextRequest) {
   const supabaseUser = await createClient();
   const { data: { user } } = await supabaseUser.auth.getUser();
 
-  if (!user || user.email !== "amir@mango-realty.com") {
+  if (!user || !isAdmin(user.email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

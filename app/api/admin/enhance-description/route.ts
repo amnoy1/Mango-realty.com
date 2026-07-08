@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { isAdmin } from "@/lib/admin-auth";
 
 export const maxDuration = 60;
 
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
   // Auth check
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (user?.email !== "amir@mango-realty.com") {
+  if (!isAdmin(user?.email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

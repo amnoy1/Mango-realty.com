@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { isAdmin } from "@/lib/admin-auth";
 
 // Client sends: { filenames: string[], slug?: string }
 // Returns:      { uploads: { signedUrl: string; path: string; publicUrl: string }[] }
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabaseUser.auth.getUser();
 
-  if (!user || user.email !== "amir@mango-realty.com") {
+  if (!user || !isAdmin(user.email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -1,10 +1,11 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { isAdmin } from "@/lib/admin-auth";
 
 async function auth() {
   const supabaseUser = await createClient();
   const { data: { user } } = await supabaseUser.auth.getUser();
-  return user?.email === "amir@mango-realty.com" ? user : null;
+  return isAdmin(user?.email) ? user : null;
 }
 
 export async function GET() {
