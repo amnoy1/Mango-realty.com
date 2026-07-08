@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -24,15 +24,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "שגיאה בשמירת הפרטים" }, { status: 500 });
   }
 
-  // Send email via Resend (graceful skip if env missing)
-  const resendKey = process.env.RESEND_API_KEY;
-  if (resendKey) {
+  // Send email via Gmail (graceful skip if env missing)
+  const gmailPass = process.env.GMAIL_APP_PASSWORD;
+  if (gmailPass) {
     try {
-      const resend = new Resend(resendKey);
-      const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "amir@mango-realty.com",
+          pass: gmailPass,
+        },
+      });
 
-      await resend.emails.send({
-        from: `מנגו נדל"ן <${fromEmail}>`,
+      await transporter.sendMail({
+        from: '"מנגו נדל"ן" <amir@mango-realty.com>',
         to: "amir@mango-realty.com",
         subject: `🏠 ליד מוכר חדש: ${name}`,
         html: `
