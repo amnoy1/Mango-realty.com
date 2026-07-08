@@ -63,11 +63,14 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 
 ### Admin Panel (`/admin`) — ✅ מוכן לשימוש
 - **כתובת אחת**: `/admin/login` → `/admin` — דשבורד מאוחד
-- Google OAuth — רק `amir@mango-realty.com` נכנס
+- Google OAuth — הרשאות לפי תפקיד (`lib/admin-auth.ts`):
+  - **Full Admin** `amir@mango-realty.com` — גישה מלאה לכל כולל ניהול סוכנים
+  - **Agent** `dorsur76@gmail.com` — נכסים + שכונות + AI; טאב "צוות" מוסתר + API חסום
+  - `isAdmin()` — כניסה כללית לאדמין | `isFullAdmin()` — ניהול סוכנים בלבד
 - כפתור **יציאה** ב-header
 - **Tabs בדשבורד**:
   - **נכסים** — טבלה עם עריכה / צפייה / מחיקה + "נכס חדש"
-  - **צוות** — טבלה עם עריכה / צפייה / מחיקה + "סוכן חדש"
+  - **צוות** — טבלה עם עריכה / צפייה / מחיקה + "סוכן חדש" (Full Admin בלבד)
   - **שכונות** — טבלה עם עריכה (5 שדות: description/transport/socioeconomic/commerce/schools) + מחיקה (hard delete)
 - `/admin/properties/new` + `[id]/edit` — טופס נכס מלא
 - `/admin/agents/new` + `[id]/edit` — טופס סוכן
