@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Plus, Pencil, Trash2, ExternalLink,
-  Home, Users, ChevronLeft, Star, MapPin, Upload, ImageOff,
+  Home, Users, ChevronLeft, Star, MapPin, Upload, ImageOff, Inbox,
 } from "lucide-react";
 
 interface Property {
@@ -24,11 +24,17 @@ interface Neighborhood {
   schools: string | null; image_url: string | null;
   analysis_updated_at: string | null;
 }
+interface SellerLead {
+  id: string; name: string; phone: string;
+  city: string | null; property_type: string | null;
+  notes: string | null; created_at: string;
+}
 
 const TABS = [
   { key: "properties",   label: "נכסים",   icon: Home    },
   { key: "agents",       label: "צוות",    icon: Users   },
   { key: "neighborhoods",label: "שכונות",  icon: MapPin  },
+  { key: "leads",        label: "לידים",   icon: Inbox   },
 ] as const;
 type Tab = typeof TABS[number]["key"];
 
@@ -43,11 +49,12 @@ const FALLBACK = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w
 const AGENT_FALLBACK = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&q=60";
 
 export default function AdminDashboard({
-  properties, agents, neighborhoods, isFullAdmin,
+  properties, agents, neighborhoods, sellerLeads, isFullAdmin,
 }: {
   properties: Property[];
   agents: Agent[];
   neighborhoods: Neighborhood[];
+  sellerLeads: SellerLead[];
   isFullAdmin: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("properties");
@@ -158,8 +165,15 @@ export default function AdminDashboard({
     if (key === "properties")    return properties.length;
     if (key === "agents")        return agents.length;
     if (key === "neighborhoods") return neighborhoods.length;
+    if (key === "leads")         return sellerLeads.length;
     return 0;
   };
+
+  async function deleteLead(id: string, name: string) {
+    if (!confirm(`למחוק את הפנייה של "${name}"?`)) return;
+    await fetch(`/api/admin/seller-leads/${id}`, { method: "DELETE" });
+    window.location.reload();
+  }
 
   return (
     <div dir="rtl">
@@ -407,6 +421,64 @@ export default function AdminDashboard({
                           <Trash2 size={14} />
                         </button>
                       </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {/* ── Leads tab ── */}
+      {tab === "leads" && (
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          {sellerLeads.length === 0 ? (
+            <div className="p-16 text-center text-gray-400">
+              <Inbox size={36} className="mx-auto mb-3 opacity-30" />
+              <p className="font-bold">אין פניות מוכרים עדיין</p>
+              <p className="text-sm mt-1">פניות מטופס "מוכרים נכס?" יופיעו כאן</p>
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-gray-400 text-xs">
+                  <th className="text-right font-medium px-5 py-3">שם</th>
+                  <th className="text-right font-medium px-4 py-3">טלפון</th>
+                  <th className="text-right font-medium px-4 py-3">עיר</th>
+                  <th className="text-right font-medium px-4 py-3">סוג נכס</th>
+                  <th className="text-right font-medium px-4 py-3">הערות</th>
+                  <th className="text-right font-medium px-4 py-3">תאריך</th>
+                  <th className="text-right font-medium px-4 py-3">פעולות</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {sellerLeads.map((lead) => (
+                  <tr key={lead.id} className="hover:bg-gray-50/60 transition-colors">
+                    <td className="px-5 py-3 font-semibold text-gray-900">{lead.name}</td>
+                    <td className="px-4 py-3">
+                      <a href={`tel:${lead.phone}`} className="text-[#F5A623] hover:underline font-medium">
+                        {lead.phone}
+                      </a>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{lead.city || "—"}</td>
+                    <td className="px-4 py-3 text-gray-600">{lead.property_type || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs max-w-[180px]">
+                      {lead.notes
+                        ? <span className="line-clamp-2">{lead.notes}</span>
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
+                      {new Date(lead.created_at).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => deleteLead(lead.id, lead.name)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        title="מחיקה"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </td>
                   </tr>
                 ))}
