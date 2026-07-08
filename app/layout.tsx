@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ConditionalNavbar from "@/components/layout/ConditionalNavbar";
+import { Analytics } from "@vercel/analytics/react";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mango-realty-com.vercel.app";
 
@@ -51,6 +52,7 @@ export default function RootLayout({
         />
         <ConditionalNavbar />
         {children}
+        <Analytics />
       </body>
     </html>
   );
