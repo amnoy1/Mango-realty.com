@@ -29,7 +29,9 @@ export async function POST(req: Request) {
   if (gmailPass) {
     try {
       const transporter = nodemailer.createTransport({
-        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: {
           user: "amir@mango-realty.com",
           pass: gmailPass,
