@@ -43,10 +43,15 @@ export default function Navbar() {
           <Link href="/neighborhoods" className="hover:text-[var(--color-gold)] transition-colors">שכונות</Link>
           <Link href="/team" className="hover:text-[var(--color-gold)] transition-colors">הצוות</Link>
           <Link href={isHome ? "#agent" : "/#agent"} className="hover:text-[var(--color-gold)] transition-colors">סוכן AI</Link>
-          <Link href="/sell" className="hover:text-[var(--color-gold)] transition-colors">חושב למכור?</Link>
+          <Link
+            href="/sell"
+            className="flex items-center gap-2 bg-[var(--color-luxury-black)] text-[var(--color-cream)] px-5 py-2 rounded-full font-bold hover:bg-[var(--color-charcoal)] transition-colors text-xs"
+          >
+            מוכרים נכס?
+          </Link>
           <a
             href="tel:+97235000000"
-            className="flex items-center gap-2 bg-[var(--color-luxury-black)] text-[var(--color-cream)] px-5 py-2 rounded-full font-bold hover:bg-[var(--color-charcoal)] transition-colors text-xs"
+            className="flex items-center gap-2 border border-[var(--color-luxury-black)]/40 text-[var(--color-luxury-black)]/70 px-5 py-2 rounded-full font-bold hover:border-[var(--color-luxury-black)] hover:text-[var(--color-luxury-black)] transition-colors text-xs"
           >
             <Phone size={13} />
             צור קשר
