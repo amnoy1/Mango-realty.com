@@ -104,6 +104,7 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 - **Auto-trigger**: כשמעלים נכס פעיל באדמין → ניתוח רץ ברקע (next/server `after()`)
 - מדור "שכונות מבוקשות" בדף הבית — נכסים אמיתיים מ-Supabase + modal עם ניתוח
 - **Bug fix**: `lib/neighborhood.ts` — `.limit(1).order()` במקום `.maybeSingle()` למניעת כישלון שקט כשיש שורות כפולות
+- **Bug fix 2**: DB write חייב להיות `await` — fire-and-forget IIFE גרמה לכך שהנתונים לא נשמרו ב-Vercel (lambda נסגרת לפני שה-write מסתיים). השכונה נוצרה מחדש בכל ביקור ולא הופיעה ב-/neighborhoods.
 
 ### DB — שינויים ידניים שבוצעו
 - `DROP CONSTRAINT properties_property_type_check`
