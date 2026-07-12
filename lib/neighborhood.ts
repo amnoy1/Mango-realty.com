@@ -248,27 +248,25 @@ export async function getNeighborhoodData(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { neighborhood_name: _drop, ...fields } = generated ?? {};
 
-  // 4. Persist (fire-and-forget)
+  // 4. Persist (awaited — fire-and-forget caused the write to never complete on Vercel)
   const updates: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
     image_url:  (existing?.image_url as string | null) ?? null,
     ...(generated ? { ...fields, analysis_updated_at: new Date().toISOString() } : {}),
   };
 
-  (async () => {
-    try {
-      const admin = await createAdminClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const db = admin as any;
-      if (existing) {
-        await db.from("neighborhoods").update(updates)
-          .eq("city", city).eq("neighborhood", resolvedNeighborhood);
-      } else {
-        await db.from("neighborhoods")
-          .insert({ city, neighborhood: resolvedNeighborhood, ...updates });
-      }
-    } catch (e) { console.error("[neighborhood] cache write:", e); }
-  })();
+  try {
+    const admin = await createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = admin as any;
+    if (existing) {
+      await db.from("neighborhoods").update(updates)
+        .eq("city", city).eq("neighborhood", resolvedNeighborhood);
+    } else {
+      await db.from("neighborhoods")
+        .insert({ city, neighborhood: resolvedNeighborhood, ...updates });
+    }
+  } catch (e) { console.error("[neighborhood] cache write:", e); }
 
   const merged: Record<string, unknown> = { ...(existing ?? {}), ...updates, ...(generated ?? {}) };
   const s = (v: unknown) => (typeof v === "string" ? v : null);
