@@ -543,25 +543,35 @@ export default function AdminDashboard({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[1100px]">
+              <table className="text-sm" style={{ tableLayout: "fixed", width: "max-content", minWidth: "100%" }}>
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50/60 text-gray-400 text-xs">
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">סוג נכס</th>
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">כתובת</th>
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">מ&quot;ר</th>
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">מרפסת</th>
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">חדרים</th>
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">קומה</th>
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">מחיר</th>
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">מחיר קודם</th>
-                    <th className="text-center font-medium px-3 py-3 whitespace-nowrap">ממ&quot;ד</th>
-                    <th className="text-center font-medium px-3 py-3 whitespace-nowrap">חניה</th>
-                    <th className="text-center font-medium px-3 py-3 whitespace-nowrap">מחסן</th>
-                    <th className="text-center font-medium px-3 py-3 whitespace-nowrap">מעלית</th>
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">מתווך</th>
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">טלפון</th>
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">נצפה לראשונה</th>
-                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">עדכון אחרון</th>
+                    {([
+                      { label: "סוג נכס",       align: "right",  w: 110 },
+                      { label: "כתובת",          align: "right",  w: 300 },
+                      { label: 'מ"ר',            align: "center", w: 65  },
+                      { label: "מרפסת",          align: "center", w: 70  },
+                      { label: "חדרים",          align: "center", w: 65  },
+                      { label: "קומה",           align: "center", w: 60  },
+                      { label: "מחיר",           align: "right",  w: 120 },
+                      { label: "מחיר קודם",     align: "right",  w: 150 },
+                      { label: 'ממ"ד',           align: "center", w: 55  },
+                      { label: "חניה",           align: "center", w: 55  },
+                      { label: "מחסן",           align: "center", w: 55  },
+                      { label: "מעלית",          align: "center", w: 60  },
+                      { label: "מתווך",          align: "right",  w: 130 },
+                      { label: "טלפון",          align: "right",  w: 130 },
+                      { label: "נצפה לראשונה",  align: "right",  w: 110 },
+                      { label: "עדכון אחרון",   align: "right",  w: 110 },
+                    ] as { label: string; align: string; w: number }[]).map(({ label, align, w }) => (
+                      <th
+                        key={label}
+                        style={{ width: w, minWidth: w, resize: "horizontal", overflow: "hidden", textAlign: align as "right" | "center" | "left" }}
+                        className="font-medium px-4 py-3 whitespace-nowrap border-l border-gray-100 cursor-col-resize select-none"
+                      >
+                        {label}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -573,9 +583,7 @@ export default function AdminDashboard({
                         className={`transition-colors ${priceChanged ? "bg-amber-50 hover:bg-amber-100/60" : "hover:bg-gray-50/60"}`}
                       >
                         <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{p.property_type || "—"}</td>
-                        <td className="px-4 py-2.5 font-medium text-gray-900 max-w-[180px]">
-                          <span className="line-clamp-1">{p.address || "—"}</span>
-                        </td>
+                        <td className="px-4 py-2.5 font-medium text-gray-900">{p.address || "—"}</td>
                         <td className="px-4 py-2.5 text-gray-600 text-center">{p.area_sqm ?? "—"}</td>
                         <td className="px-4 py-2.5 text-gray-600 text-center">{p.balcony_sqm ?? "—"}</td>
                         <td className="px-4 py-2.5 text-gray-600 text-center">{p.rooms ?? "—"}</td>
