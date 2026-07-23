@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Plus, Pencil, Trash2, ExternalLink,
-  Home, Users, ChevronLeft, Star, MapPin, Upload, ImageOff, Inbox,
+  Home, Users, ChevronLeft, Star, MapPin, Upload, ImageOff, Inbox, MessageCircle, Download, RefreshCw,
 } from "lucide-react";
 
 interface Property {
@@ -29,14 +29,37 @@ interface SellerLead {
   city: string | null; property_type: string | null;
   notes: string | null; created_at: string;
 }
+interface WhatsAppProperty {
+  id: string;
+  property_type: string | null;
+  address: string | null;
+  area_sqm: number | null;
+  balcony_sqm: number | null;
+  rooms: number | null;
+  floor: number | null;
+  price: number | null;
+  previous_price: number | null;
+  mamad: boolean | null;
+  parking: boolean | null;
+  storage: boolean | null;
+  elevator: boolean | null;
+  broker_name: string | null;
+  broker_phone: string | null;
+  first_seen_date: string | null;
+  last_seen_date: string | null;
+  updated_at: string | null;
+}
 
 const TABS = [
-  { key: "properties",   label: "נכסים",   icon: Home    },
-  { key: "agents",       label: "צוות",    icon: Users   },
-  { key: "neighborhoods",label: "שכונות",  icon: MapPin  },
-  { key: "leads",        label: "לידים",   icon: Inbox   },
+  { key: "properties",   label: "נכסים",   icon: Home           },
+  { key: "agents",       label: "צוות",    icon: Users          },
+  { key: "neighborhoods",label: "שכונות",  icon: MapPin         },
+  { key: "leads",        label: "לידים",   icon: Inbox          },
+  { key: "whatsapp",     label: "וואטסאפ", icon: MessageCircle  },
 ] as const;
 type Tab = typeof TABS[number]["key"];
+
+const EXCEL_URL = "https://sgrphwunigmsdtbmilgd.supabase.co/storage/v1/object/public/reports/latest.xlsx";
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   active:  { label: "פעיל",    color: "bg-green-100 text-green-700"  },
@@ -49,12 +72,13 @@ const FALLBACK = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w
 const AGENT_FALLBACK = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&q=60";
 
 export default function AdminDashboard({
-  properties, agents, neighborhoods, sellerLeads, isFullAdmin,
+  properties, agents, neighborhoods, sellerLeads, whatsAppProperties, isFullAdmin,
 }: {
   properties: Property[];
   agents: Agent[];
   neighborhoods: Neighborhood[];
   sellerLeads: SellerLead[];
+  whatsAppProperties: WhatsAppProperty[];
   isFullAdmin: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("properties");
@@ -166,6 +190,7 @@ export default function AdminDashboard({
     if (key === "agents")        return agents.length;
     if (key === "neighborhoods") return neighborhoods.length;
     if (key === "leads")         return sellerLeads.length;
+    if (key === "whatsapp")      return whatsAppProperties.length;
     return 0;
   };
 
@@ -221,6 +246,25 @@ export default function AdminDashboard({
             <Plus size={16} />
             סוכן חדש
           </Link>
+        )}
+        {tab === "whatsapp" && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="flex items-center gap-2 border border-gray-200 text-gray-600 px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
+            >
+              <RefreshCw size={14} />
+              רענון
+            </button>
+            <a
+              href={EXCEL_URL}
+              download="whatsapp_properties.xlsx"
+              className="flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-green-700 transition-colors"
+            >
+              <Download size={16} />
+              הורד Excel
+            </a>
+          </div>
         )}
       </div>
 
@@ -484,6 +528,93 @@ export default function AdminDashboard({
                 ))}
               </tbody>
             </table>
+          )}
+        </div>
+      )}
+
+      {/* ── WhatsApp Properties tab ── */}
+      {tab === "whatsapp" && (
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          {whatsAppProperties.length === 0 ? (
+            <div className="p-16 text-center text-gray-400">
+              <MessageCircle size={36} className="mx-auto mb-3 opacity-30" />
+              <p className="font-bold">אין נכסים מוואטסאפ עדיין</p>
+              <p className="text-sm mt-1">נכסים שנשלפו מקבוצות וואטסאפ יופיעו כאן</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[1100px]">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50/60 text-gray-400 text-xs">
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">סוג נכס</th>
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">כתובת</th>
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">מ&quot;ר</th>
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">מרפסת</th>
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">חדרים</th>
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">קומה</th>
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">מחיר</th>
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">מחיר קודם</th>
+                    <th className="text-center font-medium px-3 py-3 whitespace-nowrap">ממ&quot;ד</th>
+                    <th className="text-center font-medium px-3 py-3 whitespace-nowrap">חניה</th>
+                    <th className="text-center font-medium px-3 py-3 whitespace-nowrap">מחסן</th>
+                    <th className="text-center font-medium px-3 py-3 whitespace-nowrap">מעלית</th>
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">מתווך</th>
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">טלפון</th>
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">נצפה לראשונה</th>
+                    <th className="text-right font-medium px-4 py-3 whitespace-nowrap">עדכון אחרון</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {whatsAppProperties.map((p) => {
+                    const priceChanged = p.previous_price != null;
+                    return (
+                      <tr
+                        key={p.id}
+                        className={`transition-colors ${priceChanged ? "bg-amber-50 hover:bg-amber-100/60" : "hover:bg-gray-50/60"}`}
+                      >
+                        <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{p.property_type || "—"}</td>
+                        <td className="px-4 py-2.5 font-medium text-gray-900 max-w-[180px]">
+                          <span className="line-clamp-1">{p.address || "—"}</span>
+                        </td>
+                        <td className="px-4 py-2.5 text-gray-600 text-center">{p.area_sqm ?? "—"}</td>
+                        <td className="px-4 py-2.5 text-gray-600 text-center">{p.balcony_sqm ?? "—"}</td>
+                        <td className="px-4 py-2.5 text-gray-600 text-center">{p.rooms ?? "—"}</td>
+                        <td className="px-4 py-2.5 text-gray-600 text-center">{p.floor ?? "—"}</td>
+                        <td className="px-4 py-2.5 font-semibold text-gray-900 whitespace-nowrap">
+                          {p.price ? `₪${p.price.toLocaleString("he-IL")}` : "—"}
+                        </td>
+                        <td className="px-4 py-2.5 whitespace-nowrap">
+                          {p.previous_price ? (
+                            <span className="text-amber-600 font-medium flex items-center gap-1">
+                              ₪{p.previous_price.toLocaleString("he-IL")}
+                              <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">↓ עודכן</span>
+                            </span>
+                          ) : "—"}
+                        </td>
+                        <td className="px-3 py-2.5 text-center">{p.mamad ? "✓" : "—"}</td>
+                        <td className="px-3 py-2.5 text-center">{p.parking ? "✓" : "—"}</td>
+                        <td className="px-3 py-2.5 text-center">{p.storage ? "✓" : "—"}</td>
+                        <td className="px-3 py-2.5 text-center">{p.elevator ? "✓" : "—"}</td>
+                        <td className="px-4 py-2.5 text-gray-700">{p.broker_name || "—"}</td>
+                        <td className="px-4 py-2.5">
+                          {p.broker_phone ? (
+                            <a href={`tel:${p.broker_phone}`} className="text-[#F5A623] hover:underline font-medium whitespace-nowrap">
+                              {p.broker_phone}
+                            </a>
+                          ) : "—"}
+                        </td>
+                        <td className="px-4 py-2.5 text-gray-400 text-xs whitespace-nowrap">
+                          {p.first_seen_date ? new Date(p.first_seen_date).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}
+                        </td>
+                        <td className="px-4 py-2.5 text-gray-400 text-xs whitespace-nowrap">
+                          {p.last_seen_date ? new Date(p.last_seen_date).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
