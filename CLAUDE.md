@@ -31,7 +31,7 @@ Hebrew-first, RTL, Next.js 15 App Router, Tailwind v4, Supabase, Vercel.
 ```
 Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
 
-## מה בנוי (סטטוס 2026-07-08)
+## מה בנוי (סטטוס 2026-07-23)
 
 ### Public Site
 - **Navbar** — גלובלי ב-`app/layout.tsx` דרך `ConditionalNavbar` (מוסתר על /admin)
@@ -82,6 +82,11 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
   - **צוות** — טבלה עם עריכה / צפייה / מחיקה + "סוכן חדש" (Full Admin בלבד)
   - **שכונות** — טבלה עם עריכה (5 שדות: description/transport/socioeconomic/commerce/schools) + מחיקה (hard delete)
   - **לידים** — טבלת לידים מוכרים: שם, טלפון (קישור), עיר, סוג נכס, הערות, תאריך + מחיקה
+  - **וואטסאפ** ✅ (2026-07-23) — טבלת נכסים מוואטסאפ מ-`whatsapp_properties` table:
+    - כל 16 העמודות; שורות עם `previous_price` מסומנות בענבר (שינוי מחיר)
+    - כפתור רענון + כפתור הורדת Excel
+    - גרירת עמודות (JS drag via colgroup — CSS resize:horizontal לא אמין ב-RTL)
+    - מיון ע"י לחיצה על כותרת עמודה (↑/↓ בצבע מנגו); resize + sort לא מתנגשים (stopPropagation)
 - `/admin/properties/new` + `[id]/edit` — טופס נכס מלא
 - `/admin/agents/new` + `[id]/edit` — טופס סוכן
 - `components/admin/PropertyForm.tsx`:
