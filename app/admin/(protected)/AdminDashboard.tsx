@@ -89,6 +89,32 @@ export default function AdminDashboard({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingUpload = useRef<{ id: string; city: string; neighborhood: string } | null>(null);
 
+  // WhatsApp table column widths (resizable)
+  const [wpColWidths, setWpColWidths] = useState<number[]>(
+    [110, 300, 65, 70, 65, 60, 120, 150, 55, 55, 55, 60, 130, 130, 110, 110]
+  );
+
+  function startWpColResize(e: React.MouseEvent<HTMLDivElement>, idx: number) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = wpColWidths[idx];
+    const onMove = (ev: MouseEvent) => {
+      // RTL: drag left → wider, drag right → narrower
+      const delta = startX - ev.clientX;
+      setWpColWidths(prev => {
+        const next = [...prev];
+        next[idx] = Math.max(40, startW + delta);
+        return next;
+      });
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }
+
   async function toggleHero(id: string, current: boolean) {
     await fetch(`/api/admin/properties/${id}/hero`, {
       method: "POST",
@@ -544,32 +570,40 @@ export default function AdminDashboard({
           ) : (
             <div className="overflow-x-auto">
               <table className="text-sm" style={{ tableLayout: "fixed", width: "max-content", minWidth: "100%" }}>
+                <colgroup>
+                  {wpColWidths.map((w, i) => <col key={i} style={{ width: w }} />)}
+                </colgroup>
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50/60 text-gray-400 text-xs">
                     {([
-                      { label: "סוג נכס",       align: "right",  w: 110 },
-                      { label: "כתובת",          align: "right",  w: 300 },
-                      { label: 'מ"ר',            align: "center", w: 65  },
-                      { label: "מרפסת",          align: "center", w: 70  },
-                      { label: "חדרים",          align: "center", w: 65  },
-                      { label: "קומה",           align: "center", w: 60  },
-                      { label: "מחיר",           align: "right",  w: 120 },
-                      { label: "מחיר קודם",     align: "right",  w: 150 },
-                      { label: 'ממ"ד',           align: "center", w: 55  },
-                      { label: "חניה",           align: "center", w: 55  },
-                      { label: "מחסן",           align: "center", w: 55  },
-                      { label: "מעלית",          align: "center", w: 60  },
-                      { label: "מתווך",          align: "right",  w: 130 },
-                      { label: "טלפון",          align: "right",  w: 130 },
-                      { label: "נצפה לראשונה",  align: "right",  w: 110 },
-                      { label: "עדכון אחרון",   align: "right",  w: 110 },
-                    ] as { label: string; align: string; w: number }[]).map(({ label, align, w }) => (
+                      { label: "סוג נכס",       align: "right"  },
+                      { label: "כתובת",          align: "right"  },
+                      { label: 'מ"ר',            align: "center" },
+                      { label: "מרפסת",          align: "center" },
+                      { label: "חדרים",          align: "center" },
+                      { label: "קומה",           align: "center" },
+                      { label: "מחיר",           align: "right"  },
+                      { label: "מחיר קודם",      align: "right"  },
+                      { label: 'ממ"ד',           align: "center" },
+                      { label: "חניה",           align: "center" },
+                      { label: "מחסן",           align: "center" },
+                      { label: "מעלית",          align: "center" },
+                      { label: "מתווך",          align: "right"  },
+                      { label: "טלפון",          align: "right"  },
+                      { label: "נצפה לראשונה",  align: "right"  },
+                      { label: "עדכון אחרון",   align: "right"  },
+                    ] as { label: string; align: string }[]).map(({ label, align }, idx) => (
                       <th
                         key={label}
-                        style={{ width: w, minWidth: w, resize: "horizontal", overflow: "hidden", textAlign: align as "right" | "center" | "left" }}
-                        className="font-medium px-4 py-3 whitespace-nowrap border-l border-gray-100 cursor-col-resize select-none"
+                        style={{ textAlign: align as "right" | "center" | "left", position: "relative", userSelect: "none" }}
+                        className="font-medium px-4 py-3 whitespace-nowrap border-l border-gray-100"
                       >
                         {label}
+                        {/* Drag handle on left edge (RTL) */}
+                        <div
+                          onMouseDown={(e) => startWpColResize(e, idx)}
+                          style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 6, cursor: "col-resize", zIndex: 1 }}
+                        />
                       </th>
                     ))}
                   </tr>
