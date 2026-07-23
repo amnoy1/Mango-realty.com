@@ -94,6 +94,35 @@ export default function AdminDashboard({
     [110, 300, 65, 70, 65, 60, 120, 150, 55, 55, 55, 60, 130, 130, 110, 110]
   );
 
+  // WhatsApp table sort
+  const [wpSort, setWpSort] = useState<{ col: number; dir: "asc" | "desc" } | null>(null);
+
+  const WP_SORT_KEYS: (keyof WhatsAppProperty)[] = [
+    "property_type", "address", "area_sqm", "balcony_sqm", "rooms", "floor",
+    "price", "previous_price", "mamad", "parking", "storage", "elevator",
+    "broker_name", "broker_phone", "first_seen_date", "last_seen_date",
+  ];
+
+  const sortedWpProperties = wpSort === null ? whatsAppProperties : [...whatsAppProperties].sort((a, b) => {
+    const key = WP_SORT_KEYS[wpSort.col];
+    const aVal = a[key]; const bVal = b[key];
+    if (aVal == null) return 1;
+    if (bVal == null) return -1;
+    let cmp = 0;
+    if (typeof aVal === "number" && typeof bVal === "number") cmp = aVal - bVal;
+    else if (typeof aVal === "boolean" && typeof bVal === "boolean") cmp = (aVal ? 1 : 0) - (bVal ? 1 : 0);
+    else cmp = String(aVal).localeCompare(String(bVal), "he");
+    return wpSort.dir === "asc" ? cmp : -cmp;
+  });
+
+  function toggleWpSort(idx: number) {
+    setWpSort(prev =>
+      prev?.col === idx
+        ? { col: idx, dir: prev.dir === "asc" ? "desc" : "asc" }
+        : { col: idx, dir: "asc" }
+    );
+  }
+
   function startWpColResize(e: React.MouseEvent<HTMLDivElement>, idx: number) {
     e.preventDefault();
     const startX = e.clientX;
@@ -595,13 +624,20 @@ export default function AdminDashboard({
                     ] as { label: string; align: string }[]).map(({ label, align }, idx) => (
                       <th
                         key={label}
-                        style={{ textAlign: align as "right" | "center" | "left", position: "relative", userSelect: "none" }}
-                        className="font-medium px-4 py-3 whitespace-nowrap border-l border-gray-100"
+                        onClick={() => toggleWpSort(idx)}
+                        style={{ textAlign: align as "right" | "center" | "left", position: "relative", userSelect: "none", cursor: "pointer" }}
+                        className="font-medium px-4 py-3 whitespace-nowrap border-l border-gray-100 hover:bg-gray-100/60 transition-colors"
                       >
-                        {label}
-                        {/* Drag handle on left edge (RTL) */}
+                        <span className="inline-flex items-center gap-1">
+                          {label}
+                          {wpSort?.col === idx
+                            ? <span className="text-[#F5A623]">{wpSort.dir === "asc" ? "↑" : "↓"}</span>
+                            : <span className="opacity-0 group-hover:opacity-30">↕</span>}
+                        </span>
+                        {/* Drag handle on left edge (RTL) — stops click from bubbling to sort */}
                         <div
-                          onMouseDown={(e) => startWpColResize(e, idx)}
+                          onMouseDown={(e) => { e.stopPropagation(); startWpColResize(e, idx); }}
+                          onClick={(e) => e.stopPropagation()}
                           style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 6, cursor: "col-resize", zIndex: 1 }}
                         />
                       </th>
@@ -609,7 +645,7 @@ export default function AdminDashboard({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {whatsAppProperties.map((p) => {
+                  {sortedWpProperties.map((p) => {
                     const priceChanged = p.previous_price != null;
                     return (
                       <tr
