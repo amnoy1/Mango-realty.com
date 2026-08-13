@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Plus, Pencil, Trash2, ExternalLink,
-  Home, Users, ChevronLeft, Star, MapPin, Upload, ImageOff, Inbox, MessageCircle, Download, RefreshCw,
+  Home, Users, ChevronLeft, Star, MapPin, Upload, ImageOff, Inbox, MessageCircle, Download, RefreshCw, Route,
 } from "lucide-react";
 
 interface Property {
@@ -29,6 +29,19 @@ interface SellerLead {
   city: string | null; property_type: string | null;
   notes: string | null; created_at: string;
 }
+interface StreetNeighborhood {
+  id: string; city: string; street: string; neighborhood: string; created_at: string;
+}
+
+const KS_NEIGHBORHOODS_LIST = [
+  'קפלן', 'כפר סבא הצעירה', 'גני השרון', 'גבעת אשכול', 'בית ונוף', 'הדרים',
+  'סביוני הכפר', 'כפר סבא הירוקה', 'סירקין', 'ותיקים', 'אמפר',
+  'מרכז העיר', 'חצרות הדר', 'מצקין', 'כיסופים',
+  'ראשונים', 'גאולים', 'אלי כהן', 'תקומה', 'דגניה',
+  'הפועלים', 'מאוריציוס', 'שבזי', 'עובד בן עמי', 'גינת הלימון',
+  'אליעזר', 'יוספטל', 'למפרט', 'מעוז',
+];
+
 interface WhatsAppProperty {
   id: string;
   property_type: string | null;
@@ -55,8 +68,9 @@ const TABS = [
   { key: "properties",   label: "נכסים",   icon: Home           },
   { key: "agents",       label: "צוות",    icon: Users          },
   { key: "neighborhoods",label: "שכונות",  icon: MapPin         },
-  { key: "leads",        label: "לידים",   icon: Inbox          },
+  { key: "leads",        label: "לידים",    icon: Inbox          },
   { key: "whatsapp",     label: "וואטסאפ", icon: MessageCircle  },
+  { key: "street-map",   label: "רחובות",  icon: Route          },
 ] as const;
 type Tab = typeof TABS[number]["key"];
 
@@ -73,13 +87,14 @@ const FALLBACK = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w
 const AGENT_FALLBACK = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&q=60";
 
 export default function AdminDashboard({
-  properties, agents, neighborhoods, sellerLeads, whatsAppProperties, isFullAdmin,
+  properties, agents, neighborhoods, sellerLeads, whatsAppProperties, streetNeighborhoods, isFullAdmin,
 }: {
   properties: Property[];
   agents: Agent[];
   neighborhoods: Neighborhood[];
   sellerLeads: SellerLead[];
   whatsAppProperties: WhatsAppProperty[];
+  streetNeighborhoods: StreetNeighborhood[];
   isFullAdmin: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("properties");
@@ -89,6 +104,35 @@ export default function AdminDashboard({
   const [savingNeighborhood, setSavingNeighborhood] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingUpload = useRef<{ id: string; city: string; neighborhood: string } | null>(null);
+
+  // Street→Neighborhood mapping
+  const [snForm, setSnForm] = useState({ city: "כפר סבא", street: "", neighborhood: KS_NEIGHBORHOODS_LIST[0] });
+  const [snLoading, setSnLoading] = useState(false);
+  const [snSearch, setSnSearch] = useState("");
+
+  async function addStreetNeighborhood() {
+    if (!snForm.street.trim()) return;
+    setSnLoading(true);
+    try {
+      const res = await fetch("/api/admin/street-neighborhoods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(snForm),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      window.location.reload();
+    } catch (err) {
+      alert("שגיאה: " + (err instanceof Error ? err.message : ""));
+    } finally {
+      setSnLoading(false);
+    }
+  }
+
+  async function deleteStreetNeighborhood(id: string, street: string) {
+    if (!confirm(`למחוק את הרחוב "${street}" מהטבלה?`)) return;
+    await fetch(`/api/admin/street-neighborhoods/${id}`, { method: "DELETE" });
+    window.location.reload();
+  }
 
   // WhatsApp table column widths (resizable)
   const [wpColWidths, setWpColWidths] = useState<number[]>(
@@ -247,6 +291,7 @@ export default function AdminDashboard({
     if (key === "neighborhoods") return neighborhoods.length;
     if (key === "leads")         return sellerLeads.length;
     if (key === "whatsapp")      return whatsAppProperties.length;
+    if (key === "street-map")    return streetNeighborhoods.length;
     return 0;
   };
 
@@ -698,6 +743,124 @@ export default function AdminDashboard({
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Street→Neighborhood mapping tab ── */}
+      {tab === "street-map" && (
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          {/* Add form */}
+          <div className="p-4 bg-gray-50/60 border-b border-gray-100">
+            <p className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wide">הוסף מיפוי רחוב</p>
+            <div className="flex gap-3 flex-wrap items-end">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500">עיר</label>
+                <select
+                  value={snForm.city}
+                  onChange={e => setSnForm(f => ({ ...f, city: e.target.value }))}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#F5A623]"
+                >
+                  <option value="כפר סבא">כפר סבא</option>
+                  <option value="רעננה">רעננה</option>
+                  <option value="הוד השרון">הוד השרון</option>
+                  <option value="רא&quot;ש העין">ראש העין</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500">שם רחוב (ללא מספר)</label>
+                <input
+                  value={snForm.street}
+                  onChange={e => setSnForm(f => ({ ...f, street: e.target.value }))}
+                  onKeyDown={e => e.key === "Enter" && addStreetNeighborhood()}
+                  placeholder="הרצל"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-48 focus:outline-none focus:border-[#F5A623]"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500">שכונה</label>
+                <select
+                  value={snForm.neighborhood}
+                  onChange={e => setSnForm(f => ({ ...f, neighborhood: e.target.value }))}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#F5A623]"
+                >
+                  {KS_NEIGHBORHOODS_LIST.map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+              <button
+                onClick={addStreetNeighborhood}
+                disabled={snLoading || !snForm.street.trim()}
+                className="flex items-center gap-2 bg-[#F5A623] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#D4881A] transition-colors disabled:opacity-50"
+              >
+                <Plus size={14} />
+                {snLoading ? "שומר..." : "הוסף"}
+              </button>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="px-4 py-3 border-b border-gray-100">
+            <input
+              value={snSearch}
+              onChange={e => setSnSearch(e.target.value)}
+              placeholder="חיפוש רחוב או שכונה..."
+              className="w-full max-w-xs border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#F5A623]"
+            />
+          </div>
+
+          {streetNeighborhoods.length === 0 ? (
+            <div className="p-16 text-center text-gray-400">
+              <Route size={36} className="mx-auto mb-3 opacity-30" />
+              <p className="font-bold">הטבלה ריקה עדיין</p>
+              <p className="text-sm mt-1">הוסף מיפויי רחוב→שכונה באמצעות הטופס למעלה</p>
+            </div>
+          ) : (() => {
+            const q = snSearch.trim().toLowerCase();
+            const rows = q
+              ? streetNeighborhoods.filter(r =>
+                  r.street.toLowerCase().includes(q) ||
+                  r.neighborhood.toLowerCase().includes(q) ||
+                  r.city.toLowerCase().includes(q)
+                )
+              : streetNeighborhoods;
+            return (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 text-gray-400 text-xs">
+                    <th className="text-right font-medium px-5 py-3">עיר</th>
+                    <th className="text-right font-medium px-4 py-3">רחוב</th>
+                    <th className="text-right font-medium px-4 py-3">שכונה</th>
+                    <th className="text-right font-medium px-4 py-3">נוסף</th>
+                    <th className="text-right font-medium px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {rows.map(r => (
+                    <tr key={r.id} className="hover:bg-gray-50/60 transition-colors">
+                      <td className="px-5 py-2.5 text-gray-600 text-xs">{r.city}</td>
+                      <td className="px-4 py-2.5 font-semibold text-gray-900">{r.street}</td>
+                      <td className="px-4 py-2.5">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#F5A623]/10 text-[#D4881A]">
+                          {r.neighborhood}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-gray-400 text-xs">
+                        {new Date(r.created_at).toLocaleDateString("he-IL")}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <button
+                          onClick={() => deleteStreetNeighborhood(r.id, r.street)}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          title="מחיקה"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            );
+          })()}
         </div>
       )}
 

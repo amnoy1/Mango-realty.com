@@ -10,7 +10,7 @@ export default async function AdminPage() {
   const { data: { user } } = await userClient.auth.getUser();
   const fullAdmin = isFullAdmin(user?.email);
 
-  const [{ data: properties }, { data: agents }, { data: neighborhoods }, { data: sellerLeads }, { data: whatsAppProperties }] = await Promise.all([
+  const [{ data: properties }, { data: agents }, { data: neighborhoods }, { data: sellerLeads }, { data: whatsAppProperties }, { data: streetNeighborhoods }] = await Promise.all([
     supabase
       .from("properties")
       .select("id, slug, title, price, city, status, images, features")
@@ -31,6 +31,10 @@ export default async function AdminPage() {
       .from("whatsapp_properties")
       .select("id, property_type, address, city, neighborhood, area_sqm, balcony_sqm, rooms, floor, price, previous_price, mamad, parking, storage, elevator, broker_name, broker_phone, first_seen_date, last_seen_date, updated_at")
       .order("last_seen_date", { ascending: false }),
+    supabase
+      .from("street_neighborhoods")
+      .select("id, city, street, neighborhood, created_at")
+      .order("city").order("street"),
   ]);
 
   return (
@@ -40,6 +44,7 @@ export default async function AdminPage() {
       neighborhoods={neighborhoods ?? []}
       sellerLeads={sellerLeads ?? []}
       whatsAppProperties={whatsAppProperties ?? []}
+      streetNeighborhoods={streetNeighborhoods ?? []}
       isFullAdmin={fullAdmin}
     />
   );
