@@ -1,10 +1,11 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { isFullAdmin } from "@/lib/admin-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 async function auth() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  return user ? user : null;
+  return isFullAdmin(user?.email) ? user : null;
 }
 
 export async function DELETE(
