@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -99,6 +99,16 @@ export default function AdminDashboard({
   agentName?: string;
 }) {
   const [tab, setTab] = useState<Tab>("properties");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("adminTab") as Tab | null;
+    if (saved && TABS.some(t => t.key === saved)) setTab(saved);
+  }, []);
+
+  function changeTab(key: Tab) {
+    setTab(key);
+    localStorage.setItem("adminTab", key);
+  }
   const [uploading, setUploading] = useState<string | null>(null);
   const [editNeighborhood, setEditNeighborhood] = useState<Neighborhood | null>(null);
   const [editForm, setEditForm] = useState({ description: "", transport: "", socioeconomic: "", commerce: "", schools: "" });
@@ -321,7 +331,7 @@ export default function AdminDashboard({
           {TABS.filter(t => isFullAdmin || t.key === "properties").map(({ key, label, icon: Icon }) => (
             <button
               key={key}
-              onClick={() => setTab(key)}
+              onClick={() => changeTab(key)}
               className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
                 tab === key
                   ? "bg-white shadow-sm text-[#F5A623]"
