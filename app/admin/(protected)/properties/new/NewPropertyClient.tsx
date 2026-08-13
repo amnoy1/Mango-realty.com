@@ -27,7 +27,7 @@ export default function NewPropertyClient({ agents }: { agents: Agent[] }) {
 
       const json = await res.json();
       if (!res.ok) return { error: json.error || "שגיאה בשמירה" };
-      return {};
+      return { id: json.data?.id as string };
     } catch {
       return { error: "שגיאה בלתי צפויה" };
     }

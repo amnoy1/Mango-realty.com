@@ -1,11 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import AgentForm from "@/components/admin/AgentForm";
 
 export default function NewAgentPage() {
-  const router = useRouter();
-
   async function handleSubmit(data: { first_name: string; last_name: string; phone: string; email: string; photo_url: string; bio: string }) {
     const res = await fetch("/api/admin/agents", {
       method: "POST",
@@ -14,9 +11,7 @@ export default function NewAgentPage() {
     });
     const json = await res.json();
     if (json.error) return { error: json.error };
-    router.push("/admin");
-    router.refresh();
-    return {};
+    return { id: json.data?.id as string };
   }
 
   return (

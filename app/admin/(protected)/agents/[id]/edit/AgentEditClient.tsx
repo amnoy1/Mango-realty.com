@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import AgentForm from "@/components/admin/AgentForm";
 
 interface Agent {
@@ -17,8 +16,6 @@ interface Agent {
 }
 
 export default function AgentEditClient({ agent }: { agent: Agent }) {
-  const router = useRouter();
-
   async function handleSubmit(data: { first_name: string; last_name: string; phone: string; email: string; photo_url: string; bio: string; license_number: string }) {
     const res = await fetch(`/api/admin/agents/${agent.id}`, {
       method: "PATCH",
@@ -27,8 +24,6 @@ export default function AgentEditClient({ agent }: { agent: Agent }) {
     });
     const json = await res.json();
     if (json.error) return { error: json.error };
-    router.push("/admin");
-    router.refresh();
     return {};
   }
 

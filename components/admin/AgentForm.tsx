@@ -19,7 +19,7 @@ interface AgentFormData {
 
 interface Props {
   initialData?: Partial<AgentFormData> & { id?: string };
-  onSubmit: (data: AgentFormData) => Promise<{ error?: string }>;
+  onSubmit: (data: AgentFormData) => Promise<{ error?: string; id?: string }>;
 }
 
 const empty: AgentFormData = {
@@ -39,6 +39,7 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
   const [isPending, startTransition] = useTransition();
   const [form, setForm]   = useState<AgentFormData>({ ...empty, ...initialData });
   const [error, setError] = useState<string | null>(null);
+  const [savedOk, setSavedOk] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -74,12 +75,15 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setSavedOk(false);
     startTransition(async () => {
       const result = await onSubmit(form);
       if (result.error) {
         setError(result.error);
+      } else if (result.id) {
+        router.push(`/admin/agents/${result.id}/edit`);
       } else {
-        router.push("/admin");
+        setSavedOk(true);
         router.refresh();
       }
     });
@@ -89,6 +93,12 @@ export default function AgentForm({ initialData, onSubmit }: Props) {
     <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
+      )}
+      {savedOk && (
+        <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm flex items-center justify-between">
+          <span>✓ הסוכן נשמר בהצלחה</span>
+          <button type="button" onClick={() => setSavedOk(false)} className="text-green-500 hover:text-green-700 text-lg leading-none">×</button>
+        </div>
       )}
 
       {/* Photo */}

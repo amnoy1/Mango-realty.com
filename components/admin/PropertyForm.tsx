@@ -106,7 +106,7 @@ function generateSlug(title: string): string {
 
 interface Props {
   initialData?: Partial<PropertyFormData> & { id?: string };
-  onSubmit: (data: PropertyFormData) => Promise<{ error?: string }>;
+  onSubmit: (data: PropertyFormData) => Promise<{ error?: string; id?: string }>;
   agents?: Agent[];
 }
 
@@ -134,6 +134,7 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
   });
   const [slugManual, setSlugManual] = useState(!!initialData?.slug);
   const [error, setError] = useState<string | null>(null);
+  const [savedOk, setSavedOk] = useState(false);
 
   // Neighborhood auto-fill
   const [neighborhoodAutoFilled, setNeighborhoodAutoFilled] = useState(false);
@@ -258,12 +259,15 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setSavedOk(false);
     startTransition(async () => {
       const result = await onSubmit(form);
       if (result.error) {
         setError(result.error);
+      } else if (result.id) {
+        router.push(`/admin/properties/${result.id}/edit`);
       } else {
-        router.push("/admin");
+        setSavedOk(true);
         router.refresh();
       }
     });
@@ -278,6 +282,12 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
           {error}
+        </div>
+      )}
+      {savedOk && (
+        <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm flex items-center justify-between">
+          <span>✓ הנכס נשמר בהצלחה</span>
+          <button type="button" onClick={() => setSavedOk(false)} className="text-green-500 hover:text-green-700 text-lg leading-none">×</button>
         </div>
       )}
 
