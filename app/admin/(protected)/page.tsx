@@ -29,7 +29,7 @@ export default async function AdminPage() {
       .order("created_at", { ascending: false }),
     supabase
       .from("whatsapp_properties")
-      .select("id, property_type, address, area_sqm, balcony_sqm, rooms, floor, price, previous_price, mamad, parking, storage, elevator, broker_name, broker_phone, first_seen_date, last_seen_date, updated_at")
+      .select("id, property_type, address, city, neighborhood, area_sqm, balcony_sqm, rooms, floor, price, previous_price, mamad, parking, storage, elevator, broker_name, broker_phone, first_seen_date, last_seen_date, updated_at")
       .order("last_seen_date", { ascending: false }),
   ]);
 

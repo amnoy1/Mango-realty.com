@@ -33,6 +33,8 @@ interface WhatsAppProperty {
   id: string;
   property_type: string | null;
   address: string | null;
+  city: string | null;
+  neighborhood: string | null;
   area_sqm: number | null;
   balcony_sqm: number | null;
   rooms: number | null;
@@ -49,7 +51,6 @@ interface WhatsAppProperty {
   last_seen_date: string | null;
   updated_at: string | null;
 }
-
 const TABS = [
   { key: "properties",   label: "נכסים",   icon: Home           },
   { key: "agents",       label: "צוות",    icon: Users          },
@@ -91,14 +92,14 @@ export default function AdminDashboard({
 
   // WhatsApp table column widths (resizable)
   const [wpColWidths, setWpColWidths] = useState<number[]>(
-    [110, 300, 65, 70, 65, 60, 120, 150, 55, 55, 55, 60, 130, 130, 110, 110]
+    [110, 300, 100, 120, 65, 70, 65, 60, 120, 150, 55, 55, 55, 60, 130, 130, 110, 110]
   );
 
   // WhatsApp table sort
   const [wpSort, setWpSort] = useState<{ col: number; dir: "asc" | "desc" } | null>(null);
 
   const WP_SORT_KEYS: (keyof WhatsAppProperty)[] = [
-    "property_type", "address", "area_sqm", "balcony_sqm", "rooms", "floor",
+    "property_type", "address", "city", "neighborhood", "area_sqm", "balcony_sqm", "rooms", "floor",
     "price", "previous_price", "mamad", "parking", "storage", "elevator",
     "broker_name", "broker_phone", "first_seen_date", "last_seen_date",
   ];
@@ -607,6 +608,8 @@ export default function AdminDashboard({
                     {([
                       { label: "סוג נכס",       align: "right"  },
                       { label: "כתובת",          align: "right"  },
+                      { label: "עיר",            align: "right"  },
+                      { label: "שכונה",          align: "right"  },
                       { label: 'מ"ר',            align: "center" },
                       { label: "מרפסת",          align: "center" },
                       { label: "חדרים",          align: "center" },
@@ -634,7 +637,6 @@ export default function AdminDashboard({
                             ? <span className="text-[#F5A623]">{wpSort.dir === "asc" ? "↑" : "↓"}</span>
                             : <span className="opacity-0 group-hover:opacity-30">↕</span>}
                         </span>
-                        {/* Drag handle on left edge (RTL) — stops click from bubbling to sort */}
                         <div
                           onMouseDown={(e) => { e.stopPropagation(); startWpColResize(e, idx); }}
                           onClick={(e) => e.stopPropagation()}
@@ -654,6 +656,8 @@ export default function AdminDashboard({
                       >
                         <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{p.property_type || "—"}</td>
                         <td className="px-4 py-2.5 font-medium text-gray-900">{p.address || "—"}</td>
+                        <td className="px-4 py-2.5 text-gray-600">{p.city || "—"}</td>
+                        <td className="px-4 py-2.5 text-gray-500 text-xs">{p.neighborhood || "—"}</td>
                         <td className="px-4 py-2.5 text-gray-600 text-center">{p.area_sqm ?? "—"}</td>
                         <td className="px-4 py-2.5 text-gray-600 text-center">{p.balcony_sqm ?? "—"}</td>
                         <td className="px-4 py-2.5 text-gray-600 text-center">{p.rooms ?? "—"}</td>
