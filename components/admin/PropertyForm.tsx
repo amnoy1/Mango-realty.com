@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "./ImageUploader";
 
@@ -134,6 +134,32 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
   });
   const [slugManual, setSlugManual] = useState(!!initialData?.slug);
   const [error, setError] = useState<string | null>(null);
+
+  // Neighborhood auto-fill
+  const [neighborhoodAutoFilled, setNeighborhoodAutoFilled] = useState(false);
+  const neighborhoodRef = useRef(form.neighborhood);
+  neighborhoodRef.current = form.neighborhood;
+
+  useEffect(() => {
+    if (!form.city || !form.street) return;
+    const timer = setTimeout(async () => {
+      const clean = form.street.trim()
+        .replace(/^(רחוב|שד'|שדרות|סמטת|משעול|דרך)\s+/i, "")
+        .replace(/\s+\d+.*$/, "")
+        .trim();
+      if (!clean) return;
+      try {
+        const res  = await fetch(`/api/admin/street-neighborhoods?city=${encodeURIComponent(form.city)}&street=${encodeURIComponent(clean)}`);
+        const data = await res.json();
+        if (data.neighborhood && !neighborhoodRef.current) {
+          set("neighborhood", data.neighborhood);
+          setNeighborhoodAutoFilled(true);
+        }
+      } catch { /* silent */ }
+    }, 600);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.city, form.street]);
 
   // AI description enhancer
   const [aiPanel, setAiPanel] = useState(false);
@@ -353,7 +379,11 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
           <div>
             <label className={labelClass}>שכונה</label>
             <input type="text" className={inputClass} value={form.neighborhood}
-              onChange={(e) => set("neighborhood", e.target.value)} placeholder="מרכז העיר" />
+              onChange={(e) => { set("neighborhood", e.target.value); setNeighborhoodAutoFilled(false); }}
+              placeholder="מרכז העיר" />
+            {neighborhoodAutoFilled && (
+              <p className="text-xs text-amber-600 mt-1 font-medium">✓ מולא אוטומטית</p>
+            )}
           </div>
           <div>
             <label className={labelClass}>רחוב</label>

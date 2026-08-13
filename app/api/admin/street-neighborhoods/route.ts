@@ -8,8 +8,22 @@ async function auth() {
   return isFullAdmin(user?.email) ? user : null;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const city   = searchParams.get("city");
+  const street = searchParams.get("street");
   const supabase = await createAdminClient();
+
+  if (city && street) {
+    const { data } = await supabase
+      .from("street_neighborhoods")
+      .select("neighborhood")
+      .eq("city", city)
+      .eq("street", street)
+      .maybeSingle();
+    return NextResponse.json({ neighborhood: data?.neighborhood ?? null });
+  }
+
   const { data, error } = await supabase
     .from("street_neighborhoods")
     .select("id, city, street, neighborhood, created_at")
