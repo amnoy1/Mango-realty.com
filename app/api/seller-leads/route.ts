@@ -24,6 +24,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "שגיאה בשמירת הפרטים" }, { status: 500 });
   }
 
+  // HTML escape + phone validation helpers
+  const esc = (s: string) =>
+    String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  const safePhone = /^[+0-9 \-()\s]{5,20}$/.test(phone.trim()) ? phone.trim() : "";
+  const safeSubjectName = name.trim().replace(/[\r\n]/g, " ");
+
   // Send email via Gmail (graceful skip if env missing)
   const gmailPass = process.env.GMAIL_APP_PASSWORD;
   if (gmailPass) {
@@ -41,7 +47,7 @@ export async function POST(req: Request) {
       await transporter.sendMail({
         from: '"מנגו נדל"ן" <amir@mango-realty.com>',
         to: "amir@mango-realty.com",
-        subject: `🏠 ליד מוכר חדש: ${name}`,
+        subject: `🏠 ליד מוכר חדש: ${safeSubjectName}`,
         html: `
           <div dir="rtl" style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
             <div style="background:#1C1C1E;padding:24px 32px;">
@@ -52,17 +58,19 @@ export async function POST(req: Request) {
               <table style="width:100%;border-collapse:collapse;">
                 <tr>
                   <td style="padding:8px 0;color:#6b7280;font-size:13px;width:100px;">שם</td>
-                  <td style="padding:8px 0;font-weight:700;color:#111827;font-size:15px;">${name}</td>
+                  <td style="padding:8px 0;font-weight:700;color:#111827;font-size:15px;">${esc(name)}</td>
                 </tr>
                 <tr>
                   <td style="padding:8px 0;color:#6b7280;font-size:13px;">טלפון</td>
                   <td style="padding:8px 0;font-weight:700;color:#111827;font-size:15px;">
-                    <a href="tel:${phone}" style="color:#D4A853;text-decoration:none;">${phone}</a>
+                    ${safePhone
+                      ? `<a href="tel:${safePhone}" style="color:#D4A853;text-decoration:none;">${esc(safePhone)}</a>`
+                      : esc(phone)}
                   </td>
                 </tr>
-                ${city ? `<tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">עיר</td><td style="padding:8px 0;color:#374151;font-size:14px;">${city}</td></tr>` : ""}
-                ${property_type ? `<tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">סוג נכס</td><td style="padding:8px 0;color:#374151;font-size:14px;">${property_type}</td></tr>` : ""}
-                ${notes ? `<tr><td style="padding:8px 0;color:#6b7280;font-size:13px;vertical-align:top;">הערות</td><td style="padding:8px 0;color:#374151;font-size:14px;">${notes}</td></tr>` : ""}
+                ${city ? `<tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">עיר</td><td style="padding:8px 0;color:#374151;font-size:14px;">${esc(city)}</td></tr>` : ""}
+                ${property_type ? `<tr><td style="padding:8px 0;color:#6b7280;font-size:13px;">סוג נכס</td><td style="padding:8px 0;color:#374151;font-size:14px;">${esc(property_type)}</td></tr>` : ""}
+                ${notes ? `<tr><td style="padding:8px 0;color:#6b7280;font-size:13px;vertical-align:top;">הערות</td><td style="padding:8px 0;color:#374151;font-size:14px;">${esc(notes)}</td></tr>` : ""}
               </table>
             </div>
             <div style="background:#f9fafb;padding:16px 32px;border-top:1px solid #e5e7eb;">
