@@ -1,5 +1,6 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { isFullAdmin } from "@/lib/admin-auth";
+import { redirect } from "next/navigation";
 import AdminDashboard from "./AdminDashboard";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,9 @@ export default async function AdminPage() {
   const userClient = await createClient();
   const { data: { user } } = await userClient.auth.getUser();
   const fullAdmin = isFullAdmin(user?.email);
+
+  // Agents (non-full-admin) go directly to property upload — no dashboard for them
+  if (!fullAdmin) redirect("/admin/properties/new");
 
   const [{ data: properties }, { data: agents }, { data: neighborhoods }, { data: sellerLeads }, { data: whatsAppProperties }, { data: streetNeighborhoods }] = await Promise.all([
     supabase
