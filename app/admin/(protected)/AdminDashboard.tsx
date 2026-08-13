@@ -87,7 +87,7 @@ const FALLBACK = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w
 const AGENT_FALLBACK = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&q=60";
 
 export default function AdminDashboard({
-  properties, agents, neighborhoods, sellerLeads, whatsAppProperties, streetNeighborhoods, isFullAdmin,
+  properties, agents, neighborhoods, sellerLeads, whatsAppProperties, streetNeighborhoods, isFullAdmin, agentName,
 }: {
   properties: Property[];
   agents: Agent[];
@@ -96,6 +96,7 @@ export default function AdminDashboard({
   whatsAppProperties: WhatsAppProperty[];
   streetNeighborhoods: StreetNeighborhood[];
   isFullAdmin: boolean;
+  agentName?: string;
 }) {
   const [tab, setTab] = useState<Tab>("properties");
   const [uploading, setUploading] = useState<string | null>(null);
@@ -306,10 +307,18 @@ export default function AdminDashboard({
       {/* Hidden file input */}
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
+      {/* Agent greeting */}
+      {agentName && (
+        <div className="mb-5 flex items-center gap-2">
+          <span className="text-lg font-bold text-[#1C1C1E]">הנכסים שלי</span>
+          <span className="text-lg text-[#F5A623] font-semibold">— {agentName}</span>
+        </div>
+      )}
+
       {/* Tabs + action button */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
-          {TABS.filter(t => isFullAdmin || t.key !== "agents").map(({ key, label, icon: Icon }) => (
+          {TABS.filter(t => isFullAdmin || t.key === "properties").map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setTab(key)}

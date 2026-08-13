@@ -1,6 +1,5 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { isFullAdmin } from "@/lib/admin-auth";
-import { redirect } from "next/navigation";
 import AdminDashboard from "./AdminDashboard";
 
 export const dynamic = "force-dynamic";
@@ -11,8 +10,39 @@ export default async function AdminPage() {
   const { data: { user } } = await userClient.auth.getUser();
   const fullAdmin = isFullAdmin(user?.email);
 
-  // Agents (non-full-admin) go directly to property upload — no dashboard for them
-  if (!fullAdmin) redirect("/admin/properties/new");
+  // Agent (non-full-admin): show only their own properties
+  if (!fullAdmin) {
+    const { data: agentRecord } = await supabase
+      .from("agents")
+      .select("id, first_name, last_name")
+      .eq("email", user?.email ?? "")
+      .maybeSingle();
+
+    const { data: myProperties } = agentRecord
+      ? await supabase
+          .from("properties")
+          .select("id, slug, title, price, city, status, images, features")
+          .eq("agent_id", agentRecord.id)
+          .order("created_at", { ascending: false })
+      : { data: [] };
+
+    const agentName = agentRecord
+      ? `${agentRecord.first_name} ${agentRecord.last_name}`
+      : undefined;
+
+    return (
+      <AdminDashboard
+        properties={myProperties ?? []}
+        agents={[]}
+        neighborhoods={[]}
+        sellerLeads={[]}
+        whatsAppProperties={[]}
+        streetNeighborhoods={[]}
+        isFullAdmin={false}
+        agentName={agentName}
+      />
+    );
+  }
 
   const [{ data: properties }, { data: agents }, { data: neighborhoods }, { data: sellerLeads }, { data: whatsAppProperties }, { data: streetNeighborhoods }] = await Promise.all([
     supabase
