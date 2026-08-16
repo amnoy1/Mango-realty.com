@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Plus, Pencil, Trash2, ExternalLink,
-  Home, Users, ChevronLeft, Star, MapPin, Upload, ImageOff, Inbox, MessageCircle, Download, RefreshCw, Route,
+  Star, MapPin, Upload, ImageOff, Inbox, Download, RefreshCw, Route,
+  Home, Users, MessageCircle,
 } from "lucide-react";
 
 interface Property {
@@ -64,15 +65,7 @@ interface WhatsAppProperty {
   last_seen_date: string | null;
   updated_at: string | null;
 }
-const TABS = [
-  { key: "properties",   label: "נכסים",   icon: Home           },
-  { key: "agents",       label: "צוות",    icon: Users          },
-  { key: "neighborhoods",label: "שכונות",  icon: MapPin         },
-  { key: "leads",        label: "לידים",    icon: Inbox          },
-  { key: "whatsapp",     label: "וואטסאפ", icon: MessageCircle  },
-  { key: "street-map",   label: "רחובות",  icon: Route          },
-] as const;
-type Tab = typeof TABS[number]["key"];
+type Tab = "properties" | "agents" | "neighborhoods" | "leads" | "whatsapp" | "street-map";
 
 const EXCEL_URL = "https://sgrphwunigmsdtbmilgd.supabase.co/storage/v1/object/public/reports/latest.xlsx";
 
@@ -87,7 +80,7 @@ const FALLBACK = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w
 const AGENT_FALLBACK = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&q=60";
 
 export default function AdminDashboard({
-  properties, agents, neighborhoods, sellerLeads, whatsAppProperties, streetNeighborhoods, isFullAdmin, agentName,
+  properties, agents, neighborhoods, sellerLeads, whatsAppProperties, streetNeighborhoods, isFullAdmin, agentName, initialTab,
 }: {
   properties: Property[];
   agents: Agent[];
@@ -97,18 +90,10 @@ export default function AdminDashboard({
   streetNeighborhoods: StreetNeighborhood[];
   isFullAdmin: boolean;
   agentName?: string;
+  initialTab?: string;
 }) {
-  const [tab, setTab] = useState<Tab>("properties");
+  const tab = (initialTab ?? "properties") as Tab;
 
-  useEffect(() => {
-    const saved = localStorage.getItem("adminTab") as Tab | null;
-    if (saved && TABS.some(t => t.key === saved)) setTab(saved);
-  }, []);
-
-  function changeTab(key: Tab) {
-    setTab(key);
-    localStorage.setItem("adminTab", key);
-  }
   const [uploading, setUploading] = useState<string | null>(null);
   const [editNeighborhood, setEditNeighborhood] = useState<Neighborhood | null>(null);
   const [editForm, setEditForm] = useState({ description: "", transport: "", socioeconomic: "", commerce: "", schools: "" });
@@ -296,16 +281,6 @@ export default function AdminDashboard({
     }
   }
 
-  const tabCount = (key: Tab) => {
-    if (key === "properties")    return properties.length;
-    if (key === "agents")        return agents.length;
-    if (key === "neighborhoods") return neighborhoods.length;
-    if (key === "leads")         return sellerLeads.length;
-    if (key === "whatsapp")      return whatsAppProperties.length;
-    if (key === "street-map")    return streetNeighborhoods.length;
-    return 0;
-  };
-
   async function deleteLead(id: string, name: string) {
     if (!confirm(`למחוק את הפנייה של "${name}"?`)) return;
     await fetch(`/api/admin/seller-leads/${id}`, { method: "DELETE" });
@@ -325,30 +300,8 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {/* Tabs + action button */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
-          {TABS.filter(t => isFullAdmin || t.key === "properties").map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => changeTab(key)}
-              className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                tab === key
-                  ? "bg-white shadow-sm text-[#F5A623]"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <Icon size={15} />
-              {label}
-              <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-                tab === key ? "bg-[#F5A623]/15 text-[#F5A623]" : "bg-gray-200 text-gray-500"
-              }`}>
-                {tabCount(key)}
-              </span>
-            </button>
-          ))}
-        </div>
-
+      {/* Action button */}
+      <div className="flex items-center justify-end mb-6">
         {tab === "properties" && (
           <Link
             href="/admin/properties/new"
@@ -882,10 +835,6 @@ export default function AdminDashboard({
           })()}
         </div>
       )}
-
-      <div className="mt-6 text-center">
-        <ChevronLeft size={0} className="hidden" />
-      </div>
 
       {/* ── Edit Neighborhood Modal ── */}
       {editNeighborhood && (

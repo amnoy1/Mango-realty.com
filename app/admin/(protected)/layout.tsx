@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
-import { isAdmin } from "@/lib/admin-auth";
+import { isAdmin, isFullAdmin } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
+import AdminNavBar from "./AdminNavBar";
 
 export const metadata = { title: "Admin — Mango Realty" };
 
@@ -13,6 +15,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!isAdmin(user?.email)) {
     redirect("/admin/login");
   }
+
+  const fullAdmin = isFullAdmin(user?.email);
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
@@ -37,6 +41,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <LogoutButton />
         </div>
       </header>
+
+      <Suspense fallback={null}>
+        <AdminNavBar isFullAdmin={fullAdmin} />
+      </Suspense>
 
       <main className="max-w-5xl mx-auto px-6 py-8">{children}</main>
     </div>

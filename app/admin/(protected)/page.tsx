@@ -4,13 +4,20 @@ import AdminDashboard from "./AdminDashboard";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ tab?: string }>;
+}) {
+  const params = await (searchParams ?? Promise.resolve({}));
+  const initialTab = params.tab ?? "properties";
+
   const supabase = await createAdminClient();
   const userClient = await createClient();
   const { data: { user } } = await userClient.auth.getUser();
   const fullAdmin = isFullAdmin(user?.email);
 
-  // Agent (non-full-admin): show only their own properties
+  // Agent (non-full-admin): show only their own properties + all leads
   if (!fullAdmin) {
     const { data: agentRecord } = await supabase
       .from("agents")
@@ -18,13 +25,19 @@ export default async function AdminPage() {
       .eq("email", user?.email ?? "")
       .maybeSingle();
 
-    const { data: myProperties } = agentRecord
-      ? await supabase
-          .from("properties")
-          .select("id, slug, title, price, city, status, images, features")
-          .eq("agent_id", agentRecord.id)
-          .order("created_at", { ascending: false })
-      : { data: [] };
+    const [{ data: myProperties }, { data: sellerLeads }] = await Promise.all([
+      agentRecord
+        ? supabase
+            .from("properties")
+            .select("id, slug, title, price, city, status, images, features")
+            .eq("agent_id", agentRecord.id)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] }),
+      supabase
+        .from("seller_leads")
+        .select("id, name, phone, city, property_type, notes, created_at")
+        .order("created_at", { ascending: false }),
+    ]);
 
     const agentName = agentRecord
       ? `${agentRecord.first_name} ${agentRecord.last_name}`
@@ -35,11 +48,12 @@ export default async function AdminPage() {
         properties={myProperties ?? []}
         agents={[]}
         neighborhoods={[]}
-        sellerLeads={[]}
+        sellerLeads={sellerLeads ?? []}
         whatsAppProperties={[]}
         streetNeighborhoods={[]}
         isFullAdmin={false}
         agentName={agentName}
+        initialTab={initialTab}
       />
     );
   }
@@ -80,6 +94,7 @@ export default async function AdminPage() {
       whatsAppProperties={whatsAppProperties ?? []}
       streetNeighborhoods={streetNeighborhoods ?? []}
       isFullAdmin={fullAdmin}
+      initialTab={initialTab}
     />
   );
 }
