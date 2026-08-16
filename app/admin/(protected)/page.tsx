@@ -9,7 +9,7 @@ export default async function AdminPage({
 }: {
   searchParams?: Promise<{ tab?: string }>;
 }) {
-  const params = await (searchParams ?? Promise.resolve({}));
+  const params = await (searchParams ?? Promise.resolve({} as { tab?: string }));
   const initialTab = params.tab ?? "properties";
 
   const supabase = await createAdminClient();
