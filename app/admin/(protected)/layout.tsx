@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { isAdmin, isFullAdmin } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -17,6 +17,47 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const fullAdmin = isFullAdmin(user?.email);
+
+  // Fetch tab counts
+  const adminSupabase = await createAdminClient();
+  let counts: Record<string, number> = {};
+
+  if (fullAdmin) {
+    const [
+      { count: propCount },
+      { count: agentCount },
+      { count: hoodCount },
+      { count: leadsCount },
+      { count: waCount },
+      { count: streetCount },
+    ] = await Promise.all([
+      adminSupabase.from("properties").select("*", { count: "exact", head: true }),
+      adminSupabase.from("agents").select("*", { count: "exact", head: true }),
+      adminSupabase.from("neighborhoods").select("*", { count: "exact", head: true }),
+      adminSupabase.from("seller_leads").select("*", { count: "exact", head: true }),
+      adminSupabase.from("whatsapp_properties").select("*", { count: "exact", head: true }),
+      adminSupabase.from("street_neighborhoods").select("*", { count: "exact", head: true }),
+    ]);
+    counts = {
+      properties: propCount ?? 0,
+      agents: agentCount ?? 0,
+      neighborhoods: hoodCount ?? 0,
+      leads: leadsCount ?? 0,
+      whatsapp: waCount ?? 0,
+      "street-map": streetCount ?? 0,
+    };
+  } else {
+    const { data: agentRecord } = await adminSupabase
+      .from("agents").select("id").eq("email", user?.email ?? "").maybeSingle();
+
+    const [{ count: propCount }, { count: leadsCount }] = await Promise.all([
+      agentRecord
+        ? adminSupabase.from("properties").select("*", { count: "exact", head: true }).eq("agent_id", agentRecord.id)
+        : Promise.resolve({ count: 0, data: null, error: null, status: 200, statusText: "" }),
+      adminSupabase.from("seller_leads").select("*", { count: "exact", head: true }),
+    ]);
+    counts = { properties: propCount ?? 0, leads: leadsCount ?? 0 };
+  }
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
@@ -43,7 +84,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
 
       <Suspense fallback={null}>
-        <AdminNavBar isFullAdmin={fullAdmin} />
+        <AdminNavBar isFullAdmin={fullAdmin} counts={counts} />
       </Suspense>
 
       <main className="max-w-5xl mx-auto px-6 py-8">{children}</main>

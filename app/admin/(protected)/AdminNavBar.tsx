@@ -15,7 +15,7 @@ const ALL_TABS = [
 
 const AGENT_TAB_KEYS = ["properties", "leads"];
 
-export default function AdminNavBar({ isFullAdmin }: { isFullAdmin: boolean }) {
+export default function AdminNavBar({ isFullAdmin, counts = {} }: { isFullAdmin: boolean; counts?: Record<string, number> }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -43,6 +43,11 @@ export default function AdminNavBar({ isFullAdmin }: { isFullAdmin: boolean }) {
           >
             <Icon size={14} />
             {label}
+            {(counts[key] ?? 0) > 0 && (
+              <span className="text-[10px] font-bold bg-gray-100 text-gray-500 rounded-full px-1.5 py-0.5 min-w-[1.1rem] text-center leading-tight">
+                {counts[key]}
+              </span>
+            )}
           </Link>
         ))}
       </div>
