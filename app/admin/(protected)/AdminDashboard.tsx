@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Plus, Pencil, Trash2, ExternalLink,
   Star, MapPin, Upload, ImageOff, Inbox, Download, RefreshCw, Route,
-  Home, Users, MessageCircle,
+  Home, Users, MessageCircle, Play, Loader2, CheckCircle2, AlertCircle,
 } from "lucide-react";
 
 interface Property {
@@ -137,6 +137,45 @@ export default function AdminDashboard({
 
   // WhatsApp table sort
   const [wpSort, setWpSort] = useState<{ col: number; dir: "asc" | "desc" } | null>(null);
+
+  // WhatsApp "Run Now" trigger
+  type RunStatus = "idle" | "sending" | "pending" | "running" | "done" | "error" | "already_running";
+  const [runStatus, setRunStatus] = useState<RunStatus>("idle");
+  const [runResult, setRunResult] = useState<string | null>(null);
+  const [triggerId, setTriggerId] = useState<string | null>(null);
+
+  async function handleRunNow() {
+    setRunStatus("sending");
+    setRunResult(null);
+    try {
+      const res = await fetch("/api/admin/run-whatsapp-report", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "שגיאה");
+      setTriggerId(data.id);
+      setRunStatus(data.status as RunStatus);
+    } catch (err) {
+      setRunStatus("error");
+      setRunResult(err instanceof Error ? err.message : "שגיאה לא ידועה");
+    }
+  }
+
+  // Poll status every 5s while pending/running
+  useEffect(() => {
+    if (!triggerId || runStatus === "idle" || runStatus === "sending" ||
+        runStatus === "done" || runStatus === "error" || runStatus === "already_running") return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/admin/run-whatsapp-report?id=${triggerId}`);
+        const data = await res.json();
+        setRunStatus(data.status as RunStatus);
+        setRunResult(data.result ?? null);
+        if (data.status === "done" || data.status === "error" || data.status === "already_running") {
+          clearInterval(interval);
+        }
+      } catch {}
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [triggerId, runStatus]);
 
   const WP_SORT_KEYS: (keyof WhatsAppProperty)[] = [
     "property_type", "address", "city", "neighborhood", "area_sqm", "balcony_sqm", "rooms", "floor",
@@ -321,7 +360,38 @@ export default function AdminDashboard({
           </Link>
         )}
         {tab === "whatsapp" && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {/* Run status indicator */}
+            {runStatus !== "idle" && (
+              <span className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg ${
+                runStatus === "done"           ? "bg-green-50 text-green-700" :
+                runStatus === "error"          ? "bg-red-50 text-red-700" :
+                runStatus === "already_running"? "bg-yellow-50 text-yellow-700" :
+                                                 "bg-blue-50 text-blue-700"
+              }`}>
+                {(runStatus === "pending" || runStatus === "running" || runStatus === "sending") &&
+                  <Loader2 size={13} className="animate-spin" />}
+                {runStatus === "done"            && <CheckCircle2 size={13} />}
+                {runStatus === "error"           && <AlertCircle size={13} />}
+                {runStatus === "already_running" && <AlertCircle size={13} />}
+                {runStatus === "sending"         ? "שולח..." :
+                 runStatus === "pending"         ? "ממתין..." :
+                 runStatus === "running"         ? "מושך נתונים..." :
+                 runStatus === "done"            ? (runResult ?? "הושלם ✅") :
+                 runStatus === "already_running" ? "כבר רץ — נסה שוב בעוד כמה דקות" :
+                                                   (runResult ?? "שגיאה")}
+              </span>
+            )}
+            <button
+              onClick={handleRunNow}
+              disabled={runStatus === "sending" || runStatus === "pending" || runStatus === "running"}
+              className="flex items-center gap-2 bg-[#F5A623] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#D4881A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {(runStatus === "sending" || runStatus === "pending" || runStatus === "running")
+                ? <Loader2 size={15} className="animate-spin" />
+                : <Play size={15} />}
+              הרץ עכשיו
+            </button>
             <button
               onClick={() => window.location.reload()}
               className="flex items-center gap-2 border border-gray-200 text-gray-600 px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
