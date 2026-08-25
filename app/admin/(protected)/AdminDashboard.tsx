@@ -34,14 +34,6 @@ interface StreetNeighborhood {
   id: string; city: string; street: string; neighborhood: string; created_at: string;
 }
 
-const KS_NEIGHBORHOODS_LIST = [
-  'קפלן', 'כפר סבא הצעירה', 'גני השרון', 'גבעת אשכול', 'בית ונוף', 'הדרים',
-  'סביוני הכפר', 'כפר סבא הירוקה', 'סירקין', 'ותיקים', 'אמפר',
-  'מרכז העיר', 'חצרות הדר', 'מצקין', 'כיסופים',
-  'ראשונים', 'גאולים', 'אלי כהן', 'תקומה', 'דגניה',
-  'הפועלים', 'מאוריציוס', 'שבזי', 'עובד בן עמי', 'גינת הלימון',
-  'אליעזר', 'יוספטל', 'למפרט', 'מעוז',
-];
 
 interface WhatsAppProperty {
   id: string;
@@ -101,8 +93,9 @@ export default function AdminDashboard({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingUpload = useRef<{ id: string; city: string; neighborhood: string } | null>(null);
 
-  // Street→Neighborhood mapping
-  const [snForm, setSnForm] = useState({ city: "כפר סבא", street: "", neighborhood: KS_NEIGHBORHOODS_LIST[0] });
+  // Street→Neighborhood mapping — unique neighborhoods derived from the loaded table
+  const snNeighborhoods = [...new Set(streetNeighborhoods.map(r => r.neighborhood))].sort();
+  const [snForm, setSnForm] = useState({ city: "כפר סבא", street: "", neighborhood: "" });
   const [snLoading, setSnLoading] = useState(false);
   const [snSearch, setSnSearch] = useState("");
 
@@ -825,7 +818,8 @@ export default function AdminDashboard({
                   onChange={e => setSnForm(f => ({ ...f, neighborhood: e.target.value }))}
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#F5A623]"
                 >
-                  {KS_NEIGHBORHOODS_LIST.map(n => <option key={n} value={n}>{n}</option>)}
+                  <option value="">— בחר שכונה —</option>
+                  {snNeighborhoods.map(n => <option key={n} value={n}>{n}</option>)}
                 </select>
               </div>
               <button
