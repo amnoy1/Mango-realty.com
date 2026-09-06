@@ -87,6 +87,7 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
     - כפתור רענון + כפתור הורדת Excel
     - גרירת עמודות (JS drag via colgroup — CSS resize:horizontal לא אמין ב-RTL)
     - מיון ע"י לחיצה על כותרת עמודה (↑/↓ בצבע מנגו); resize + sort לא מתנגשים (stopPropagation)
+    - **מילוי שדה `neighborhood`**: מבוצע ע"י ריפו חיצוני נפרד `amnoy1/whatsapp-property-parser` (לא חלק מקוד האתר הזה, לא רץ כאן) — **לא** ע"י אתר מנגו נדל"ן. ה-lookup שם (`src/neighborhood-lookup.js`) מתבצע מול טבלת `street_neighborhoods` בסופהבייס (אותה טבלה ששימשת גם את PropertyForm באדמין), עם נרמול שם רחוב (ה"א הידיעה, גרשיים/גרש, רחובות פינתיים).
 - `/admin/properties/new` + `[id]/edit` — טופס נכס מלא
 - `/admin/agents/new` + `[id]/edit` — טופס סוכן
 - `components/admin/PropertyForm.tsx`:
@@ -128,6 +129,10 @@ Fonts: Heebo (headings) / Assistant (body) / Playfair Display (serif accents)
   ALTER TABLE seller_leads ENABLE ROW LEVEL SECURITY;
   CREATE POLICY "public_insert" ON seller_leads FOR INSERT TO anon WITH CHECK (true);
   ```
+- ✅ טבלת `street_neighborhoods` — mapping רחוב→שכונה ידני, **משותפת** לשתי מערכות נפרדות:
+  - אתר מנגו (`app/api/admin/street-neighborhoods/route.ts` + `PropertyForm.tsx`) — auto-fill שדה שכונה בטופס נכס באדמין (טבלת `properties`)
+  - ריפו חיצוני נפרד `amnoy1/whatsapp-property-parser` — מקור ה-lookup למילוי שכונה בטבלת `whatsapp_properties`
+- ✅ טבלת `whatsapp_properties` — 16 עמודות, מיוצרת ע"י ריפו חיצוני נפרד `amnoy1/whatsapp-property-parser` (לא חלק מקוד האתר הזה, רץ על מחשב נפרד דרך Task Scheduler)
 
 ### SEO / GEO — ✅ מלא
 - `generateMetadata` לכל נכס: og:image, twitter card, canonical URL
@@ -169,6 +174,12 @@ neighborhoods: id, city, neighborhood, description, transport, socioeconomic,
                commerce, schools, image_url, analysis_updated_at, updated_at
 
 seller_leads: id, name, phone, city, property_type, notes, created_at
+
+street_neighborhoods: id, city, street, neighborhood
+  -- משותפת: PropertyForm (אתר) + amnoy1/whatsapp-property-parser (ריפו חיצוני נפרד)
+
+whatsapp_properties: 16 עמודות כולל neighborhood, previous_price
+  -- מיוצרת ע"י amnoy1/whatsapp-property-parser בלבד (ריפו חיצוני נפרד), לא ע"י האתר
 ```
 RLS: public read על `status = 'active'` (properties) ו-agents, service_role לכל השאר.
 
