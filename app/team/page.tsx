@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/layout/Footer";
@@ -8,13 +8,13 @@ export const metadata = {
   description: "הכירו את צוות הסוכנים המקצועי של מנגו נדל\"ן — מומחי נדל\"ן באזורי הביקוש",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const FALLBACK = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80";
 
 
 export default async function TeamPage() {
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
   const { data: agents } = await supabase
     .from("agents")
     .select("*")

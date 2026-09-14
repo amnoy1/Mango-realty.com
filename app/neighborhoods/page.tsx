@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -8,10 +8,12 @@ export const metadata: Metadata = {
   description: "גלה את השכונות המבוקשות ביותר — ניתוח שוק, תחבורה, חינוך ומסחר",
 };
 
+export const revalidate = 300;
+
 const FALLBACK = "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&q=80";
 
 export default async function NeighborhoodsPage() {
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
 
   const { data: neighborhoods } = await supabase
     .from("neighborhoods")
