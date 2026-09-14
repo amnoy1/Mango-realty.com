@@ -1,4 +1,4 @@
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createPublicClient, createAdminClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -6,7 +6,7 @@ import Footer from "@/components/layout/Footer";
 import PropertyCard, { type Property } from "@/components/ui/PropertyCard";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mango-realty-com.vercel.app";
 const FALLBACK_AGENT = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&q=80";
@@ -22,7 +22,7 @@ export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
   const { data: a } = await supabase
     .from("agents")
     .select("first_name, last_name, bio, photo_url, city")
@@ -72,7 +72,7 @@ export async function generateStaticParams() {
 
 export default async function AgentPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
 
   const { data: agent } = await supabase
     .from("agents")

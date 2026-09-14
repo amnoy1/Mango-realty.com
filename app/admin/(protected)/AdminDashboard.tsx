@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -84,6 +85,7 @@ export default function AdminDashboard({
   agentName?: string;
   initialTab?: string;
 }) {
+  const router = useRouter();
   const tab = (initialTab ?? "properties") as Tab;
 
   const [uploading, setUploading] = useState<string | null>(null);
@@ -109,7 +111,7 @@ export default function AdminDashboard({
         body: JSON.stringify(snForm),
       });
       if (!res.ok) throw new Error((await res.json()).error);
-      window.location.reload();
+      router.refresh();
     } catch (err) {
       alert("שגיאה: " + (err instanceof Error ? err.message : ""));
     } finally {
@@ -120,7 +122,7 @@ export default function AdminDashboard({
   async function deleteStreetNeighborhood(id: string, street: string) {
     if (!confirm(`למחוק את הרחוב "${street}" מהטבלה?`)) return;
     await fetch(`/api/admin/street-neighborhoods/${id}`, { method: "DELETE" });
-    window.location.reload();
+    router.refresh();
   }
 
   // WhatsApp table column widths (resizable)
@@ -223,25 +225,25 @@ export default function AdminDashboard({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ hero: !current }),
     });
-    window.location.reload();
+    router.refresh();
   }
 
   async function deleteProperty(id: string, title: string) {
     if (!confirm(`למחוק את "${title}"?`)) return;
     await fetch(`/api/admin/properties/${id}`, { method: "DELETE" });
-    window.location.reload();
+    router.refresh();
   }
 
   async function deleteAgent(id: string, name: string) {
     if (!confirm(`למחוק את ${name}?`)) return;
     await fetch(`/api/admin/agents/${id}`, { method: "DELETE" });
-    window.location.reload();
+    router.refresh();
   }
 
   async function deleteNeighborhood(id: string, name: string) {
     if (!confirm(`למחוק לצמיתות את שכונת "${name}"?\nהיא תוסר מהאתר ומהדאטהבייס.`)) return;
     await fetch(`/api/admin/neighborhoods/${id}`, { method: "DELETE" });
-    window.location.reload();
+    router.refresh();
   }
 
   function openEdit(n: Neighborhood) {
@@ -265,7 +267,7 @@ export default function AdminDashboard({
         body: JSON.stringify({ ...editForm, analysis_updated_at: new Date().toISOString() }),
       });
       setEditNeighborhood(null);
-      window.location.reload();
+      router.refresh();
     } finally {
       setSavingNeighborhood(false);
     }
@@ -304,7 +306,7 @@ export default function AdminDashboard({
         body: JSON.stringify({ image_url: publicUrl }),
       });
 
-      window.location.reload();
+      router.refresh();
     } catch (err) {
       alert("שגיאה בהעלאת התמונה");
       console.error(err);
@@ -316,7 +318,7 @@ export default function AdminDashboard({
   async function deleteLead(id: string, name: string) {
     if (!confirm(`למחוק את הפנייה של "${name}"?`)) return;
     await fetch(`/api/admin/seller-leads/${id}`, { method: "DELETE" });
-    window.location.reload();
+    router.refresh();
   }
 
   return (
@@ -386,7 +388,7 @@ export default function AdminDashboard({
               הרץ עכשיו
             </button>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => router.refresh()}
               className="flex items-center gap-2 border border-gray-200 text-gray-600 px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
             >
               <RefreshCw size={14} />
@@ -459,7 +461,7 @@ export default function AdminDashboard({
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <Link href={`/admin/properties/${p.id}/edit`} className="p-1.5 rounded-lg text-gray-400 hover:text-[#F5A623] hover:bg-[#F5A623]/8 transition-colors" title="עריכה">
+                          <Link href={`/admin/properties/${p.id}/edit`} prefetch={false} className="p-1.5 rounded-lg text-gray-400 hover:text-[#F5A623] hover:bg-[#F5A623]/8 transition-colors" title="עריכה">
                             <Pencil size={14} />
                           </Link>
                           <Link href={`/properties/${p.slug}`} target="_blank" className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors" title="צפייה באתר">
@@ -515,7 +517,7 @@ export default function AdminDashboard({
                     <td className="px-4 py-3 text-gray-500 text-xs">{a.email || "—"}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Link href={`/admin/agents/${a.id}/edit`} className="p-1.5 rounded-lg text-gray-400 hover:text-[#F5A623] hover:bg-[#F5A623]/8 transition-colors" title="עריכה">
+                        <Link href={`/admin/agents/${a.id}/edit`} prefetch={false} className="p-1.5 rounded-lg text-gray-400 hover:text-[#F5A623] hover:bg-[#F5A623]/8 transition-colors" title="עריכה">
                           <Pencil size={14} />
                         </Link>
                         <Link href={`/team/${a.slug}`} target="_blank" className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors" title="צפייה באתר">
