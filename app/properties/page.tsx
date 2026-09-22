@@ -14,7 +14,7 @@ export default async function PropertiesPage() {
 
   const { data } = await supabase
     .from("properties")
-    .select("id, slug, title, price, rooms, area_sqm, city, neighborhood, images, status")
+    .select("id, slug, title, price, updated_price, rooms, area_sqm, city, neighborhood, images, status")
     .eq("status", "active")
     .order("published_at", { ascending: false });
 
@@ -22,7 +22,7 @@ export default async function PropertiesPage() {
     id: p.id,
     slug: p.slug,
     title: p.title,
-    price: p.price || 0,
+    price: p.updated_price || p.price || 0,
     rooms: p.rooms || 0,
     area: p.area_sqm || 0,
     city: p.city || "",

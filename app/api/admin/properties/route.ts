@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     title:            body.title            || null,
     description:      body.description      || null,
     price:            body.price            || null,
+    updated_price:    body.updated_price    || null,
     price_type:       body.price_type       || "sale",
     property_type:    body.property_type    || "apartment",
     status:           body.status           || "active",

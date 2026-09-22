@@ -25,6 +25,7 @@ export default async function EditPropertyPage({
     title: property.title || "",
     slug: property.slug || "",
     price: property.price?.toString() || "",
+    updated_price: property.updated_price?.toString() || "",
     price_type: property.price_type || "sale",
     property_type: property.property_type || "apartment",
     status: property.status || "active",

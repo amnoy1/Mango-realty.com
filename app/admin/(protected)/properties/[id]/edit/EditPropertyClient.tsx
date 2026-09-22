@@ -18,6 +18,7 @@ export default function EditPropertyClient({
       const payload = {
         ...formData,
         price:        formData.price        ? Number(formData.price)        : null,
+        updated_price: formData.updated_price ? Number(formData.updated_price) : null,
         rooms:        formData.rooms        ? Number(formData.rooms)        : null,
         bathrooms:    formData.bathrooms    ? Number(formData.bathrooms)    : null,
         area_sqm:     formData.area_sqm     ? Number(formData.area_sqm)     : null,

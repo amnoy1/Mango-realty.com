@@ -116,7 +116,7 @@ export default async function PropertyPage({
   // Fetch related (same city, different slug, active)
   const { data: relatedRaw } = await supabase
     .from("properties")
-    .select("id, slug, title, price, rooms, area_sqm, city, neighborhood, images")
+    .select("id, slug, title, price, updated_price, rooms, area_sqm, city, neighborhood, images")
     .eq("status", "active")
     .eq("city", property.city)
     .neq("slug", slug)
@@ -126,7 +126,7 @@ export default async function PropertyPage({
     id: p.id,
     slug: p.slug,
     title: p.title,
-    price: p.price || 0,
+    price: p.updated_price || p.price || 0,
     rooms: p.rooms || 0,
     area: p.area_sqm || 0,
     city: p.city || "",
@@ -166,10 +166,17 @@ export default async function PropertyPage({
     license_number: agentRaw.license_number ?? null,
   } : null;
 
+  // A manually-set updated_price means the marketing price has genuinely
+  // changed since the listing was created (see supabase/migrations/
+  // properties_updated_price.sql) — Amir republishes it everywhere the
+  // moment it's approved, so the public page shows it as THE price, no
+  // "was/now" comparison, same as nir-buyers-agent does.
+  const effectivePrice = property.updated_price || property.price || 0;
+
   const propertyForClient = {
     slug: property.slug,
     title: property.title,
-    price: property.price || 0,
+    price: effectivePrice,
     price_type: (property.price_type || "sale") as "sale" | "rent",
     rooms: property.rooms || 0,
     bathrooms: property.bathrooms || 0,
@@ -201,7 +208,7 @@ export default async function PropertyPage({
     "description": property.description || undefined,
     "url": `${SITE_URL}/properties/${property.slug}`,
     "image": images,
-    "price": property.price || undefined,
+    "price": effectivePrice || undefined,
     "priceCurrency": "ILS",
     "numberOfRooms": property.rooms || undefined,
     "floorSize": property.area_sqm

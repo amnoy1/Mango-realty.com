@@ -32,6 +32,7 @@ interface PropertyFormData {
   title:            string;
   slug:             string;
   price:            string;
+  updated_price:    string;
   price_type:       "sale" | "rent";
   property_type:    string;
   status:           "active" | "draft" | "sold" | "rented";
@@ -111,7 +112,7 @@ interface Props {
 }
 
 const emptyForm: PropertyFormData = {
-  title: "", slug: "", price: "", price_type: "sale", property_type: "apartment",
+  title: "", slug: "", price: "", updated_price: "", price_type: "sale", property_type: "apartment",
   status: "active", city: "", neighborhood: "", street: "",
   rooms: "", bathrooms: "", area_sqm: "", floor: "", total_floors: "",
   description: "",
@@ -337,6 +338,20 @@ export default function PropertyForm({ initialData, onSubmit, agents = [] }: Pro
               <option value="rent">השכרה</option>
             </select>
           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>מחיר מעודכן (₪)</label>
+            <input
+              type="number" className={inputClass} value={form.updated_price}
+              onChange={(e) => set("updated_price", e.target.value)} placeholder="השאר ריק אם המחיר לא השתנה"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              מלא רק אם המחיר עודכן. כשמלא, זה המחיר שיוצג באתר ושניר יאמר ללידים - במקום המחיר הרגיל למעלה.
+            </p>
+          </div>
+          <div />
         </div>
 
         <div className="grid grid-cols-2 gap-4">

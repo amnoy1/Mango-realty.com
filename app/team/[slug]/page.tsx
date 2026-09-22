@@ -85,7 +85,7 @@ export default async function AgentPage({ params }: { params: Promise<{ slug: st
   // Properties handled by this agent
   const { data: propsRaw } = await supabase
     .from("properties")
-    .select("id, slug, title, price, rooms, area_sqm, city, neighborhood, images")
+    .select("id, slug, title, price, updated_price, rooms, area_sqm, city, neighborhood, images")
     .eq("agent_id", agent.id)
     .eq("status", "active")
     .order("published_at", { ascending: false })
@@ -95,7 +95,7 @@ export default async function AgentPage({ params }: { params: Promise<{ slug: st
     id:           p.id,
     slug:         p.slug,
     title:        p.title,
-    price:        p.price || 0,
+    price:        p.updated_price || p.price || 0,
     rooms:        p.rooms || 0,
     area:         p.area_sqm || 0,
     city:         p.city || "",
