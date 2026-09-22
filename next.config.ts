@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion"],
+    // Re-visiting the same dynamic route (e.g. clicking back to an admin tab
+    // you were just on) reuses the client-side Router Cache for 30s instead of
+    // re-running the server component every time.
+    staleTimes: { dynamic: 30 },
   },
 };
 

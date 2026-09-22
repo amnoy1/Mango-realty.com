@@ -1,4 +1,4 @@
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createPublicClient, createAdminClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
 import Navbar from "@/components/layout/Navbar";
@@ -21,7 +21,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mango-realty-com.v
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
   const { data } = await supabase
     .from("properties")
     .select("title, meta_title, meta_description, city, neighborhood, street, images, lat, lng, price, price_type, rooms, area_sqm")
@@ -75,7 +75,11 @@ export async function generateStaticParams() {
 }
 
 export const dynamicParams = true;
-export const dynamic = "force-dynamic";
+// Was force-dynamic, which disabled the static generation this page was already
+// built for (see generateStaticParams above) and forced a full Supabase round-trip
+// on every single visit. Property listings don't change per-visitor — cache the
+// rendered page and revalidate every 5 minutes instead.
+export const revalidate = 300;
 
 export default async function PropertyPage({
   params,
@@ -83,7 +87,7 @@ export default async function PropertyPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
 
   const { data: property } = await supabase
     .from("properties")

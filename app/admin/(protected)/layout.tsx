@@ -4,25 +4,18 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense } from "react";
+import { unstable_cache } from "next/cache";
 import AdminNavBar from "./AdminNavBar";
 
 export const metadata = { title: "Admin — Mango Realty" };
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!isAdmin(user?.email)) {
-    redirect("/admin/login");
-  }
-
-  const fullAdmin = isFullAdmin(user?.email);
-
-  // Fetch tab counts
-  const adminSupabase = await createAdminClient();
-  let counts: Record<string, number> = {};
-
-  if (fullAdmin) {
+// These badge counts don't need to be to-the-second accurate, and this layout
+// re-runs on every single navigation inside /admin (including every tab click)
+// because the auth check above depends on cookies(). Cache them for 30s so
+// hopping between tabs doesn't re-run six count queries every time.
+const getFullAdminCounts = unstable_cache(
+  async () => {
+    const adminSupabase = await createAdminClient();
     const [
       { count: propCount },
       { count: agentCount },
@@ -38,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       adminSupabase.from("whatsapp_properties").select("*", { count: "exact", head: true }),
       adminSupabase.from("street_neighborhoods").select("*", { count: "exact", head: true }),
     ]);
-    counts = {
+    return {
       properties: propCount ?? 0,
       agents: agentCount ?? 0,
       neighborhoods: hoodCount ?? 0,
@@ -46,17 +39,45 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       whatsapp: waCount ?? 0,
       "street-map": streetCount ?? 0,
     };
-  } else {
-    const { data: agentRecord } = await adminSupabase
-      .from("agents").select("id").eq("email", user?.email ?? "").maybeSingle();
+  },
+  ["admin-tab-counts-full"],
+  { revalidate: 30 }
+);
 
+const getAgentCounts = unstable_cache(
+  async (agentId: string | null) => {
+    const adminSupabase = await createAdminClient();
     const [{ count: propCount }, { count: leadsCount }] = await Promise.all([
-      agentRecord
-        ? adminSupabase.from("properties").select("*", { count: "exact", head: true }).eq("agent_id", agentRecord.id)
-        : Promise.resolve({ count: 0, data: null, error: null, status: 200, statusText: "" }),
+      agentId
+        ? adminSupabase.from("properties").select("*", { count: "exact", head: true }).eq("agent_id", agentId)
+        : Promise.resolve({ count: 0 }),
       adminSupabase.from("seller_leads").select("*", { count: "exact", head: true }),
     ]);
-    counts = { properties: propCount ?? 0, leads: leadsCount ?? 0 };
+    return { properties: propCount ?? 0, leads: leadsCount ?? 0 };
+  },
+  ["admin-tab-counts-agent"],
+  { revalidate: 30 }
+);
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!isAdmin(user?.email)) {
+    redirect("/admin/login");
+  }
+
+  const fullAdmin = isFullAdmin(user?.email);
+
+  let counts: Record<string, number> = {};
+
+  if (fullAdmin) {
+    counts = await getFullAdminCounts();
+  } else {
+    const adminSupabase = await createAdminClient();
+    const { data: agentRecord } = await adminSupabase
+      .from("agents").select("id").eq("email", user?.email ?? "").maybeSingle();
+    counts = await getAgentCounts(agentRecord?.id ?? null);
   }
 
   return (

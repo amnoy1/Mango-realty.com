@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import NeighborhoodsGrid from "./NeighborhoodsGrid";
 import type { NeighborhoodData } from "@/lib/neighborhood";
 
 export default async function Neighborhoods() {
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
 
   // 1. All unique (city, neighborhood) pairs from active properties
   const { data: propRows } = await supabase

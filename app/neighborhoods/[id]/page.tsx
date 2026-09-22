@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,11 +10,13 @@ import type { NeighborhoodData } from "@/lib/neighborhood";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mango-realty-com.vercel.app";
 const FALLBACK = "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&q=80";
 
+export const revalidate = 300;
+
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
   const { data } = await supabase
     .from("neighborhoods")
     .select("city, neighborhood, image_url")
@@ -56,7 +58,7 @@ export default async function NeighborhoodPage(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
 
   const [{ data: n }, { data: others }] = await Promise.all([
     supabase

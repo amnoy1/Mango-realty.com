@@ -1,6 +1,6 @@
 import { Phone, Mail, MapPin } from "lucide-react";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 
 const NAV = [
   { label: "נכסים למכירה", href: "/properties" },
@@ -10,7 +10,7 @@ const NAV = [
 ];
 
 export default async function Footer() {
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
   const { data } = await supabase
     .from("properties")
     .select("city")

@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import HeroSlider from "./HeroSlider";
 
 export default async function Hero() {
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
 
   // First try hero-flagged properties, then fall back to all active
   const { data: all } = await supabase

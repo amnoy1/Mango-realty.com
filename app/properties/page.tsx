@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import PropertyCard, { type Property } from "@/components/ui/PropertyCard";
 
 const FALLBACK_IMAGE =
@@ -9,8 +9,12 @@ export const metadata = {
   description: "כל הנכסים המובחרים של Mango Realty — דירות, וילות ובתים פרטיים למכירה",
 };
 
+// Public listing — no per-visitor data, safe to cache and revalidate periodically
+// instead of hitting Supabase fresh on every single page view.
+export const revalidate = 300;
+
 export default async function PropertiesPage() {
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
 
   const { data } = await supabase
     .from("properties")

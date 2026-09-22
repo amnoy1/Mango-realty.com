@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import FeaturedPropertiesGrid from "./FeaturedPropertiesGrid";
 import type { Property } from "@/components/ui/PropertyCard";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80";
 
 export default async function FeaturedProperties() {
-  const supabase = await createClient();
+  const supabase = await createPublicClient();
 
   // First: hero-picked properties
   const { data: heroData } = await supabase
