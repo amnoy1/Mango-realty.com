@@ -1,5 +1,6 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse, after } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getNeighborhoodData } from "@/lib/neighborhood";
 import { geocodeIsraeliAddress } from "@/lib/geocode";
 import { isAdmin } from "@/lib/admin-auth";
@@ -46,6 +47,9 @@ export async function POST(request: NextRequest) {
     lng,
     meta_title:       body.meta_title       || null,
     meta_description: body.meta_description || null,
+    // Was missing: the agent picked in the form was silently dropped on create,
+    // so new listings had no agent card / phone / WhatsApp in the price box.
+    agent_id:         body.agent_id         || null,
     published_at:     body.status === "active" ? new Date().toISOString() : null,
   };
 
@@ -58,6 +62,8 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  revalidatePublicPages(data.slug);
 
   // Fire neighborhood analysis after response is sent (non-blocking)
   if (data.status === "active" && data.city) {
@@ -75,4 +81,13 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ data });
+}
+
+// Public pages are cached (revalidate = 300); refresh them right away so an
+// admin save shows up immediately instead of up to 5 minutes later.
+function revalidatePublicPages(slug?: string | null) {
+  revalidatePath("/");
+  revalidatePath("/properties");
+  revalidatePath("/team/[slug]", "page");
+  if (slug) revalidatePath(`/properties/${slug}`);
 }
