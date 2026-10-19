@@ -178,7 +178,47 @@ export default function AdminDashboard({
     "broker_name", "broker_phone", "first_seen_date", "last_seen_date",
   ];
 
-  const sortedWpProperties = wpSort === null ? whatsAppProperties : [...whatsAppProperties].sort((a, b) => {
+  // WhatsApp free-text search (Nir's engine, via /api/admin/property-search).
+  // Results keep the engine's order (cheapest first) until a column is sorted.
+  const [wpQuery, setWpQuery] = useState("");
+  const [wpSearching, setWpSearching] = useState(false);
+  const [wpSearchError, setWpSearchError] = useState<string | null>(null);
+  const [wpSearch, setWpSearch] = useState<{ ids: string[]; echo: string; unparsed: string | null; total: number } | null>(null);
+
+  async function handleWpSearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (!wpQuery.trim()) return;
+    setWpSearching(true);
+    setWpSearchError(null);
+    try {
+      const res = await fetch("/api/admin/property-search", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text: wpQuery }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "החיפוש נכשל");
+      setWpSearch({ ids: (data.ids as unknown[]).map(String), echo: data.echo, unparsed: data.unparsed, total: data.total });
+      setWpSort(null);
+    } catch (err) {
+      setWpSearchError(err instanceof Error ? err.message : "החיפוש נכשל");
+    } finally {
+      setWpSearching(false);
+    }
+  }
+
+  function clearWpSearch() {
+    setWpSearch(null);
+    setWpQuery("");
+    setWpSearchError(null);
+  }
+
+  const wpBase = wpSearch === null ? whatsAppProperties : (() => {
+    const byId = new Map(whatsAppProperties.map((p) => [String(p.id), p]));
+    return wpSearch.ids.map((id) => byId.get(id)).filter((p): p is WhatsAppProperty => !!p);
+  })();
+
+  const sortedWpProperties = wpSort === null ? wpBase : [...wpBase].sort((a, b) => {
     const key = WP_SORT_KEYS[wpSort.col];
     const aVal = a[key]; const bVal = b[key];
     if (aVal == null) return 1;
@@ -666,6 +706,51 @@ export default function AdminDashboard({
                 ))}
               </tbody>
             </table>
+          )}
+        </div>
+      )}
+
+      {/* ── WhatsApp free-text search ── */}
+      {tab === "whatsapp" && (
+        <div className="mb-4">
+          <form onSubmit={handleWpSearch} className="flex items-center gap-2">
+            <input
+              value={wpQuery}
+              onChange={(e) => setWpQuery(e.target.value)}
+              placeholder='חפש בשפה חופשית, למשל: 4 חדרים בכפר סבא עד 3.2 עם ממ"ד וחניה'
+              className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#F5A623]"
+            />
+            <button
+              type="submit"
+              disabled={wpSearching || !wpQuery.trim()}
+              className="flex items-center gap-2 bg-[#F5A623] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#D4881A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {wpSearching && <Loader2 size={15} className="animate-spin" />}
+              חפש
+            </button>
+            {wpSearch && (
+              <button
+                type="button"
+                onClick={clearWpSearch}
+                className="border border-gray-200 text-gray-600 px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
+              >
+                נקה
+              </button>
+            )}
+          </form>
+          {wpSearchError && (
+            <p className="mt-2 text-sm text-red-600 flex items-center gap-1.5">
+              <AlertCircle size={14} /> {wpSearchError}
+            </p>
+          )}
+          {wpSearch && (
+            <div className="mt-2 text-sm text-gray-600">
+              <span className="font-semibold text-gray-900">{wpSearch.total} נכסים</span>
+              {" · "}הבנתי: {wpSearch.echo}
+              {wpSearch.unparsed && (
+                <span className="text-amber-700"> · לא נכלל בחיפוש: {wpSearch.unparsed}</span>
+              )}
+            </div>
           )}
         </div>
       )}
