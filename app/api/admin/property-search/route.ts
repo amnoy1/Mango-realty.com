@@ -4,7 +4,7 @@ import { isFullAdmin } from "@/lib/admin-auth";
 
 // Free-text search over whatsapp_properties (property-search-spec.md, door 2).
 // The engine lives in nir-buyers-agent; this route only checks the admin and
-// forwards, so the shared secret never reaches the browser.
+// forwards, so the search secret never reaches the browser.
 const NIR_SEARCH_URL = "https://mango-lead-street-extractor.vercel.app/api/search";
 
 export async function POST(req: NextRequest) {
@@ -14,9 +14,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const secret = process.env.NIR_SHARED_SECRET;
+  const secret = process.env.NIR_SEARCH_SECRET;
   if (!secret) {
-    return NextResponse.json({ error: "NIR_SHARED_SECRET לא מוגדר ב-Vercel" }, { status: 500 });
+    return NextResponse.json({ error: "NIR_SEARCH_SECRET לא מוגדר ב-Vercel" }, { status: 500 });
   }
 
   const { text } = await req.json().catch(() => ({ text: "" }));
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   const res = await fetch(NIR_SEARCH_URL, {
     method: "POST",
-    headers: { "content-type": "application/json", "x-shared-secret": secret },
+    headers: { "content-type": "application/json", "x-search-secret": secret },
     body: JSON.stringify({ text: text.trim() }),
   });
   const data = await res.json().catch(() => ({}));
