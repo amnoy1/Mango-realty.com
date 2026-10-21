@@ -134,10 +134,23 @@ export default function AdminDashboard({
   const [wpSort, setWpSort] = useState<{ col: number; dir: "asc" | "desc" } | null>(null);
 
   // WhatsApp "Run Now" trigger
-  type RunStatus = "idle" | "sending" | "pending" | "running" | "done" | "error" | "already_running";
+  type RunStatus = "idle" | "sending" | "pending" | "running" | "done" | "error" | "already_running" | "watcher_down";
   const [runStatus, setRunStatus] = useState<RunStatus>("idle");
   const [runResult, setRunResult] = useState<string | null>(null);
   const [triggerId, setTriggerId] = useState<string | null>(null);
+
+  // A request nobody picked up = the watcher on the office computer is down.
+  // Checked as soon as the tab opens, so the fault shows before anyone presses.
+  useEffect(() => {
+    if (tab !== "whatsapp") return;
+    fetch("/api/admin/run-whatsapp-report?health=1")
+      .then((r) => r.json())
+      .then((d) => { if (d.status === "watcher_down") setRunStatus("watcher_down"); })
+      .catch(() => {});
+  }, [tab]);
+
+  // The report itself failed because WhatsApp logged the session out.
+  const needsQr = runStatus === "error" && /QR|logged out|auth failure/i.test(runResult ?? "");
 
   async function handleRunNow() {
     setRunStatus("sending");
@@ -157,14 +170,15 @@ export default function AdminDashboard({
   // Poll status every 5s while pending/running
   useEffect(() => {
     if (!triggerId || runStatus === "idle" || runStatus === "sending" ||
-        runStatus === "done" || runStatus === "error" || runStatus === "already_running") return;
+        runStatus === "done" || runStatus === "error" || runStatus === "already_running" ||
+        runStatus === "watcher_down") return;
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/admin/run-whatsapp-report?id=${triggerId}`);
         const data = await res.json();
         setRunStatus(data.status as RunStatus);
         setRunResult(data.result ?? null);
-        if (data.status === "done" || data.status === "error" || data.status === "already_running") {
+        if (data.status === "done" || data.status === "error" || data.status === "already_running" || data.status === "watcher_down") {
           clearInterval(interval);
         }
       } catch {}
@@ -400,20 +414,21 @@ export default function AdminDashboard({
             {runStatus !== "idle" && (
               <span className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg ${
                 runStatus === "done"           ? "bg-green-50 text-green-700" :
-                runStatus === "error"          ? "bg-red-50 text-red-700" :
+                runStatus === "error" || runStatus === "watcher_down" ? "bg-red-50 text-red-700" :
                 runStatus === "already_running"? "bg-yellow-50 text-yellow-700" :
                                                  "bg-blue-50 text-blue-700"
               }`}>
                 {(runStatus === "pending" || runStatus === "running" || runStatus === "sending") &&
                   <Loader2 size={13} className="animate-spin" />}
                 {runStatus === "done"            && <CheckCircle2 size={13} />}
-                {runStatus === "error"           && <AlertCircle size={13} />}
+                {(runStatus === "error" || runStatus === "watcher_down") && <AlertCircle size={13} />}
                 {runStatus === "already_running" && <AlertCircle size={13} />}
                 {runStatus === "sending"         ? "שולח..." :
                  runStatus === "pending"         ? "ממתין..." :
                  runStatus === "running"         ? "מושך נתונים..." :
                  runStatus === "done"            ? (runResult ?? "הושלם ✅") :
                  runStatus === "already_running" ? "כבר רץ — נסה שוב בעוד כמה דקות" :
+                 runStatus === "watcher_down"    ? "תקלה — פירוט ודרך תיקון למטה" :
                                                    (runResult ?? "שגיאה")}
               </span>
             )}
@@ -752,6 +767,42 @@ export default function AdminDashboard({
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Run-button faults, with how to fix them (Amir, 2026-10-21) ── */}
+      {tab === "whatsapp" && runStatus === "watcher_down" && (
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-900">
+          <p className="flex items-center gap-2 font-bold text-base mb-2">
+            <AlertCircle size={18} /> תקלה: כפתור &quot;הרץ עכשיו&quot; לא פעיל
+          </p>
+          <p className="mb-3">
+            מנגנון ההרצה במחשב המשרד (המחשב שמריץ את הפרסר) לא פועל, ולכן הבקשה לא נקלטה.
+            הדוח היומי של 08:00 לא תלוי בזה וממשיך לרוץ כרגיל.
+          </p>
+          <p className="font-semibold mb-1">איך לתקן, במחשב המשרד:</p>
+          <ol className="list-decimal pr-5 space-y-1">
+            <li>לחץ על &quot;התחל&quot;, הקלד <b>Task Scheduler</b> (מתזמן המשימות) ופתח אותו.</li>
+            <li>בצד שמאל לחץ על <b>Task Scheduler Library</b>.</li>
+            <li>מצא את <b>WhatsApp Trigger Watcher - Mango Realty</b>, לחץ עליו קליק ימני ובחר <b>Run</b>.</li>
+            <li>חכה חצי דקה. הבקשה שחיכתה תרוץ לבד, ואפשר גם ללחוץ שוב &quot;הרץ עכשיו&quot;.</li>
+          </ol>
+          <p className="mt-3">אם זה לא עוזר: הפעל מחדש את מחשב המשרד, והמנגנון עולה אוטומטית בכניסה.</p>
+        </div>
+      )}
+      {tab === "whatsapp" && needsQr && (
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-900">
+          <p className="flex items-center gap-2 font-bold text-base mb-2">
+            <AlertCircle size={18} /> תקלה: WhatsApp התנתק מהפרסר
+          </p>
+          <p className="mb-3">WhatsApp ניתק את מחשב המשרד מהחשבון, ולכן אי אפשר למשוך הודעות מהקבוצות עד שמחברים מחדש.</p>
+          <p className="font-semibold mb-1">איך לתקן, במחשב המשרד, עם הטלפון ביד:</p>
+          <ol className="list-decimal pr-5 space-y-1">
+            <li>פתח את התיקייה <b>C:\מנגו AI\whatsapp-property-parser</b> והפעל את <b>חבר-ווצאפ.bat</b> (לחיצה כפולה).</li>
+            <li>בטלפון: WhatsApp ← הגדרות ← <b>מכשירים מקושרים</b> ← <b>קישור מכשיר</b>, וסרוק את ה-QR שמופיע.</li>
+            <li>כשמופיע &quot;מחובר&quot;, חזור לכאן ולחץ &quot;הרץ עכשיו&quot; כדי להשלים את מה שפוספס.</li>
+          </ol>
+          <p className="mt-3">אם ה-QR לא מופיע, בקש מ-Claude &quot;תציג לי את ה-QR של הפרסר&quot;.</p>
         </div>
       )}
 

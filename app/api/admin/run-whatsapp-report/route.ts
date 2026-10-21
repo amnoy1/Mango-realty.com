@@ -43,7 +43,22 @@ export async function POST() {
   return NextResponse.json({ id: row.id, status: row.status });
 }
 
-// GET ?id=xxx — return { status, result }
+// The watcher on the office computer picks a pending request up within a
+// second or two (Supabase Realtime). A request still pending after this long
+// means the watcher isn't running: live 19-21.10.2026 it was dead for two
+// days and the button silently did nothing (architecture.md sec 76).
+const WATCHER_DOWN_AFTER_MS = 45_000;
+
+function withWatcherCheck(row: { status: string; result?: string | null; requested_at?: string }) {
+  const age = row.requested_at ? Date.now() - new Date(row.requested_at).getTime() : 0;
+  if (row.status === "pending" && age > WATCHER_DOWN_AFTER_MS) {
+    return { status: "watcher_down", result: row.result ?? null };
+  }
+  return { status: row.status, result: row.result ?? null };
+}
+
+// GET ?id=xxx — return { status, result } ("watcher_down" when nobody picked it up)
+// GET ?health=1 — the latest request, so the tab can warn before anyone presses
 export async function GET(request: NextRequest) {
   const user = await getUser();
   if (!user || !isFullAdmin(user.email)) {
@@ -51,18 +66,23 @@ export async function GET(request: NextRequest) {
   }
 
   const id = request.nextUrl.searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  const health = request.nextUrl.searchParams.get("health");
+  if (!id && !health) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  const res = await fetch(
-    `${PARSER_URL}/rest/v1/run_triggers?id=eq.${id}&select=status,result`,
-    { headers: parserHeaders() }
-  );
+  const query = id
+    ? `id=eq.${encodeURIComponent(id)}&select=status,result,requested_at`
+    : "select=status,result,requested_at&order=requested_at.desc&limit=1";
+  const res = await fetch(`${PARSER_URL}/rest/v1/run_triggers?${query}`, { headers: parserHeaders() });
 
   if (!res.ok) {
     return NextResponse.json({ error: "Fetch failed" }, { status: 500 });
   }
 
   const rows = await res.json();
-  if (!rows?.length) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(rows[0]);
+  if (!rows?.length) {
+    return id
+      ? NextResponse.json({ error: "Not found" }, { status: 404 })
+      : NextResponse.json({ status: "idle", result: null });
+  }
+  return NextResponse.json(withWatcherCheck(rows[0]));
 }
