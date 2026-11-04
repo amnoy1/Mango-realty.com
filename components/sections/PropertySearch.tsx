@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, Loader2, ShieldCheck, ArrowUpDown, Car, Package, Sun, MessageCircle } from "lucide-react";
 
 // Public property search (property-search-spec.md, door 4). Cards come from
@@ -8,6 +8,11 @@ import { Search, Loader2, ShieldCheck, ArrowUpDown, Car, Package, Sun, MessageCi
 // to Nir's number with the card's code, so Nir knows the listing (spec 5b).
 
 const NIR_WHATSAPP = "972545370056";
+
+// The hero's Nir field fires this event with the visitor's text; this
+// component runs the search and scrolls itself into view, so the hero field
+// and this one are the same Nir search.
+export const NIR_SEARCH_EVENT = "nir:search";
 
 const EXAMPLES = [
   '4 חדרים בכפר סבא עד 3.2 מיליון',
@@ -125,6 +130,20 @@ export default function PropertySearch() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const runRef = useRef<(t: string) => void>(() => {});
+
+  useEffect(() => {
+    function onHeroSearch(e: Event) {
+      const text = (e as CustomEvent<string>).detail || "";
+      if (!text.trim()) return;
+      setQuery(text);
+      rootRef.current?.closest("section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      runRef.current(text);
+    }
+    window.addEventListener(NIR_SEARCH_EVENT, onHeroSearch);
+    return () => window.removeEventListener(NIR_SEARCH_EVENT, onHeroSearch);
+  }, []);
 
   async function run(text: string) {
     const q = text.trim();
@@ -148,8 +167,10 @@ export default function PropertySearch() {
     }
   }
 
+  runRef.current = run;
+
   return (
-    <div className="w-full">
+    <div ref={rootRef} className="w-full">
       <form
         onSubmit={(e) => { e.preventDefault(); run(query); }}
         className="flex flex-col sm:flex-row gap-2"
