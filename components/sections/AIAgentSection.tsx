@@ -19,11 +19,11 @@ export default function AIAgentSection() {
               סוכן AI אישי
             </span>
             <h2 className="text-4xl md:text-5xl font-black text-[var(--color-cream)] leading-tight mb-5">
-              ניר, הסוכן שלך<br />
+              ניר הסוכן שלנו,<br />
               <span className="text-[var(--color-gold)]">תמיד פה בשבילך</span>
             </h2>
             <p className="text-[var(--color-cream)]/50 text-lg leading-relaxed mb-6 max-w-2xl">
-              ניר, מנהל מחלקת הקונים של מנגו נדל&quot;ן, מחפש בשבילך בין הנכסים שבשיווק באזור. כתבו מה אתם מחפשים, בלי טפסים.
+              ניר, מנהל מחלקת הקונים של מנגו נדל&quot;ן, מחפש עבורך נכסים שבשיווק באזור. <span className="font-bold text-[var(--color-cream)]/80">רשמו לניר כאן למטה מה אתם מחפשים ↓</span>
             </p>
             <ul className="flex flex-col md:flex-row md:flex-wrap gap-3 md:gap-6">
               {features.map(({ icon: Icon, text }) => (

@@ -1,10 +1,54 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MapPin, Search } from "lucide-react";
+import { Sparkles, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { NIR_SEARCH_EVENT } from "./PropertySearch";
 
-const CITIES = ["תל אביב", "רמת גן", "גבעתיים", "רמת השרון"];
+// Amir updates this list from time to time (currently: the Sharon area).
+const CITIES = ["כפר סבא", "אלפי מנשה", "רעננה"];
+
+// Typed one character at a time inside the empty field, to show visitors they
+// can write to Nir in free language.
+// Mostly Kfar Saba (~90%), a little Raanana and Alfei Menashe.
+const TYPED_EXAMPLES = [
+  '4 חדרים בכפר סבא עם ממ"ד ומרפסת, עד 3.2 מיליון',
+  "5 חדרים בכפר סבא עם חניה ומחסן",
+  "דירת גן בכפר סבא",
+  "פנטהאוז בכפר סבא עם מרפסת גדולה",
+  "3 חדרים בכפר סבא קרוב למרכז",
+  "דירה בכפר סבא ליד בתי ספר ופארק",
+  'דירה בבניין חדש בכפר סבא עם ממ"ד',
+  "קוטג' או דו משפחתי בכפר סבא",
+  "דירת גן ברעננה",
+  "בית פרטי באלפי מנשה",
+];
+
+function useTypewriter(lines: string[], paused: boolean) {
+  const [text, setText] = useState("");
+  useEffect(() => {
+    if (paused) return;
+    let line = 0, pos = 0, deleting = false;
+    let t: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const full = lines[line];
+      if (!deleting) {
+        pos++;
+        setText(full.slice(0, pos));
+        if (pos === full.length) { deleting = true; t = setTimeout(tick, 1800); return; }
+        t = setTimeout(tick, 55 + Math.random() * 45);
+      } else {
+        pos--;
+        setText(full.slice(0, pos));
+        if (pos === 0) { deleting = false; line = (line + 1) % lines.length; t = setTimeout(tick, 400); return; }
+        t = setTimeout(tick, 25);
+      }
+    };
+    t = setTimeout(tick, 600);
+    return () => clearTimeout(t);
+  }, [lines, paused]);
+  return text;
+}
 
 interface Slide {
   image: string;
@@ -15,7 +59,15 @@ interface Slide {
 export default function HeroSlider({ slides }: { slides: Slide[] }) {
   const [city, setCity]       = useState("");
   const [current, setCurrent] = useState(0);
+  const [focused, setFocused] = useState(false);
   const router = useRouter();
+  const typed = useTypewriter(TYPED_EXAMPLES, focused || city.length > 0);
+
+  function askNir(text: string) {
+    const q = text.trim();
+    if (!q) return;
+    window.dispatchEvent(new CustomEvent(NIR_SEARCH_EVENT, { detail: q }));
+  }
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -59,8 +111,8 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
           <span style={{ color: "#e8c86a" }}>שחלמת עליו</span>
         </h1>
 
-        <p className="mb-7 text-white/60" style={{ fontSize: "clamp(0.85rem, 1.2vw, 1rem)" }}>
-          מנגו נדל&quot;ן — יוקרה עם ליווי AI אישי 24/7
+        <p className="mb-7 font-black text-white" style={{ fontSize: "clamp(0.95rem, 1.4vw, 1.15rem)", textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>
+          רשמו לניר כאן למטה מה אתם מחפשים ↓
         </p>
 
         {/* Tabs + Search bar */}
@@ -99,7 +151,8 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
           </div>
 
           {/* Search bar — top-right flat (connects to קונים tab in RTL) */}
-          <div
+          <form
+            onSubmit={(e) => { e.preventDefault(); askNir(city); }}
             className="flex items-center gap-2 p-2"
             style={{
               borderRadius: "18px 0 18px 18px",
@@ -114,30 +167,35 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
             className="flex-1 flex items-center gap-2 rounded-[12px] px-3 py-2"
             style={{ background: "rgba(255,255,255,0.11)", border: "1px solid rgba(255,255,255,0.14)" }}
           >
-            <MapPin size={14} style={{ color: "#D4A853", flexShrink: 0 }} />
+            <Sparkles size={14} style={{ color: "#D4A853", flexShrink: 0 }} />
             <input
               type="text"
-              placeholder="עיר, שכונה..."
+              aria-label="ספרו לניר מה אתם מחפשים"
+              placeholder={focused ? "ספרו לניר מה אתם מחפשים..." : `${typed}|`}
               value={city}
+              maxLength={300}
               onChange={(e) => setCity(e.target.value)}
-              className="bg-transparent text-white placeholder-white/35 outline-none w-full text-sm"
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              className="bg-transparent text-white placeholder-white/55 outline-none w-full text-sm"
             />
           </div>
           <button
+            type="submit"
             className="flex items-center gap-1.5 rounded-[12px] px-4 py-2 font-black text-sm whitespace-nowrap hover:brightness-110 transition-all shrink-0"
             style={{ background: "#D4A853", color: "#1C1C1E", fontFamily: "var(--font-heebo)" }}
           >
             <Search size={13} />
             חפש
           </button>
-        </div>
+        </form>
         </div>{/* end tabs+searchbar wrapper */}
 
         {/* Quick city links */}
         <div className="mt-3.5 flex flex-wrap gap-x-3 gap-y-1 items-center text-[11px] text-white/35">
           <span>פופולרי:</span>
           {CITIES.map((c) => (
-            <button key={c} onClick={() => setCity(c)}
+            <button key={c} onClick={() => { setCity(c); askNir(c); }}
               className="text-white/50 hover:text-[#e8c86a] transition-colors">
               {c}
             </button>
