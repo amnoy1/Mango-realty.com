@@ -11,17 +11,22 @@ const CITIES = ["כפר סבא", "אלפי מנשה", "רעננה"];
 // Typed one character at a time inside the empty field, to show visitors they
 // can write to Nir in free language.
 // Mostly Kfar Saba (~90%), a little Raanana and Alfei Menashe.
+// RULE (Amir, 2026-11-04): only searches the property table can answer -
+// city, neighborhood, street, rooms, property type, floor, sqm, price,
+// mamad / elevator / parking / storage / balcony. Never "near schools",
+// "quiet", "new building", "view" etc. A visitor who types the example
+// must get real results, not a disappointment.
 const TYPED_EXAMPLES = [
   '4 חדרים בכפר סבא עם ממ"ד ומרפסת, עד 3.2 מיליון',
   "5 חדרים בכפר סבא עם חניה ומחסן",
   "דירת גן בכפר סבא",
-  "פנטהאוז בכפר סבא עם מרפסת גדולה",
-  "3 חדרים בכפר סבא קרוב למרכז",
-  "דירה בכפר סבא ליד בתי ספר ופארק",
-  'דירה בבניין חדש בכפר סבא עם ממ"ד',
-  "קוטג' או דו משפחתי בכפר סבא",
-  "דירת גן ברעננה",
-  "בית פרטי באלפי מנשה",
+  "פנטהאוז בכפר סבא",
+  "3 חדרים בכפר סבא עד 2.5 מיליון",
+  "4 חדרים בכפר סבא עם מעלית וחניה",
+  'דירה בכפר סבא מעל 120 מ"ר',
+  "5 חדרים ומעלה בכפר סבא",
+  "4 חדרים ברעננה",
+  "דירה באלפי מנשה",
 ];
 
 function useTypewriter(lines: string[], paused: boolean) {
@@ -111,7 +116,7 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
           <span style={{ color: "#e8c86a" }}>שחלמת עליו</span>
         </h1>
 
-        <p className="mb-7 font-black text-white" style={{ fontSize: "clamp(0.95rem, 1.4vw, 1.15rem)", textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>
+        <p className="mb-7 font-black text-white" style={{ fontSize: "clamp(0.95rem, 1.4vw, 1.15rem)", fontFamily: "var(--font-heebo)", textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>
           רשמו לניר כאן למטה מה אתם מחפשים ↓
         </p>
 
@@ -171,7 +176,7 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
             <input
               type="text"
               aria-label="ספרו לניר מה אתם מחפשים"
-              placeholder={focused ? "ספרו לניר מה אתם מחפשים..." : `${typed}|`}
+              placeholder={focused ? "ספרו לניר מה אתם מחפשים..." : typed}
               value={city}
               maxLength={300}
               onChange={(e) => setCity(e.target.value)}
