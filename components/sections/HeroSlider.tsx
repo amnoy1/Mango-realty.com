@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation";
 import { NIR_SEARCH_EVENT } from "./PropertySearch";
 
 // Amir updates this list from time to time (currently: the Sharon area).
-const CITIES = ["כפר סבא", "אלפי מנשה", "רעננה"];
+const CITIES = ["כפר סבא", "הוד השרון", "רעננה"];
 
 // Typed one character at a time inside the empty field, to show visitors they
 // can write to Nir in free language.
-// Mostly Kfar Saba (~90%), a little Raanana and Alfei Menashe.
+// Mostly Kfar Saba (~90%), a little Raanana and Hod HaSharon.
 // RULE (Amir, 2026-11-04): only searches the property table can answer -
 // city, neighborhood, street, rooms, property type, floor, sqm, price,
 // mamad / elevator / parking / storage / balcony. Never "near schools",
@@ -26,7 +26,7 @@ const TYPED_EXAMPLES = [
   'דירה בכפר סבא מעל 120 מ"ר',
   "5 חדרים ומעלה בכפר סבא",
   "4 חדרים ברעננה",
-  "דירה באלפי מנשה",
+  "דירה בהוד השרון",
 ];
 
 function useTypewriter(lines: string[], paused: boolean) {
