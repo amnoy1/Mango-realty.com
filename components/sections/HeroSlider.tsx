@@ -117,7 +117,7 @@ export default function HeroSlider({ slides }: { slides: Slide[] }) {
         </h1>
 
         <p className="mb-7 font-black text-white" style={{ fontSize: "clamp(0.95rem, 1.4vw, 1.15rem)", fontFamily: "var(--font-heebo)", textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>
-          רשמו לניר כאן למטה מה אתם מחפשים ↓
+          רשמו לניר סוכן הקונים שלנו, כאן למטה, מה אתם מחפשים ↓
         </p>
 
         {/* Tabs + Search bar */}
